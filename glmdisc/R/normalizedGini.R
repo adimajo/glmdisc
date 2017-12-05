@@ -1,6 +1,7 @@
 #' Calculating the normalized Gini index
 #'
-#' This function calculates the Gini index of a classification rule outputting probabilities.
+#' This function calculates the Gini index of a classification rule outputting probabilities. It is a classical metric in the context of Credit Scoring.
+#' It is equal to 2 times the AUC (Area Under ROC Curve) minus 1.
 #' @param actual The numeric binary vector of the actual labels observed.
 #' @param predicted The vector of the probabilities predicted by the classification rule.
 #' @keywords gini, index

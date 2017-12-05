@@ -1,12 +1,12 @@
-#' Discretize a dataset using a trained SEM discretization scheme
-#'
-#' This function discretizes a user-specified dataset using a pre-trained SEM discretization scheme.
-#' @param link A multinomial logit model.
-#' @param df The dataframe, containing the same variables as the one used to train the discretization scheme, to be discretized.
-#' @keywords discretization, predict
-#' @importFrom stats predict
-#' @references
-#' Asad Hasan, Wang Zhiyu and Alireza S. Mahani (2015). mnlogit: Multinomial Logit Model. R package version 1.2.4. \url{https://CRAN.R-project.org/package=mnlogit}
+# #' Discretize a dataset using a trained glmdisc discretization scheme.
+# #'
+# #' This function discretizes a user-specified dataset using a pre-trained \code{\link{glmdisc}} discretization scheme.
+# #' @param link A multinomial logit model.
+# #' @param df The dataframe, containing the same variables as the one used to train the discretization scheme, to be discretized.
+# #' @keywords discretization, predict
+# #' @importFrom stats predict
+# #' @references
+# #' Asad Hasan, Wang Zhiyu and Alireza S. Mahani (2015). mnlogit: Multinomial Logit Model. R package version 1.2.4. \url{https://CRAN.R-project.org/package=mnlogit}
 
 discretize_link <- function(link,df) {
 

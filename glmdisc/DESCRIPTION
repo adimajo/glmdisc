@@ -1,23 +1,31 @@
 Package: glmdisc
 Type: Package
-Title: Discretization, grouping and interaction discovery for logistic regression
+Title: Discretization and grouping for logistic regression
 Version: 0.1
-Author@R: person("Adrien", "Ehrhardt", email = "adrien.ehrhardt@inria.fr",
-                  role = c("aut", "cre"))
+Author@R: c(person("Adrien", "Ehrhardt", email = "adrien.ehrhardt@inria.fr",
+                  role = c("aut", "cre")),
+                  person("Vincent", "Vandewalle", email = "vincent.vandewalle@inria.fr",
+                  role = c("aut")),
+                  person("Christophe", "Biernacki", email = "christophe.biernacki@inria.fr",
+                  role = c("ctb")),
+                  person("Philippe", "Heinrich", email = "philippe.heinrich@univ-lille1.fr",
+                  role = c("ctb")))
 Author: Adrien Ehrhardt [aut, cre]
 Maintainer: Adrien Ehrhardt <adrien.ehrhardt@inria.fr>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
+Description: An SEM algorithm associated with a Gibbs sampler which purpose is feature engineering for logistic regression.
+     Continuous features are discretized and categorical features' values are grouped to produce a better logistic regression model.
 License: GPL (>= 2)
 Encoding: UTF-8
 LazyData: true
 Imports:
-    methods
-Suggests:
+    methods,
     mnlogit,
     MASS,
-    plotly,
-    pROC
+    graphics
 URL: https://adimajo.github.io
 BugReports: https://github.com/adimajo/glmdisc/issues
 RoxygenNote: 6.0.1.9000
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr

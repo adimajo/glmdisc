@@ -1,50 +1,62 @@
 methods::setMethod("show",
-                   methods::signature(object = "discretization"),
+                   methods::signature(object = "glmdisc"),
                    function(object) {
                         methods::show(object@best.disc[[1]])
                    })
 
 
-print.discretization <- function(object) {
+print.glmdisc <- function(object) {
      print(object@best.disc[[1]])
 }
 
 
-summary.discretization <- function(object) {
+summary.glmdisc <- function(object) {
      summary(object@best.disc[[1]])
+}
+
+plot.glmdisc <- function(object) {
+     graphics::plot(object@best.disc[[1]])
 }
 
 
 #' Prediction on a raw test set of the best logistic regression model on discretized data.
 #'
-#' This function discretizes a user-provided test dataset given a discretization scheme provided by an S4 "discretization" object.
-#' It then applies the learnt logistic regression model and outputs its prediction (see predict.glm).
+#' This function discretizes a user-provided test dataset given a discretization scheme provided by an S4 "glmdisc" object.
+#' It then applies the learnt logistic regression model and outputs its prediction (see \code{\link{predict.glm}}).
+#' @exportMethod predict
 #' @param object The S4 discretization object.
 #' @param predictors The test dataframe to discretize and for which we wish to have predictions.
 #' @keywords test, discretization, predict, prediction
 
-predict.discretization <- function(object, predictors) {
-     predict(object@best.disc[[1]],as.data.frame(discretize_link(object@best.disc[[2]],predictors)))
+methods::setGeneric("predict")
+
+predict.glmdisc <- function(object, predictors) {
+     predict(object@best.disc[[1]],data.frame(discretize_link(object@best.disc[[2]],predictors)))
 }
 
+#' Method for predicting on a new input dataset given a discretization scheme and its associated model of class \code{\link{glmdisc}}.
+#' @rdname predict-methods
+#' @name predict
+#' @aliases predict,glmdisc-method
+#' @description This defines the method "discretize" which will discretize a new input dataset given a discretization scheme of S4 class \code{\link{glmdisc}}
 
-#' Constructor method "discretize" for discretization objects
-#'
-#' @name discretize
-#' @rdname discretize-methods
+methods::setMethod("predict", "glmdisc", predict.glmdisc)
+
+# #' @name discretize
+# #' @rdname discretize-methods
 #' @exportMethod discretize
-#' @description This defines the generic method "discretize" which will discretize a new input dataset given a discretization scheme of S4 class discretization.
+# #' @description This defines the generic method "discretize" which will discretize a new input dataset given a discretization scheme of S4 class \code{\link{discretization}}.
 
 methods::setGeneric("discretize", function(object,...) attributes(object))
 
 
-#' Method for discretizing a new input dataset given a discretization scheme of class "discretization".
+#' Method for discretizing a new input dataset given a discretization scheme of class \code{\link{glmdisc}}.
 #' @rdname discretize-methods
 #' @name discretize
-#' @aliases discretize,discretization-method
-#' @description This defines the method "discretize" which will discretize a new input dataset given a discretization scheme of S4 class discretization.
+#' @aliases discretize,glmdisc-method
+#' @description This defines the method "discretize" which will discretize a new input dataset given a discretization scheme of S4 class \code{\link{glmdisc}}
 
-methods::setMethod("discretize", methods::signature(object="discretization"), function(object,data) {
+methods::setMethod("discretize", methods::signature(object="glmdisc"), function(object,data) {
      # if (substr(object@method.name,1,3)=="sem") {
      glmdisc:::discretize_link(object@best.disc[[2]],data)
      # } else {
@@ -52,13 +64,4 @@ methods::setMethod("discretize", methods::signature(object="discretization"), fu
      # }
 })
 
-
-#' Different kinds of plots using either plotly (if available) or the standard plot (graphics package).
-#'
-#' This function aims at producing useful graphs in the context of credit scoring in order to simplify the validation process
-#' of the produced credit score.
-#' @param discretization The S4 discretization object.
-#' @param type The test dataframe to discretize and for which we wish to have predictions.
-#' @param ... See additional parameters of plotly (if installed) or the standard plot function (from the graphics package).
-#' @keywords test, discretization, predict, prediction
 
