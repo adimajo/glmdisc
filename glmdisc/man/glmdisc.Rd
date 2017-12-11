@@ -59,7 +59,7 @@ Asad Hasan, Wang Zhiyu and Alireza S. Mahani (2015). mnlogit: Multinomial Logit 
 Agresti, A. (2002) \emph{Categorical Data}. Second edition. Wiley.
 }
 \seealso{
-\code{\link{glm}}, \code{\link{mnlogit}}, \code{\link{polr}}
+\code{\link{glm}}, \code{\link{multinom}}, \code{\link{polr}}
 }
 \author{
 Adrien Ehrhardt, Vincent Vandewalle, Christophe Biernacki, Philippe Heinrich.

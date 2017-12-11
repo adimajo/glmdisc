@@ -18,8 +18,9 @@ License: GPL (>= 2)
 Encoding: UTF-8
 LazyData: true
 Imports:
+    nnet,
+    RcppNumerical,
     methods,
-    mnlogit,
     MASS,
     graphics
 URL: https://adimajo.github.io

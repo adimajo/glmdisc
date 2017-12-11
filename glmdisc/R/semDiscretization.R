@@ -13,7 +13,7 @@
 #' @param seed For reproducibility purposes (default: 1).
 #' @keywords SEM, Gibbs, discretization
 #' @author Adrien Ehrhardt, Vincent Vandewalle, Christophe Biernacki, Philippe Heinrich.
-#' @seealso \code{\link{glm}}, \code{\link{mnlogit}}, \code{\link{polr}}
+#' @seealso \code{\link{glm}}, \code{\link{multinom}}, \code{\link{polr}}
 #' @details
 #' This function finds the most appropriate discretization scheme for logistic regression. When provided with a continuous variable \eqn{X}, it tries to convert it to a categorical variable \eqn{E} which values uniquely correspond to intervals of the continuous variable \eqn{X}.
 #' When provided with a categorical variable \eqn{X}, it tries to find the best regroupement of its values and subsequently creates categorical variable \eqn{E}. The goal is to perform supervised learning with logistic regression so that you have to specify a target variable \eqn{Y} denoted by \code{labels}.
@@ -136,10 +136,16 @@ glmdisc <- function(predictors,labels,validation=TRUE,test=TRUE,criterion='gini'
 
                               # Polytomic or ordered logistic regression
                               if ((reg_type=='poly')&(types_data[j]=="numeric")) {
-                                        long_dataset <- data.frame(e = as.vector(sapply(e[ensemble[[1]],j],function(var) (lev_j[seq(1:as.numeric(m[j]))]==var))),x = as.vector(sapply(predictors[ensemble[[1]],j], function(var) rep(var,as.numeric(m[j])))), names = as.character(as.vector(rep(lev_j[seq(1:as.numeric(m[j]))],length(ensemble[[1]])))),stringsAsFactors=FALSE)
-                                        link[[j]] = tryCatch(mnlogit::mnlogit(e ~ 1 | x | 1, data=long_dataset, choiceVar = "names", start = link[[j]]$coefficients, returnData = TRUE, order = TRUE),error=function(cond) link[[j]] = mnlogit::mnlogit(e ~ 1 | x | 1, data=long_dataset, choiceVar = "names", returnData = TRUE, order = TRUE))
+                                   # long_dataset <- data.frame(e = as.vector(sapply(e[ensemble[[1]],j],function(var) (lev_j[seq(1:as.numeric(m[j]))]==var))),x = as.vector(sapply(predictors[ensemble[[1]],j], function(var) rep(var,as.numeric(m[j])))), names = as.character(as.vector(rep(lev_j[seq(1:as.numeric(m[j]))],length(ensemble[[1]])))),stringsAsFactors=FALSE)
+                                   link[[j]] = nnet::multinom(e ~ x, data=data.frame(e=data[ensemble[[1]],j],x=predictors[ensemble[[1]],j]), start = link[[j]]$coefficients)
                               } else if (types_data[j]=="numeric") {
-                                   link[[j]] = tryCatch(MASS::polr(e ~ x, data=data.frame(e = factor(as.numeric(ordered(e[ensemble[[1]],j],levels = names(sort(unlist(by(predictors[ensemble[[1]],j],e[ensemble[[1]],j],mean)))))), ordered=T), x = predictors[ensemble[[1]],j]), Hess = FALSE, model = FALSE, weights = link[[j]]$weights),error=function(cond) tryCatch(MASS::polr(e ~ x, data=data.frame(e = factor(as.numeric(ordered(e[ensemble[[1]],j],levels = names(sort(unlist(by(predictors[ensemble[[1]],j],e[ensemble[[1]],j],mean)))))), ordered=T), x = predictors[ensemble[[1]],j]), Hess = FALSE, model = FALSE), error=function(cond) stats::glm(e ~ x, data=data.frame(e = factor(e[ensemble[[1]],j]), x = predictors[ensemble[[1]],j]), family = stats::binomial(link="logit"), model = FALSE)))
+                                   if (exists("link[[j]]$weights")) {
+                                        link[[j]] = MASS::polr(e ~ x, data=data.frame(e = factor(as.numeric(ordered(e[ensemble[[1]],j],levels = names(sort(unlist(by(predictors[ensemble[[1]],j],e[ensemble[[1]],j],mean)))))), ordered=T), x = predictors[ensemble[[1]],j]), Hess = FALSE, model = FALSE, weights = link[[j]]$weights)
+                                   } else if (nlevels(as.factor(e[ensemble[[1]],j]))>2) {
+                                        link[[j]] = MASS::polr(e ~ x, data=data.frame(e = factor(as.numeric(ordered(e[ensemble[[1]],j],levels = names(sort(unlist(by(predictors[ensemble[[1]],j],e[ensemble[[1]],j],mean)))))), ordered=T), x = predictors[ensemble[[1]],j]), Hess = FALSE, model = FALSE)
+                                   } else {
+                                        link[[j]] = stats::glm(e ~ x, data=data.frame(e = factor(e[ensemble[[1]],j]), x = predictors[ensemble[[1]],j]), family = stats::binomial(link="logit"), model = FALSE)
+                                   }
                               }
                          }
 
@@ -160,16 +166,9 @@ glmdisc <- function(predictors,labels,validation=TRUE,test=TRUE,criterion='gini'
 
                               # p(e^j|reste) calculation
                               if ((types_data[j]=="numeric")) {
-                                   if (reg_type=='poly') {
-                                        if (!requireNamespace("mnlogit", quietly = TRUE)) {
-                                             t = predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs")
-                                        } else {
-                                             long_dataset <- data.frame(e = as.vector(sapply(e[,j],function(var) (lev_j[seq(1:as.numeric(m[j]))]==var))),x = as.vector(sapply(predictors[,j], function(var) rep(var,as.numeric(m[j])))), names = as.character(as.vector(rep(lev_j[seq(1:as.numeric(m[j]))],n))))
-                                             t = predict(link[[j]], newdata = long_dataset,type="probs", choiceVar = "names")
-                                             t[which(is.nan(t),arr.ind = TRUE)[,"row"],which(is.nan(t),arr.ind = TRUE)[,"col"]] = 1
-                                        }
-                                   } else {
-                                        t = tryCatch(predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs"), error = function(cond) matrix(c(1-predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="response"),predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="response")),ncol=2,dimnames = list(seq(1:n),c(min(levels(factor(e[ensemble[[1]],j]))),max(levels(factor(e[ensemble[[1]],j])))))))
+                                   t = predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs")
+                                   if (is.vector(t)) {
+                                        t = c(1-t,t)
                                    }
                               } else {
                                    link[[j]] = table(e[ensemble[[1]],j],predictors[ensemble[[1]],j])
@@ -204,12 +203,12 @@ glmdisc <- function(predictors,labels,validation=TRUE,test=TRUE,criterion='gini'
                                    ind_diff_train_test <- which(emap[ensemble[[2]],j]==setdiff(factor(emap[ensemble[[2]],j]),factor(emap[ensemble[[1]],j])))
                                    while (!length(ind_diff_train_test)==0) {
                                         if (reg_type=='poly') {
-                                             if (!requireNamespace("mnlogit", quietly = TRUE)) {
+                                             if (!requireNamespace("nnet", quietly = TRUE)) {
                                                   t = predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs")
                                              } else {
-                                                  long_dataset <- data.frame(e = as.vector(sapply(e[,j],function(var) (lev_j[seq(1:as.numeric(m[j]))]==var))),x = as.vector(sapply(predictors[,j], function(var) rep(var,as.numeric(m[j])))), names = as.character(as.vector(rep(lev_j[seq(1:as.numeric(m[j]))],n))))
-                                                  t = predict(link[[j]], newdata = long_dataset,type="probs", choiceVar = "names")
-                                                  t[which(is.nan(t),arr.ind = TRUE)[,"row"],which(is.nan(t),arr.ind = TRUE)[,"col"]] = 1
+                                                  # long_dataset <- data.frame(e = as.vector(sapply(e[,j],function(var) (lev_j[seq(1:as.numeric(m[j]))]==var))),x = as.vector(sapply(predictors[,j], function(var) rep(var,as.numeric(m[j])))), names = as.character(as.vector(rep(lev_j[seq(1:as.numeric(m[j]))],n))))
+                                                  t = predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs")
+                                                  # t[which(is.nan(t),arr.ind = TRUE)[,"row"],which(is.nan(t),arr.ind = TRUE)[,"col"]] = 1
                                              }
                                         } else {
                                              t = tryCatch(predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs"), error = function(cond) matrix(c(1-predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="response"),predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="response")),ncol=2,dimnames = list(seq(1:n),c(min(levels(factor(e[ensemble[[1]],j]))),max(levels(factor(e[ensemble[[1]],j])))))))
@@ -241,12 +240,12 @@ glmdisc <- function(predictors,labels,validation=TRUE,test=TRUE,criterion='gini'
                                    ind_diff_train_test <- which(emap[ensemble[[3]],j]==setdiff(factor(emap[ensemble[[3]],j]),factor(emap[ensemble[[1]],j])))
                                    while (!length(ind_diff_train_test)==0) {
                                         if (reg_type=='poly') {
-                                             if (!requireNamespace("mnlogit", quietly = TRUE)) {
+                                             if (!requireNamespace("nnet", quietly = TRUE)) {
                                                   t = predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs")
                                              } else {
-                                                  long_dataset <- data.frame(e = as.vector(sapply(e[,j],function(var) (lev_j[seq(1:as.numeric(m[j]))]==var))),x = as.vector(sapply(predictors[,j], function(var) rep(var,as.numeric(m[j])))), names = as.character(as.vector(rep(lev_j[seq(1:as.numeric(m[j]))],n))))
-                                                  t = predict(link[[j]], newdata = long_dataset,type="probs", choiceVar = "names")
-                                                  t[which(is.nan(t),arr.ind = TRUE)[,"row"],which(is.nan(t),arr.ind = TRUE)[,"col"]] = 1
+                                                  # long_dataset <- data.frame(e = as.vector(sapply(e[,j],function(var) (lev_j[seq(1:as.numeric(m[j]))]==var))),x = as.vector(sapply(predictors[,j], function(var) rep(var,as.numeric(m[j])))), names = as.character(as.vector(rep(lev_j[seq(1:as.numeric(m[j]))],n))))
+                                                  t = predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs")
+                                                  # t[which(is.nan(t),arr.ind = TRUE)[,"row"],which(is.nan(t),arr.ind = TRUE)[,"col"]] = 1
                                              }
                                         } else {
                                              t = tryCatch(predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs"), error = function(cond) matrix(c(1-predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="response"),predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="response")),ncol=2,dimnames = list(seq(1:n),c(min(levels(factor(e[ensemble[[1]],j]))),max(levels(factor(e[ensemble[[1]],j])))))))

@@ -217,7 +217,7 @@ The `criterion` parameters lets the user choose between standard model selection
 
 The `m_start` parameter controls the maximum number of categories of $E^j$ for $X^j$ continuous. The SEM algorithm will start with random $E^j$ taking values in $\{1,m_start\}$. For qualitative features $X^j$, $E^j$ is initialized with as many values as $X^j$ so that `m_start` has no effect.
 
-The `reg_type` parameter controls the model used to fit $E^j$ to continuous $X^j$. The default behavior uses `mnlogit` from the `mnlogit` package which is a polytomous logistic regression (see References section). The other `reg_type` value is `polr` from the `MASS` package which is an ordered logistic regression (simpler to estimate but less flexible as it fits way fewer parameters).
+The `reg_type` parameter controls the model used to fit $E^j$ to continuous $X^j$. The default behavior (`reg_type=poly`) uses `multinom` from the `nnet` package which is a polytomous logistic regression (see References section). The other `reg_type` value is `polr` from the `MASS` package which is an ordered logistic regression (simpler to estimate but less flexible as it fits way fewer parameters).
 
 Empirical studies show that with a reasonably small training dataset ($\leq 100 000$ rows) and a small `m_start` parameter ($\leq 20$), approximately $500$ to $1500$ iterations are largely sufficient to obtain a satisfactory model $p_\theta(y|e)$.
 
@@ -259,7 +259,7 @@ discretization@parameters
 
 ### The `best.disc` slot
 
-The `best.disc` slot contains all that is needed to reproduce the best discretization scheme obtained by `glmdisc` function: the first element is the best logistic regression model obtained $p_\theta(y|e)$; the second element is its associated "link" function, i.e. either the `mnlogit` or `polr` functions fit to each continuous features and the contengency tables fit to each quantitative features.
+The `best.disc` slot contains all that is needed to reproduce the best discretization scheme obtained by `glmdisc` function: the first element is the best logistic regression model obtained $p_\theta(y|e)$; the second element is its associated "link" function, i.e. either the `multinom` or `polr` functions fit to each continuous features and the contengency tables fit to each quantitative features.
 ```{r, echo=TRUE}
 discretization@best.disc[[1]]
 
@@ -381,15 +381,13 @@ These hypotheses are "building blocks" that could be changed at the modeller's w
 
 ## Make it faster
 
-The current implementation is heavily based on R code. A lot of logistic regression are fit, either through `mnlogit`, `polr` or `glm` calls, which can probably be sped up by an intelligent initialization of their parameters and a limitation or their number of iterations.
+The current implementation is heavily based on R code. A lot of logistic regression are fit, either through `multinom`, `polr` or `glm` calls, which can probably be sped up by an intelligent initialization of their parameters and a limitation or their number of iterations.
 
 We also loop of qualitative features and their values, which is known to be slow in R. A C++ version of a Gibbs sampler (which is used here) described by Hadley Wickham in [Advanced R](http://adv-r.had.co.nz/Rcpp.html#rcpp-case-studies) shows a potential speed up by 40.
 
 # References
 
 Celeux, G., Chauveau, D., Diebolt, J. (1995), On Stochastic Versions of the EM Algorithm. [Research Report] RR-2514, INRIA. 1995. <inria-00074164>
-
-Asad Hasan, Wang Zhiyu and Alireza S. Mahani (2015). mnlogit: Multinomial Logit Model. R package version 1.2.4. \url{https://CRAN.R-project.org/package=mnlogit}
 
 Agresti, A. (2002) **Categorical Data**. Second edition. Wiley.
 
