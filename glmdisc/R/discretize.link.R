@@ -34,11 +34,11 @@ discretize_link <- function(link,df) {
      if (d>1) {
           for (j in (1:d)) {
                if (types_data[j]=="numeric") {
-                    # m = length(link[[j]]$coefficients)/2 + 1
-                    # lev = c("1",sapply(names(link[[j]]$coefficients[seq(2,length(link[[j]]$coefficients),2)]), function(lev_name) substr(lev_name,start=3,stop=nchar(lev_name))))
-                    # long_dataset <- data.frame(x = as.vector(sapply(df[,j], function(var) rep(var,m))), names = as.character(as.vector(rep(lev[seq(1:m)],n))))
-                    # t = predict(link[[j]], newdata = long_dataset, choiceVar = "names", type="probs")
                     t = predict(link[[j]], newdata = data.frame(x = df[,j]), type="probs")
+                    if (is.vector(t)) {
+                         t = cbind(1-t,t)
+                         colnames(t) <- c("1","2")
+                    }
                } else {
                     t = prop.table(t(sapply(df[,j],function(row) link[[j]][,row])),1)
                }

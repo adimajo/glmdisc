@@ -92,26 +92,42 @@ glmdisc <- function(predictors,labels,validation=TRUE,test=TRUE,criterion='gini'
                for (i in 1:iter){
 
                     # Dataframe with e and emaps
-                    data = data.frame(e,labels = labels)
-                    data_logit = data.frame(emap,labels = labels)
+                    # data = data.frame(e,labels = labels)
+                    # data_logit = data.frame(emap,labels = labels)
+
+                    data_e = Filter(function(x)(length(unique(x))>1),data.frame(e))
+                    data_emap = Filter(function(x)(length(unique(x))>1),data.frame(emap))
+
+                    data = stats::model.matrix(stats::as.formula(paste("~",paste(colnames(data_e),collapse = "+"))), data = data_e)
+                    data_logit = stats::model.matrix(stats::as.formula(paste("~",paste(colnames(data_emap),collapse = "+"))), data = data_emap)
 
                     # p(y|e) and p(y|emap) training
-                    model_reglog = tryCatch((stats::glm(labels~.,family = stats::binomial(link = "logit"), data=Filter(function(x)(length(unique(x))>1),data_logit[ensemble[[1]],]), y=FALSE, model=FALSE,start=model_reglog$coefficients)),error=function(cond) (stats::glm(labels~.,family = stats::binomial(link = "logit"), data=Filter(function(x)(length(unique(x))>1),data_logit[ensemble[[1]],]), y=FALSE, model=FALSE)))
+                    # model_reglog = tryCatch((stats::glm(labels~.,family = stats::binomial(link = "logit"), data=Filter(function(x)(length(unique(x))>1),data_logit[ensemble[[1]],]), y=FALSE, model=FALSE,start=model_reglog$coefficients)),error=function(cond) (stats::glm(labels~.,family = stats::binomial(link = "logit"), data=Filter(function(x)(length(unique(x))>1),data_logit[ensemble[[1]],]), y=FALSE, model=FALSE)))
+                    if (exists("model_reglog")) {
+                         model_reglog = RcppNumerical::fastLR(data_logit[ensemble[[1]],],labels[ensemble[[1]]],start = model_reglog$coefficients)
+                    } else {
+                         model_reglog = RcppNumerical::fastLR(data_logit[ensemble[[1]],],labels[ensemble[[1]]])
+                    }
 
-                    logit = tryCatch((stats::glm(labels ~.,family = stats::binomial(link = "logit"), data=Filter(function(x)(length(unique(x))>1),data[ensemble[[1]],]), y=FALSE, model=FALSE,start=logit$coefficients)),error=function(cond) (stats::glm(labels ~ .,family = stats::binomial(link = "logit"), data=Filter(function(x)(length(unique(x))>1),data[ensemble[[1]],]), y=FALSE, model=FALSE)))
+                    # logit = tryCatch((stats::glm(labels ~.,family = stats::binomial(link = "logit"), data=Filter(function(x)(length(unique(x))>1),data[ensemble[[1]],]), y=FALSE, model=FALSE,start=logit$coefficients)),error=function(cond) (stats::glm(labels ~ .,family = stats::binomial(link = "logit"), data=Filter(function(x)(length(unique(x))>1),data[ensemble[[1]],]), y=FALSE, model=FALSE)))
+                    if (exists("logit")) {
+                         logit = RcppNumerical::fastLR(data[ensemble[[1]],],labels[ensemble[[1]]],start = logit$coefficients)
+                    } else {
+                         logit = RcppNumerical::fastLR(data[ensemble[[1]],],labels[ensemble[[1]]])
+                    }
 
 
                     # Calculate current performance and update (if better than previous best) current best model.
                     if ((criterion=='gini')&&(validation==FALSE)) {
-                         criterion_iter[[i]] = normalizedGini(labels[ensemble[[1]]],predict(model_reglog,data_logit[ensemble[[1]],],type='response'))
+                         criterion_iter[[i]] = normalizedGini(labels[ensemble[[1]]],predict_fastLR(model_reglog,data_logit[ensemble[[1]],]))
                     } else if ((criterion=='gini')&&(validation==TRUE)) {
-                         criterion_iter[[i]] = normalizedGini(labels[ensemble[[2]]],predict(model_reglog,data_logit[ensemble[[2]],],type='response'))
+                         criterion_iter[[i]] = normalizedGini(labels[ensemble[[2]]],predict_fastLR(model_reglog,data_logit[ensemble[[2]],]))
                     } else if ((criterion=='aic')&&(validation==FALSE)) {
-                         criterion_iter[[i]] = -model_reglog$aic
+                         criterion_iter[[i]] = 2*model_reglog$loglikelihood-2*length(model_reglog$coefficients)
                     } else if ((criterion=='bic')&&(validation==FALSE)) {
-                         criterion_iter[[i]] = -model_reglog$deviance - 2*log(length(ensemble[[1]]))*length(model_reglog$coefficients)
+                         criterion_iter[[i]] = 2*model_reglog$loglikelihood-log(length(ensemble[[1]]))*length(model_reglog$coefficients)
                     } else if ((criterion %in% c('aic','bic'))&&(validation==TRUE)) {
-                         criterion_iter[[i]] = sum(log(labels[ensemble[[2]]]*predict(model_reglog,data_logit[ensemble[[2]],],type='response') + (1-labels[ensemble[[2]]])*(1-labels[ensemble[[2]]]*predict(model_reglog,data_logit[ensemble[[2]],],type='response'))))
+                         criterion_iter[[i]] = sum(log(labels[ensemble[[2]]]*predict_fastLR(model_reglog,data_logit[ensemble[[2]],]) + (1-labels[ensemble[[2]]])*(1-labels[ensemble[[2]]]*predict_fastLR(model_reglog,data_logit[ensemble[[2]],]))))
                     } else stop("validation must be boolean!")
 
 
@@ -125,7 +141,7 @@ glmdisc <- function(predictors,labels,validation=TRUE,test=TRUE,criterion='gini'
                     link=list()
 
                     # Update E^j with j chosen at random
-                    for (j in sample(1:d)) {
+                    for (j in (d:1)) {
 
                          # p(e^j | x^j) training
                          if (length(unique(e[ensemble[[1]],j]))>1) {
@@ -137,7 +153,7 @@ glmdisc <- function(predictors,labels,validation=TRUE,test=TRUE,criterion='gini'
                               # Polytomic or ordered logistic regression
                               if ((reg_type=='poly')&(types_data[j]=="numeric")) {
                                    # long_dataset <- data.frame(e = as.vector(sapply(e[ensemble[[1]],j],function(var) (lev_j[seq(1:as.numeric(m[j]))]==var))),x = as.vector(sapply(predictors[ensemble[[1]],j], function(var) rep(var,as.numeric(m[j])))), names = as.character(as.vector(rep(lev_j[seq(1:as.numeric(m[j]))],length(ensemble[[1]])))),stringsAsFactors=FALSE)
-                                   link[[j]] = nnet::multinom(e ~ x, data=data.frame(e=data[ensemble[[1]],j],x=predictors[ensemble[[1]],j]), start = link[[j]]$coefficients)
+                                   link[[j]] = nnet::multinom(e ~ x, data=data.frame(e=e[ensemble[[1]],j],x=predictors[ensemble[[1]],j]), start = link[[j]]$coefficients)
                               } else if (types_data[j]=="numeric") {
                                    if (exists("link[[j]]$weights")) {
                                         link[[j]] = MASS::polr(e ~ x, data=data.frame(e = factor(as.numeric(ordered(e[ensemble[[1]],j],levels = names(sort(unlist(by(predictors[ensemble[[1]],j],e[ensemble[[1]],j],mean)))))), ordered=T), x = predictors[ensemble[[1]],j]), Hess = FALSE, model = FALSE, weights = link[[j]]$weights)
@@ -153,13 +169,24 @@ glmdisc <- function(predictors,labels,validation=TRUE,test=TRUE,criterion='gini'
                          if (as.numeric(m[j])>1) {
                               y_p = array(0,c(n,as.numeric(m[j])))
                               for (k in 1:as.numeric(m[j])) {
-                                   # Dataset e^{-j} et e^j = k
-                                   modalites_k <- cbind(e,rep(lev_j[k],n))
-                                   colnames(modalites_k) <- paste("X", 1:(d+1), sep = "")
-                                   modalites_k <- modalites_k[,-j]
-                                   colnames(modalites_k)[ncol(modalites_k)] <- paste("X",j,sep="")
-                                   modalites_k <- as.data.frame(modalites_k)
-                                   p = predict(logit,newdata=modalites_k,type = "response")
+                                   if (j>1) {
+                                        indices <- sum(as.numeric(m[1:(j-1)])) - j
+                                        if (j<d) {
+                                             modalites_k = cbind(data[,1:(indices+2)],matrix(0,nrow = n, ncol = as.numeric(m[j])-1),data[,(indices+2+as.numeric(m[j])):(ncol(data))])
+                                        } else {
+                                             modalites_k = cbind(data[,1:(indices+2)],matrix(0,nrow = n, ncol = as.numeric(m[j])-1))
+                                        }
+                                        if (k>1) {
+                                             modalites_k[,(1+indices+k)] = rep(1,n)
+                                        }
+                                   } else {
+                                        modalites_k = cbind(rep(1,n),matrix(0,nrow = n, ncol = as.numeric(m[1])-1),data[,(1+as.numeric(m[1])):(ncol(data))])
+                                        if (k>1) {
+                                             modalites_k[,k] = rep(1,n)
+                                        }
+                                   }
+
+                                   p = predict_fastLR(logit,modalites_k)
 
                                    y_p[,k] <- (labels*p+(1-labels)*(1-p))
                               }
@@ -168,7 +195,7 @@ glmdisc <- function(predictors,labels,validation=TRUE,test=TRUE,criterion='gini'
                               if ((types_data[j]=="numeric")) {
                                    t = predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs")
                                    if (is.vector(t)) {
-                                        t = c(1-t,t)
+                                        t = cbind(1-t,t)
                                    }
                               } else {
                                    link[[j]] = table(e[ensemble[[1]],j],predictors[ensemble[[1]],j])
