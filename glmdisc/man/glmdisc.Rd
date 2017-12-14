@@ -4,14 +4,16 @@
 \alias{glmdisc}
 \title{Model-based multivariate discretization for logistic regression.}
 \usage{
-glmdisc(predictors, labels, validation = TRUE, test = TRUE,
-  criterion = "gini", iter = 1000, m_start = 20, reg_type = "poly",
-  seed = 1)
+glmdisc(predictors, labels, interact = TRUE, validation = TRUE,
+  test = TRUE, criterion = "gini", iter = 1000, m_start = 20,
+  reg_type = "poly")
 }
 \arguments{
 \item{predictors}{The matrix array containing the numerical or factor attributes to discretize.}
 
 \item{labels}{The actual labels of the provided predictors (0/1).}
+
+\item{interact}{Boolean : True (default) if interaction detection is wanted (Warning: may be very memory/time-consuming).}
 
 \item{validation}{Boolean : True if the algorithm should use predictors to construct a validation set on which to search for the best discretization scheme using the provided criterion (default: TRUE).}
 
@@ -24,8 +26,6 @@ glmdisc(predictors, labels, validation = TRUE, test = TRUE,
 \item{m_start}{The maximum number of resulting categories for each variable wanted (default: 20).}
 
 \item{reg_type}{The model to use between discretized and continuous features (currently, only multinomial logistic regression ('poly') and ordered logistic regression ('polr') are supported ; default: 'poly'). WARNING: 'poly' requires the \code{mnlogit} package, 'polr' requires the \code{MASS} package.}
-
-\item{seed}{For reproducibility purposes (default: 1).}
 }
 \description{
 This function discretizes a training set using an SEM-Gibbs based method (see References section).

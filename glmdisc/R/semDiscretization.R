@@ -10,7 +10,7 @@
 #' @param iter The number of iterations to do in the SEM protocole (default: 1000).
 #' @param m_start The maximum number of resulting categories for each variable wanted (default: 20).
 #' @param reg_type The model to use between discretized and continuous features (currently, only multinomial logistic regression ('poly') and ordered logistic regression ('polr') are supported ; default: 'poly'). WARNING: 'poly' requires the \code{mnlogit} package, 'polr' requires the \code{MASS} package.
-#' @param seed For reproducibility purposes (default: 1).
+#' @param interact Boolean : True (default) if interaction detection is wanted (Warning: may be very memory/time-consuming).
 #' @keywords SEM, Gibbs, discretization
 #' @author Adrien Ehrhardt, Vincent Vandewalle, Christophe Biernacki, Philippe Heinrich.
 #' @seealso \code{\link{glm}}, \code{\link{multinom}}, \code{\link{polr}}
@@ -42,7 +42,7 @@
 #' discretize(sem_disc,data.frame(x))
 
 
-glmdisc <- function(predictors,labels,validation=TRUE,test=TRUE,criterion='gini',iter=1000,m_start=20,reg_type='poly',seed=1) {
+glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,criterion='gini',iter=1000,m_start=20,reg_type='poly') {
 
      if (criterion %in% c('gini','aic','bic')) {
           if (length(labels)==length(predictors[,1])) {
@@ -74,6 +74,7 @@ glmdisc <- function(predictors,labels,validation=TRUE,test=TRUE,criterion='gini'
                m = rep(m_start,d)
                m[which(types_data=="factor")] = as.vector(sapply(predictors[,which(types_data=="factor")],nlevels))
                names(m) <- paste("X", 1:length(m), sep = "")
+               lev = apply(e,2,function(col) list(levels(factor(col))))
 
                # Initializing "current" best logistic regression and link functions.
                current_best = 1
@@ -88,32 +89,125 @@ glmdisc <- function(predictors,labels,validation=TRUE,test=TRUE,criterion='gini'
                     warning("No need to penalize the log-likelihood when a validation set is used. Using log-likelihood instead of AIC/BIC.")
                }
 
+               if (interact==TRUE) {
+                    delta <- matrix(sample(0:1,d^2,replace=TRUE,prob=c(0.5,0.5)),nrow=d,ncol=d)
+                    delta[lower.tri(delta)] = 0
+                    diag(delta) <- 0
+                    xPrincipal <- paste0("X", 1:d)
+
+                    p_delta = matrix(0,nrow=d,ncol=d)
+                    p_delta[lower.tri(p_delta)] = 0
+                    diag(p_delta) <- 0
+
+                    for (j in 1:(d-1)) {
+                         for (k in (j+1):d) {
+                              sans_inter <- stats::glm(labels ~ X1 + X2, family=stats::binomial(link="logit"), data=data.frame(labels = labels[ensemble[[1]]],X1 = predictors[ensemble[[1]],j],X2 = predictors[ensemble[[1]],k]))
+                              avec_inter <- stats::glm(labels ~ X1 + X2 + X1:X2, family=stats::binomial(link="logit"), data=data.frame(labels = labels[ensemble[[1]]],X1 = predictors[ensemble[[1]],j],X2 = predictors[ensemble[[1]],k]))
+                              p_delta[j,k] <- 1/(1+exp(-sans_inter$deviance - log(length(ensemble[[1]]))*length(sans_inter$coefficients) + avec_inter$deviance + log(length(ensemble[[1]]))*length(avec_inter$coefficients)))
+                         }
+                    }
+               }
+
                # SEM algorithm
                for (i in 1:iter){
 
-                    # Dataframe with e and emaps
-                    # data = data.frame(e,labels = labels)
-                    # data_logit = data.frame(emap,labels = labels)
-
                     data_e = Filter(function(x)(length(unique(x))>1),data.frame(e))
                     data_emap = Filter(function(x)(length(unique(x))>1),data.frame(emap))
+                    data = data.frame(e,labels = labels)
+                    data_logit = data.frame(emap,labels = labels)
 
-                    data = stats::model.matrix(stats::as.formula(paste("~",paste(colnames(data_e),collapse = "+"))), data = data_e)
-                    data_logit = stats::model.matrix(stats::as.formula(paste("~",paste(colnames(data_emap),collapse = "+"))), data = data_emap)
+                    if (interact==TRUE) {
+                         tab_vrai <- which(delta==1,arr.ind=TRUE)
+                         ejecter_logit <- sapply(1:(ncol(data_logit)-1), function(col) length(unique(data_logit[,col]))==1)
+                         ejecter <- sapply(1:(ncol(data)-1), function(col) length(unique(data[,col]))==1)
 
-                    # p(y|e) and p(y|emap) training
-                    # model_reglog = tryCatch((stats::glm(labels~.,family = stats::binomial(link = "logit"), data=Filter(function(x)(length(unique(x))>1),data_logit[ensemble[[1]],]), y=FALSE, model=FALSE,start=model_reglog$coefficients)),error=function(cond) (stats::glm(labels~.,family = stats::binomial(link = "logit"), data=Filter(function(x)(length(unique(x))>1),data_logit[ensemble[[1]],]), y=FALSE, model=FALSE)))
-                    if (exists("model_reglog")) {
-                         model_reglog = RcppNumerical::fastLR(data_logit[ensemble[[1]],],labels[ensemble[[1]]],start = model_reglog$coefficients)
+                         if (sum(tab_vrai)>0) {
+                              xInter <- xInter_logit <- sapply(1:nrow(tab_vrai), function(row) paste0("X",tab_vrai[row,"row"],":X",tab_vrai[row,"col"]))
+
+                              if (length(xPrincipal[ejecter])>0) {
+                                   while (length(grep(xPrincipal[ejecter],xInter_logit,value=TRUE))>0) {
+                                        xInter <- xInter[!(xInter==(grep(xPrincipal[ejecter],xInter,value=TRUE)[1]))]
+                                   }
+                              }
+
+                              if (length(xPrincipal[ejecter_logit])>0) {
+                                   while (length(grep(xPrincipal[ejecter_logit],xInter_logit,value=TRUE))>0) {
+                                        xInter_logit <- xInter_logit[!(xInter_logit==(grep(xPrincipal[ejecter_logit],xInter_logit,value=TRUE)[1]))]
+                                   }
+                              }
+
+                              if (length(xInter)>0) {
+                                   fmla = stats::as.formula(paste("~",paste(xPrincipal[!ejecter],collapse = "+"),"+",paste(xInter,collapse = "+")))
+                                   # data = stats::model.matrix(stats::as.formula(paste("~",paste(xPrincipal[!ejecter],collapse = "+"),"+",paste(xInter,collapse = "+"))), data = data_e)
+                              } else {
+                                   fmla = stats::as.formula(paste("~",paste(xPrincipal[!ejecter],collapse = "+")))
+                                   # data = stats::model.matrix(stats::as.formula(paste("~",paste(xPrincipal[!ejecter],collapse = "+"))), data = data_e)
+                              }
+
+                              if (length(xInter_logit)>0) {
+                                   fmla_logit = stats::as.formula(paste("~",paste(xPrincipal[!ejecter_logit],collapse = "+"),"+",paste(xInter_logit,collapse = "+")))
+                                   # data_logit = stats::model.matrix(stats::as.formula(paste("~",paste(xPrincipal[!ejecter_logit],collapse = "+"),"+",paste(xInter_logit,collapse = "+"))), data = data_emap)
+                              } else {
+                                   fmla_logit = stats::as.formula(paste("~",paste(xPrincipal[!ejecter_logit],collapse = "+")))
+                                   # data_logit = stats::model.matrix(stats::as.formula(paste("~",paste(xPrincipal[!ejecter_logit],collapse = "+"))), data = data_emap)
+                              }
+
+                              data = stats::model.matrix(fmla,data=data_e)
+                              data_logit = stats::model.matrix(fmla_logit,data=data_emap)
+
+                              # if (exists("model_reglog")) {
+                              #      model_reglog = RcppNumerical::fastLR(data_logit[ensemble[[1]],],labels[ensemble[[1]]],start = model_reglog$coefficients)
+                              # } else {
+                                   model_reglog = RcppNumerical::fastLR(data_logit[ensemble[[1]],],labels[ensemble[[1]]])
+                              # }
+
+                              # if (exists("logit")) {
+                              #      logit = RcppNumerical::fastLR(data[ensemble[[1]],],labels[ensemble[[1]]],start = logit$coefficients)
+                              # } else {
+                                   logit = RcppNumerical::fastLR(data[ensemble[[1]],],labels[ensemble[[1]]])
+                              # }
+                         } else {
+
+                              fmla = stats::as.formula(paste("~",paste(xPrincipal[!ejecter],collapse = "+")))
+
+                              data = stats::model.matrix(fmla, data = data_e)
+
+                              fmla_logit = stats::as.formula(paste("~",paste(xPrincipal[!ejecter_logit],collapse = "+")))
+
+                              data_logit = stats::model.matrix(fmla_logit, data = data_emap)
+
+
+                              # if (exists("model_reglog")) {
+                              #      model_reglog = RcppNumerical::fastLR(data_logit[ensemble[[1]],],labels[ensemble[[1]]],start = model_reglog$coefficients)
+                              # } else {
+                                   model_reglog = RcppNumerical::fastLR(data_logit[ensemble[[1]],],labels[ensemble[[1]]])
+                              # }
+
+                              # if (exists("logit")) {
+                              #      logit = RcppNumerical::fastLR(data[ensemble[[1]],],labels[ensemble[[1]]],start = logit$coefficients)
+                              # } else {
+                                   logit = RcppNumerical::fastLR(data[ensemble[[1]],],labels[ensemble[[1]]])
+                              # }
+                         }
                     } else {
-                         model_reglog = RcppNumerical::fastLR(data_logit[ensemble[[1]],],labels[ensemble[[1]]])
-                    }
 
-                    # logit = tryCatch((stats::glm(labels ~.,family = stats::binomial(link = "logit"), data=Filter(function(x)(length(unique(x))>1),data[ensemble[[1]],]), y=FALSE, model=FALSE,start=logit$coefficients)),error=function(cond) (stats::glm(labels ~ .,family = stats::binomial(link = "logit"), data=Filter(function(x)(length(unique(x))>1),data[ensemble[[1]],]), y=FALSE, model=FALSE)))
-                    if (exists("logit")) {
-                         logit = RcppNumerical::fastLR(data[ensemble[[1]],],labels[ensemble[[1]]],start = logit$coefficients)
-                    } else {
-                         logit = RcppNumerical::fastLR(data[ensemble[[1]],],labels[ensemble[[1]]])
+                         fmla = stats::as.formula(paste("~",paste(colnames(data_e),collapse = "+")))
+                         fmla_logit = stats::as.formula(paste("~",paste(colnames(data_emap),collapse = "+")))
+
+                         data = stats::model.matrix(fmla, data = data_e)
+                         data_logit = stats::model.matrix(fmla_logit, data = data_emap)
+
+                         # if (exists("model_reglog")) {
+                              # model_reglog = RcppNumerical::fastLR(data_logit[ensemble[[1]],],labels[ensemble[[1]]],start = model_reglog$coefficients)
+                         # } else {
+                              model_reglog = RcppNumerical::fastLR(data_logit[ensemble[[1]],],labels[ensemble[[1]]])
+                         # }
+
+                         # if (exists("logit")) {
+                              # logit = RcppNumerical::fastLR(data[ensemble[[1]],],labels[ensemble[[1]]],start = logit$coefficients)
+                         # } else {
+                              logit = RcppNumerical::fastLR(data[ensemble[[1]],],labels[ensemble[[1]]])
+                         # }
                     }
 
 
@@ -137,22 +231,65 @@ glmdisc <- function(predictors,labels,validation=TRUE,test=TRUE,criterion='gini'
                          current_best = i
                     }
 
+
+                    if (interact==TRUE) {
+                         p_delta_transition = abs(delta-p_delta)
+                         pq <- sample(1:d^2,prob=prop.table(t(as.matrix(as.vector(p_delta_transition))),1),size=1)
+                         delta_new = delta
+                         delta_new[pq] = 1-delta_new[pq]
+                         if (sum(delta_new==1)>0) {
+                              xInter_new <- sapply(1:nrow(which(delta_new==1,arr.ind=TRUE)), function(row) paste0("X",which(delta_new==1,arr.ind=TRUE)[row,"row"],":X",which(delta_new==1,arr.ind=TRUE)[row,"col"]))
+                              if (exists("ejecter_logit")) {
+                                   if (length(xPrincipal[ejecter_logit])>0) {
+                                        if (length(grep(xPrincipal[ejecter_logit],xInter_new,value=TRUE))>0) {
+                                             xInter_new <- xInter_new[!(xInter_new==grep(xPrincipal[ejecter_logit],xInter_new,value=TRUE))]
+                                        }
+                                   }
+                                   if (length(xInter_new)>0) {
+                                        data_logit_new = stats::model.matrix(stats::as.formula(paste("~",paste(xPrincipal[!ejecter_logit],collapse = "+"),"+",paste(xInter_new,collapse = "+"))), data = data_emap)
+                                   } else {
+                                        data_logit_new = stats::model.matrix(stats::as.formula(paste("~",paste(xPrincipal[!ejecter_logit],collapse = "+"))), data = data_emap)
+                                   }
+                              } else {
+                                   data_logit_new = stats::model.matrix(stats::as.formula(paste("~",paste(xPrincipal,collapse = "+"),"+",paste(xInter_new,collapse = "+"))), data = data_emap)
+                              }
+                         } else {
+                              if (exists("ejecter_logit")) {
+                                   data_logit_new = stats::model.matrix(stats::as.formula(paste("~",paste(xPrincipal[!ejecter_logit],collapse = "+"))), data = data_emap)
+                              } else {
+                                   data_logit_new = stats::model.matrix(stats::as.formula(paste("~",paste(xPrincipal,collapse = "+"))), data = data_emap)
+                              }
+
+                         }
+
+                         new_logit <- RcppNumerical::fastLR(data_logit_new[ensemble[[1]],],labels[ensemble[[1]]])
+                         alpha = exp(2*new_logit$loglikelihood-log(length(ensemble[[1]]))*length(new_logit$coefficients) - (2*model_reglog$loglikelihood-log(length(ensemble[[1]]))*length(model_reglog$coefficients)))*(p_delta_transition[pq])/(1-p_delta_transition[pq])
+
+                         print(alpha)
+                         if (sample(c(TRUE,FALSE),size=1,prob = c(min(alpha,1),1-min(alpha,1)))) {
+                              delta <- delta_new
+                         }
+                    }
+
                     # Initialization of link function
                     link=list()
+                    lev_1 = lev
 
                     # Update E^j with j chosen at random
-                    for (j in (d:1)) {
+                    for (j in sample(1:d)) {
 
                          # p(e^j | x^j) training
                          if (length(unique(e[ensemble[[1]],j]))>1) {
 
                               # Possible suppression of values in e^j
                               m[j] = nlevels(as.factor(e[,j]))
-                              lev_j <- levels(as.factor(e[,j]))
+
+                              if (sum(lapply(lapply(1:d,function(j) !lev_1[[j]][[1]] %in% lev[[j]][[1]]),sum)>0)>0) {
+                                   e[,which(lapply(lapply(1:d,function(j) !lev_1[[j]][[1]] %in% lev[[j]][[1]]),sum)>0)] = sapply(which(lapply(lapply(1:d,function(j) !lev_1[[j]][[1]] %in% lev[[j]][[1]]),sum)>0), function(col) factor(e[,col],levels = lev_1[[col]][[1]]))
+                              }
 
                               # Polytomic or ordered logistic regression
                               if ((reg_type=='poly')&(types_data[j]=="numeric")) {
-                                   # long_dataset <- data.frame(e = as.vector(sapply(e[ensemble[[1]],j],function(var) (lev_j[seq(1:as.numeric(m[j]))]==var))),x = as.vector(sapply(predictors[ensemble[[1]],j], function(var) rep(var,as.numeric(m[j])))), names = as.character(as.vector(rep(lev_j[seq(1:as.numeric(m[j]))],length(ensemble[[1]])))),stringsAsFactors=FALSE)
                                    link[[j]] = nnet::multinom(e ~ x, data=data.frame(e=e[ensemble[[1]],j],x=predictors[ensemble[[1]],j]), start = link[[j]]$coefficients)
                               } else if (types_data[j]=="numeric") {
                                    if (exists("link[[j]]$weights")) {
@@ -168,27 +305,33 @@ glmdisc <- function(predictors,labels,validation=TRUE,test=TRUE,criterion='gini'
                          # p(y|e^j,e^-j) calculation
                          if (as.numeric(m[j])>1) {
                               y_p = array(0,c(n,as.numeric(m[j])))
-                              for (k in 1:as.numeric(m[j])) {
-                                   if (j>1) {
-                                        indices <- sum(as.numeric(m[1:(j-1)])) - j
-                                        if (j<d) {
-                                             modalites_k = cbind(data[,1:(indices+2)],matrix(0,nrow = n, ncol = as.numeric(m[j])-1),data[,(indices+2+as.numeric(m[j])):(ncol(data))])
-                                        } else {
-                                             modalites_k = cbind(data[,1:(indices+2)],matrix(0,nrow = n, ncol = as.numeric(m[j])-1))
-                                        }
-                                        if (k>1) {
-                                             modalites_k[,(1+indices+k)] = rep(1,n)
-                                        }
-                                   } else {
-                                        modalites_k = cbind(rep(1,n),matrix(0,nrow = n, ncol = as.numeric(m[1])-1),data[,(1+as.numeric(m[1])):(ncol(data))])
-                                        if (k>1) {
-                                             modalites_k[,k] = rep(1,n)
-                                        }
-                                   }
+                              for (k in as.numeric(unlist(lev[[j]][[1]]))) {
+                                   # if (j>1) {
+                                   #      indices <- sum(as.numeric(m[1:(j-1)])) - j
+                                   #      if (j<d) {
+                                   #           modalites_k = cbind(data[,1:(indices+2)],matrix(0,nrow = n, ncol = as.numeric(m[j])-1),data[,(indices+2+as.numeric(m[j])):(ncol(data))])
+                                   #      } else {
+                                   #           modalites_k = cbind(data[,1:(indices+2)],matrix(0,nrow = n, ncol = as.numeric(m[j])-1))
+                                   #      }
+                                   #      if (k>1) {
+                                   #           modalites_k[,(1+indices+k)] = rep(1,n)
+                                   #      }
+                                   # } else {
+                                   #      modalites_k = cbind(rep(1,n),matrix(0,nrow = n, ncol = as.numeric(m[1])-1),data[,(1+as.numeric(m[1])):(grep(":",colnames(data))[1]-1)])
+                                   #      if (k>1) {
+                                   #           modalites_k[,k] = rep(1,n)
+                                   #      }
+                                   # }
 
-                                   p = predict_fastLR(logit,modalites_k)
+                                   modalites_k = data.frame(e)
+                                   modalites_k[,j] = factor(k)
+                                   levels(modalites_k[,j]) = unlist(lev_1[[j]])
 
-                                   y_p[,k] <- (labels*p+(1-labels)*(1-p))
+                                   modalites_k_disjonctive = stats::model.matrix(fmla,data=modalites_k)
+
+                                   p = predict_fastLR(logit,modalites_k_disjonctive)
+
+                                   y_p[,which(unlist(lev[[j]][[1]])==k)] <- (labels*p+(1-labels)*(1-p))
                               }
 
                               # p(e^j|reste) calculation
@@ -208,7 +351,7 @@ glmdisc <- function(predictors,labels,validation=TRUE,test=TRUE,criterion='gini'
                               t <- prop.table(t*y_p,1)
 
                               # Updating e^j
-                              e[,j] <- apply(t,1,function(p) sample(lev_j,1,prob = p))
+                              e[,j] <- apply(t,1,function(p) sample(unlist(lev[[j]][[1]]),1,prob = p))
 
                               # We control in test and validation datasets (if applicable) that there is the same values for E than in training set (not more).
                               # Test
@@ -221,7 +364,7 @@ glmdisc <- function(predictors,labels,validation=TRUE,test=TRUE,criterion='gini'
                                    while (!length(ind_diff_train_test)==0) {
                                         t[ind_diff_train_test,e[ensemble[[2]],j][ind_diff_train_test]] <- 0
                                         t <- prop.table(t,1)
-                                        e[ensemble[[2]],j][ind_diff_train_test] <- apply(t[ind_diff_train_test,,drop=FALSE],1,function(p) sample(lev_j,1,prob = p))
+                                        e[ensemble[[2]],j][ind_diff_train_test] <- apply(t[ind_diff_train_test,,drop=FALSE],1,function(p) sample(unlist(lev[[j]][[1]]),1,prob = p))
                                         ind_diff_train_test <- which(e[ensemble[[2]],j]==setdiff(factor(e[ensemble[[2]],j]),factor(e[ensemble[[1]],j])))
                                    }
 
@@ -258,7 +401,7 @@ glmdisc <- function(predictors,labels,validation=TRUE,test=TRUE,criterion='gini'
                                    while (!length(ind_diff_train_test)==0) {
                                         t[ind_diff_train_test,e[ensemble[[3]],j][ind_diff_train_test]] <- 0
                                         t <- prop.table(t,1)
-                                        e[ensemble[[3]],j][ind_diff_train_test] <- apply(t[ind_diff_train_test,,drop=FALSE],1,function(p) sample(lev_j,1,prob = p))
+                                        e[ensemble[[3]],j][ind_diff_train_test] <- apply(t[ind_diff_train_test,,drop=FALSE],1,function(p) sample(unlist(lev[[j]][[1]]),1,prob = p))
                                         ind_diff_train_test <- which(e[ensemble[[3]],j]==setdiff(factor(e[ensemble[[3]],j]),factor(e[ensemble[[1]],j])))
                                    }
 
@@ -290,6 +433,7 @@ glmdisc <- function(predictors,labels,validation=TRUE,test=TRUE,criterion='gini'
 
                          }
                     }
+                    lev <- apply(e,2,function(col) list(levels(factor(col))))
                }
 
                # Output preparation and calculation
