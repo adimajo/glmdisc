@@ -111,6 +111,8 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                # SEM algorithm
                for (i in 1:iter){
 
+                    if (elementwise.all.equal(m,1)) {stop("Early stopping rule: all variables discretized in one value")}
+
                     data_e = Filter(function(x)(length(unique(x))>1),data.frame(e))
                     data_emap = Filter(function(x)(length(unique(x))>1),data.frame(emap))
                     data = data.frame(e,labels = labels)
@@ -278,11 +280,11 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                     # Update E^j with j chosen at random
                     for (j in sample(1:d)) {
 
+                         # Possible suppression of values in e^j
+                         m[j] = nlevels(as.factor(e[,j]))
+
                          # p(e^j | x^j) training
                          if (length(unique(e[ensemble[[1]],j]))>1) {
-
-                              # Possible suppression of values in e^j
-                              m[j] = nlevels(as.factor(e[,j]))
 
                               if (sum(lapply(lapply(1:d,function(j) !lev_1[[j]][[1]] %in% lev[[j]][[1]]),sum)>0)>0) {
                                    e[,which(lapply(lapply(1:d,function(j) !lev_1[[j]][[1]] %in% lev[[j]][[1]]),sum)>0)] = sapply(which(lapply(lapply(1:d,function(j) !lev_1[[j]][[1]] %in% lev[[j]][[1]]),sum)>0), function(col) factor(e[,col],levels = lev_1[[col]][[1]]))
