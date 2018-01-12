@@ -78,7 +78,9 @@ y = rbinom(1000,1,p)
 modele_lin <- glm(y ~ x, family = binomial(link="logit"))
 pred_lin <- predict(modele_lin,as.data.frame(x),type="response")
 pred_lin_logit <- predict(modele_lin,as.data.frame(x))
+```
 
+```{r, echo=FALSE}
 knitr::kable(head(data.frame(True_prob = p,Pred_lin = pred_lin)))
 ```
 
@@ -91,6 +93,10 @@ x_disc <- factor(cut(x,c(-Inf,0.5,0.7,0.8,0.9,+Inf)),labels = c(1,2,3,4,5))
 modele_disc <- glm(y ~ x_disc, family = binomial(link="logit"))
 pred_disc <- predict(modele_disc,as.data.frame(x_disc),type="response")
 pred_disc_logit <- predict(modele_disc,as.data.frame(x_disc))
+
+```
+
+```{r, echo=FALSE}
 
 knitr::kable(head(data.frame(True_prob = p,Pred_lin = pred_lin,Pred_disc = pred_disc)))
 plot(x,3*x^5,main = "Estimated logit transform of p(Y|X)", ylab = "p(Y|X) under different models")
@@ -215,7 +221,7 @@ The `validation` and `test` boolean parameters control if the provided dataset s
 
 The `criterion` parameters lets the user choose between standard model selection statistics like `aic` and `bic` and the `gini` index performance measure (proportional to the more traditional AUC measure). Note that if `validation=TRUE`, there is no need to penalize the log-likelihood and `aic` and `bic` become equivalent. On the contrary if `criterion="gini"` and `validation=FALSE` then the algorithm may overfit the training data.
 
-The `m_start` parameter controls the maximum number of categories of $E^j$ for $X^j$ continuous. The SEM algorithm will start with random $E^j$ taking values in $\{1,m_start\}$. For qualitative features $X^j$, $E^j$ is initialized with as many values as $X^j$ so that `m_start` has no effect.
+The `m_start` parameter controls the maximum number of categories of $E^j$ for $X^j$ continuous. The SEM algorithm will start with random $E^j$ taking values in $\{1,m_{\text{start}}\}$. For qualitative features $X^j$, $E^j$ is initialized with as many values as $X^j$ so that `m_start` has no effect.
 
 The `reg_type` parameter controls the model used to fit $E^j$ to continuous $X^j$. The default behavior (`reg_type=poly`) uses `multinom` from the `nnet` package which is a polytomous logistic regression (see References section). The other `reg_type` value is `polr` from the `MASS` package which is an ordered logistic regression (simpler to estimate but less flexible as it fits way fewer parameters).
 
@@ -226,7 +232,7 @@ Empirical studies show that with a reasonably small training dataset ($\leq 100 
 First, the discretized version $E$ of $X$ is initialized at random using the user-provided maximum number of values for quantitative values through the `m_start` parameter.
 
 Then we iterate `times`:
-First, the model $p_\theta(y|e)$, where $e$ denotes the current value of $E$, is adjusted. Then, for each feature $X^j$, the model $p_{\alpha_j}(e|x)$ is adjusted (depending on the type of $X^j$ it can be a polytomous logistic regression or a contengency table). Finally, we draw a new candidate $e^j$ with probability $p_θ_\theta(y|e)p_{\alpha_j}(e^j|x^j)$.
+First, the model $p_\theta(y|e)$, where $e$ denotes the current value of $E$, is adjusted. Then, for each feature $X^j$, the model $p_{\alpha_j}(e|x)$ is adjusted (depending on the type of $X^j$ it can be a polytomous logistic regression or a contengency table). Finally, we draw a new candidate $e^j$ with probability $p_\theta(y|e)p_{\alpha_j}(e^j|x^j)$.
 
 The performance metric chosen through the `criterion` parameter determines the best candidate $e$.
 
@@ -244,7 +250,7 @@ y = rbinom(100,1,1/(1+exp(-log_odd)))
 ```
 
 The `glmdisc` function will try to "recover" the hidden true discretization `xd` when provided only with `x` and `y`:
-```{r, echo=TRUE, results='asis',warning=FALSE}
+```{r, echo=TRUE, results='asis',warning=FALSE, message=FALSE}
 library(glmdisc)
 discretization <- glmdisc(x,y,iter=50,m_start=5,test=FALSE,validation=FALSE,criterion="aic",interact=FALSE)
 ```
@@ -290,7 +296,7 @@ In our example, `discretization` has `validation=FALSE` and `test=FALSE` so that
 discretization@disc.data
 ```
 
-```{r}
+```{r, echo=FALSE}
 knitr::kable(head(discretization@disc.data))
 ```
 
@@ -303,14 +309,15 @@ In our example, `discretization` has `validation=FALSE` and `test=FALSE` so that
 discretization@cont.data
 ```
 
-```{r}
+```{r, echo=FALSE}
 knitr::kable(head(discretization@cont.data))
 ```
 
 ### How well did we do?
 
 To compare the estimated and the true discretization schemes, we can represent them with respect to the input "raw" data `x`:
-```{r, echo=TRUE, out.width='.49\\linewidth', fig.width=3, fig.height=3,fig.show='hold'}
+<!--```{r, echo=TRUE, out.width='.49\\linewidth', fig.width=3, fig.height=3,fig.show='hold'}-->
+```{r, echo=FALSE}
 plot(x[,1],xd[,1])
 plot(discretization@cont.data[,1],discretization@disc.data[,1])
 ```
@@ -341,7 +348,7 @@ The `discretize` method allows the user to discretize a new "raw" input set by a
 x_new <- discretize(discretization,x)
 ```
 
-```{r, echo=FALSE, results='asis'}
+```{r, echo=FALSE, results='asis', warning=FALSE}
 knitr::kable(head(x_new))
 ```
 ## The `predict` method
@@ -351,7 +358,7 @@ The `discretize` method allows the user to predict the response of a new "raw" i
 pred_new <- predict(discretization,x)
 ```
 
-```{r, echo=FALSE, results='asis'}
+```{r, echo=FALSE, results='asis', warning=FALSE}
 knitr::kable(head(pred_new))
 ```
 

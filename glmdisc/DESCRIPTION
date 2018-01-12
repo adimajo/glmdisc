@@ -1,8 +1,8 @@
 Package: glmdisc
 Type: Package
-Title: Discretization and grouping for logistic regression
+Title: Discretization and Grouping for Logistic Regression
 Version: 0.1
-Author@R: c(person("Adrien", "Ehrhardt", email = "adrien.ehrhardt@inria.fr",
+Authors@R: c(person("Adrien", "Ehrhardt", email = "adrien.ehrhardt@inria.fr",
                   role = c("aut", "cre")),
                   person("Vincent", "Vandewalle", email = "vincent.vandewalle@inria.fr",
                   role = c("aut")),
@@ -10,7 +10,6 @@ Author@R: c(person("Adrien", "Ehrhardt", email = "adrien.ehrhardt@inria.fr",
                   role = c("ctb")),
                   person("Philippe", "Heinrich", email = "philippe.heinrich@univ-lille1.fr",
                   role = c("ctb")))
-Author: Adrien Ehrhardt [aut, cre]
 Maintainer: Adrien Ehrhardt <adrien.ehrhardt@inria.fr>
 Description: An SEM algorithm associated with a Gibbs sampler which purpose is feature engineering for logistic regression.
      Continuous features are discretized and categorical features' values are grouped to produce a better logistic regression model.

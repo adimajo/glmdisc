@@ -127,14 +127,23 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                               xInter <- xInter_logit <- sapply(1:nrow(tab_vrai), function(row) paste0("X",tab_vrai[row,"row"],":X",tab_vrai[row,"col"]))
 
                               if (length(xPrincipal[ejecter])>0) {
-                                   while (length(grep(xPrincipal[ejecter],xInter_logit,value=TRUE))>0) {
-                                        xInter <- xInter[!(xInter==(grep(xPrincipal[ejecter],xInter,value=TRUE)[1]))]
+                                   # while (length(grep(xPrincipal[ejecter],xInter,value=TRUE))>0) {
+                                   #      xInter <- xInter[!(xInter==(grep(xPrincipal[ejecter],xInter,value=TRUE)[1]))]
+                                   # }
+
+                                   for (l in xPrincipal[ejecter]) {
+                                        xInter <- xInter[!(xInter %in% (grep(l,xInter,value=TRUE)))]
                                    }
+
                               }
 
                               if (length(xPrincipal[ejecter_logit])>0) {
-                                   while (length(grep(xPrincipal[ejecter_logit],xInter_logit,value=TRUE))>0) {
-                                        xInter_logit <- xInter_logit[!(xInter_logit==(grep(xPrincipal[ejecter_logit],xInter_logit,value=TRUE)[1]))]
+                                   # while (length(grep(xPrincipal[ejecter_logit],xInter_logit,value=TRUE))>0) {
+                                   #      xInter_logit <- xInter_logit[!(xInter_logit==(grep(xPrincipal[ejecter_logit],xInter_logit,value=TRUE)[1]))]
+                                   # }
+
+                                   for (l in xPrincipal[ejecter_logit]) {
+                                        xInter_logit <- xInter_logit[!(xInter_logit %in% (grep(l,xInter_logit,value=TRUE)))]
                                    }
                               }
 
@@ -243,9 +252,14 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                               xInter_new <- sapply(1:nrow(which(delta_new==1,arr.ind=TRUE)), function(row) paste0("X",which(delta_new==1,arr.ind=TRUE)[row,"row"],":X",which(delta_new==1,arr.ind=TRUE)[row,"col"]))
                               if (exists("ejecter_logit")) {
                                    if (length(xPrincipal[ejecter_logit])>0) {
-                                        if (length(grep(xPrincipal[ejecter_logit],xInter_new,value=TRUE))>0) {
-                                             xInter_new <- xInter_new[!(xInter_new==grep(xPrincipal[ejecter_logit],xInter_new,value=TRUE))]
+                                        # if (length(grep(xPrincipal[ejecter_logit],xInter_new,value=TRUE))>0) {
+                                        #      xInter_new <- xInter_new[!(xInter_new==grep(xPrincipal[ejecter_logit],xInter_new,value=TRUE))]
+                                        # }
+
+                                        for (l in xPrincipal[ejecter_logit]) {
+                                             xInter_new <- xInter_new[!(xInter_new %in% (grep(l,xInter_new,value=TRUE)))]
                                         }
+
                                    }
                                    if (length(xInter_new)>0) {
                                         data_logit_new = stats::model.matrix(stats::as.formula(paste("~",paste(xPrincipal[!ejecter_logit],collapse = "+"),"+",paste(xInter_new,collapse = "+"))), data = data_emap)
