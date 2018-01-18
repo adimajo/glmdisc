@@ -2,6 +2,7 @@ Package: glmdisc
 Type: Package
 Title: Discretization and Grouping for Logistic Regression
 Version: 0.1
+Date: 2018-01-17
 Authors@R: c(person("Adrien", "Ehrhardt", email = "adrien.ehrhardt@inria.fr",
                   role = c("aut", "cre")),
                   person("Vincent", "Vandewalle", email = "vincent.vandewalle@inria.fr",
@@ -21,7 +22,9 @@ Imports:
     RcppNumerical,
     methods,
     MASS,
-    graphics
+    graphics,
+    Rcpp (>= 0.12.13)
+LinkingTo: Rcpp, RcppEigen, RcppNumerical
 URL: https://adimajo.github.io
 BugReports: https://github.com/adimajo/glmdisc/issues
 RoxygenNote: 6.0.1.9000

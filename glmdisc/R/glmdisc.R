@@ -12,5 +12,7 @@
 #'
 #' @author Adrien Ehrhardt, Vincent Vandewalle, Christophe Biernacki, Philippe Heinrich.
 #' @docType package
+#' @importFrom Rcpp evalCpp
+#' @useDynLib glmdisc
 #' @name glmdisc-package
 NULL

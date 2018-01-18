@@ -45,7 +45,7 @@ We are provided with an i.i.d. sample $(\bar{x},\bar{y}) = (x_i,y_i)_1^n$ consis
 
 The logistic regression model assumes the following relation between $X$ (supposed continuous here) and $Y$:
 $$\ln \left( \frac{p_\theta(Y=1|x)}{p_\theta(Y=0|x)} \right) = \theta_0 + \sum_{j=1}^d \theta_j*x^j  $$
-where $\theta = (\theta_j)_0^d)$ are estimated using $(\bar{x},\bar{y})$.
+where $\theta = (\theta_j)_0^d$ are estimated using $(\bar{x},\bar{y})$.
 
 Clearly, the model assumes linearity of the logit transform of the response $Y$ with respect to $X$.
 
@@ -250,7 +250,12 @@ y = rbinom(100,1,1/(1+exp(-log_odd)))
 ```
 
 The `glmdisc` function will try to "recover" the hidden true discretization `xd` when provided only with `x` and `y`:
-```{r, echo=TRUE, results='asis',warning=FALSE, message=FALSE}
+```{r, echo=TRUE,warning=FALSE, message=FALSE, results='hide',eval=FALSE}
+library(glmdisc)
+discretization <- glmdisc(x,y,iter=50,m_start=5,test=FALSE,validation=FALSE,criterion="aic",interact=FALSE)
+```
+
+```{r, echo=FALSE,warning=FALSE, message=FALSE, results='hide',eval=TRUE}
 library(glmdisc)
 discretization <- glmdisc(x,y,iter=50,m_start=5,test=FALSE,validation=FALSE,criterion="aic",interact=FALSE)
 ```
@@ -348,7 +353,7 @@ The `discretize` method allows the user to discretize a new "raw" input set by a
 x_new <- discretize(discretization,x)
 ```
 
-```{r, echo=FALSE, results='asis', warning=FALSE}
+```{r, echo=FALSE, warning=FALSE}
 knitr::kable(head(x_new))
 ```
 ## The `predict` method
@@ -358,7 +363,7 @@ The `discretize` method allows the user to predict the response of a new "raw" i
 pred_new <- predict(discretization,x)
 ```
 
-```{r, echo=FALSE, results='asis', warning=FALSE}
+```{r, echo=FALSE, warning=FALSE}
 knitr::kable(head(pred_new))
 ```
 

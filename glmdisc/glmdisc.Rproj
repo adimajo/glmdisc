@@ -10,10 +10,7 @@ NumSpacesForTab: 5
 Encoding: UTF-8
 
 RnwWeave: Sweave
-LaTeX: pdfLaTeX
-
-AutoAppendNewline: Yes
-StripTrailingWhitespace: Yes
+LaTeX: XeLaTeX
 
 BuildType: Package
 PackageUseDevtools: Yes

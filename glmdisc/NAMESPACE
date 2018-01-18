@@ -2,6 +2,9 @@
 
 export(glmdisc)
 export(normalizedGini)
+export(predictlogisticRegression)
 exportMethods(discretize)
 exportMethods(predict)
+importFrom(Rcpp,evalCpp)
 importFrom(stats,predict)
+useDynLib(glmdisc)

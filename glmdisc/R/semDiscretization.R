@@ -47,6 +47,12 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
      if (criterion %in% c('gini','aic','bic')) {
           if (length(labels)==length(predictors[,1])) {
 
+               prop.table.robust <- function (x, margin = NULL) {
+                    tab <- sweep(x, margin, margin.table(x, margin), "/", check.margin = FALSE)
+                    tab[which(is.na(tab))] <- 1/ncol(tab)
+                    tab
+               }
+               
                # Calculating lengths n and d and data types
                n = length(labels)
                d = length(predictors[1,])
@@ -111,7 +117,7 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                # SEM algorithm
                for (i in 1:iter){
 
-                    if (sum(elementwise.all.equal(m,1))==d) {stop("Early stopping rule: all variables discretized in one value")}
+                    # if (sum(elementwise.all.equal(m,1))==d) {stop("Early stopping rule: all variables discretized in one value")}
 
                     data_e = Filter(function(x)(length(unique(x))>1),data.frame(e))
                     data_emap = Filter(function(x)(length(unique(x))>1),data.frame(emap))
@@ -224,15 +230,15 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
 
                     # Calculate current performance and update (if better than previous best) current best model.
                     if ((criterion=='gini')&&(validation==FALSE)) {
-                         criterion_iter[[i]] = normalizedGini(labels[ensemble[[1]]],predict_fastLR(model_reglog,data_logit[ensemble[[1]],]))
+                         criterion_iter[[i]] = normalizedGini(labels[ensemble[[1]]],predictlogisticRegression(data_logit[ensemble[[1]],],model_reglog$coefficients))
                     } else if ((criterion=='gini')&&(validation==TRUE)) {
-                         criterion_iter[[i]] = normalizedGini(labels[ensemble[[2]]],predict_fastLR(model_reglog,data_logit[ensemble[[2]],]))
+                         criterion_iter[[i]] = normalizedGini(labels[ensemble[[2]]],predictlogisticRegression(data_logit[ensemble[[2]],],model_reglog$coefficients))
                     } else if ((criterion=='aic')&&(validation==FALSE)) {
                          criterion_iter[[i]] = 2*model_reglog$loglikelihood-2*length(model_reglog$coefficients)
                     } else if ((criterion=='bic')&&(validation==FALSE)) {
                          criterion_iter[[i]] = 2*model_reglog$loglikelihood-log(length(ensemble[[1]]))*length(model_reglog$coefficients)
                     } else if ((criterion %in% c('aic','bic'))&&(validation==TRUE)) {
-                         criterion_iter[[i]] = sum(log(labels[ensemble[[2]]]*predict_fastLR(model_reglog,data_logit[ensemble[[2]],]) + (1-labels[ensemble[[2]]])*(1-labels[ensemble[[2]]]*predict_fastLR(model_reglog,data_logit[ensemble[[2]],]))))
+                         criterion_iter[[i]] = sum(log(labels[ensemble[[2]]]*predictlogisticRegression(data_logit[ensemble[[2]],],model_reglog$coefficients) + (1-labels[ensemble[[2]]])*(1-labels[ensemble[[2]]]*predictlogisticRegression(data_logit[ensemble[[2]],],model_reglog$coefficients))))
                     } else stop("validation must be boolean!")
 
 
@@ -245,7 +251,7 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
 
                     if (interact==TRUE) {
                          p_delta_transition = abs(delta-p_delta)
-                         pq <- sample(1:d^2,prob=prop.table(t(as.matrix(as.vector(p_delta_transition))),1),size=1)
+                         pq <- sample(1:d^2,prob=prop.table.robust(t(as.matrix(as.vector(p_delta_transition))),1),size=1)
                          delta_new = delta
                          delta_new[pq] = 1-delta_new[pq]
                          if (sum(delta_new==1)>0) {
@@ -345,7 +351,7 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
 
                                    modalites_k_disjonctive = stats::model.matrix(fmla,data=modalites_k)
 
-                                   p = predict_fastLR(logit,modalites_k_disjonctive)
+                                   p = predictlogisticRegression(modalites_k_disjonctive,logit$coefficients)
 
                                    y_p[,which(unlist(lev[[j]][[1]])==k)] <- (labels*p+(1-labels)*(1-p))
                               }
@@ -358,13 +364,13 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                                    }
                               } else {
                                    link[[j]] = table(e[ensemble[[1]],j],predictors[ensemble[[1]],j])
-                                   t = prop.table(t(sapply(predictors[,j],function(row) link[[j]][,row])),1)
+                                   t = prop.table.robust(t(sapply(predictors[,j],function(row) link[[j]][,row])),1)
                               }
 
                               # Updating emap^j
                               emap[,j] <- apply(t,1,function(p) names(which.max(p)))
 
-                              t <- prop.table(t*y_p,1)
+                              t <- prop.table.robust(t*y_p,1)
 
                               # Updating e^j
                               e[,j] <- apply(t,1,function(p) sample(unlist(lev[[j]][[1]]),1,prob = p))
@@ -379,7 +385,7 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                                    ind_diff_train_test <- which(e[ensemble[[2]],j]==setdiff(factor(e[ensemble[[2]],j]),factor(e[ensemble[[1]],j])))
                                    while (!length(ind_diff_train_test)==0) {
                                         t[ind_diff_train_test,e[ensemble[[2]],j][ind_diff_train_test]] <- 0
-                                        t <- prop.table(t,1)
+                                        t <- prop.table.robust(t,1)
                                         e[ensemble[[2]],j][ind_diff_train_test] <- apply(t[ind_diff_train_test,,drop=FALSE],1,function(p) sample(unlist(lev[[j]][[1]]),1,prob = p))
                                         ind_diff_train_test <- which(e[ensemble[[2]],j]==setdiff(factor(e[ensemble[[2]],j]),factor(e[ensemble[[1]],j])))
                                    }
@@ -400,7 +406,7 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                                              t = tryCatch(predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs"), error = function(cond) matrix(c(1-predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="response"),predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="response")),ncol=2,dimnames = list(seq(1:n),c(min(levels(factor(e[ensemble[[1]],j]))),max(levels(factor(e[ensemble[[1]],j])))))))
                                         }
                                         t[ind_diff_train_test,emap[ensemble[[2]],j][ind_diff_train_test]] <- 0
-                                        t <- prop.table(t,1)
+                                        t <- prop.table.robust(t,1)
                                         emap[ensemble[[2]],j][ind_diff_train_test] <- apply(t[ind_diff_train_test,,drop=FALSE],1,function(p) names(which.max(p)))
                                         ind_diff_train_test <- which(emap[ensemble[[2]],j]==setdiff(factor(emap[ensemble[[2]],j]),factor(emap[ensemble[[1]],j])))
                                    }
@@ -416,7 +422,7 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                                    ind_diff_train_test <- which(e[ensemble[[3]],j]==setdiff(factor(e[ensemble[[3]],j]),factor(e[ensemble[[1]],j])))
                                    while (!length(ind_diff_train_test)==0) {
                                         t[ind_diff_train_test,e[ensemble[[3]],j][ind_diff_train_test]] <- 0
-                                        t <- prop.table(t,1)
+                                        t <- prop.table.robust(t,1)
                                         e[ensemble[[3]],j][ind_diff_train_test] <- apply(t[ind_diff_train_test,,drop=FALSE],1,function(p) sample(unlist(lev[[j]][[1]]),1,prob = p))
                                         ind_diff_train_test <- which(e[ensemble[[3]],j]==setdiff(factor(e[ensemble[[3]],j]),factor(e[ensemble[[1]],j])))
                                    }
@@ -437,7 +443,7 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                                              t = tryCatch(predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs"), error = function(cond) matrix(c(1-predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="response"),predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="response")),ncol=2,dimnames = list(seq(1:n),c(min(levels(factor(e[ensemble[[1]],j]))),max(levels(factor(e[ensemble[[1]],j])))))))
                                         }
                                         t[ind_diff_train_test,emap[ensemble[[3]],j][ind_diff_train_test]] <- 0
-                                        t <- prop.table(t,1)
+                                        t <- prop.table.robust(t,1)
                                         emap[ensemble[[3]],j][ind_diff_train_test] <- apply(t[ind_diff_train_test,,drop=FALSE],1,function(p) names(which.max(p)))
                                         ind_diff_train_test <- which(e[ensemble[[3]],j]==setdiff(factor(e[ensemble[[3]],j]),factor(e[ensemble[[1]],j])))
                                    }

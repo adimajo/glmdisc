@@ -33,7 +33,7 @@ methods::setGeneric("predict")
 predict.glmdisc <- function(object, predictors) {
      data_e = Filter(function(x)(length(unique(x))>1),data.frame(discretize_link(object@best.disc[[2]],predictors)))
      data = stats::model.matrix(stats::as.formula(paste("~",paste(colnames(data_e),collapse = "+"))), data = data_e)
-     predict_fastLR(object@best.disc[[1]],data)
+     predictlogisticRegression(data,object@best.disc[[1]]$coefficients)
 }
 
 #' Method for predicting on a new input dataset given a discretization scheme and its associated model of class \code{\link{glmdisc}}.
