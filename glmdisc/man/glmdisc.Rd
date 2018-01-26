@@ -6,7 +6,7 @@
 \usage{
 glmdisc(predictors, labels, interact = TRUE, validation = TRUE,
   test = TRUE, criterion = "gini", iter = 1000, m_start = 20,
-  reg_type = "poly")
+  reg_type = "poly", cores = NULL)
 }
 \arguments{
 \item{predictors}{The matrix array containing the numerical or factor attributes to discretize.}
@@ -26,6 +26,8 @@ glmdisc(predictors, labels, interact = TRUE, validation = TRUE,
 \item{m_start}{The maximum number of resulting categories for each variable wanted (default: 20).}
 
 \item{reg_type}{The model to use between discretized and continuous features (currently, only multinomial logistic regression ('poly') and ordered logistic regression ('polr') are supported ; default: 'poly'). WARNING: 'poly' requires the \code{mnlogit} package, 'polr' requires the \code{MASS} package.}
+
+\item{cores}{Number of cores to use in the parallel loops (defaults to NULL: see the foreach package). Currently not supported on Windows platforms.}
 }
 \description{
 This function discretizes a training set using an SEM-Gibbs based method (see References section).
@@ -54,7 +56,6 @@ discretize(sem_disc,data.frame(x))
 \references{
 Celeux, G., Chauveau, D., Diebolt, J. (1995), On Stochastic Versions of the EM Algorithm. [Research Report] RR-2514, INRIA. 1995. <inria-00074164>
 
-Asad Hasan, Wang Zhiyu and Alireza S. Mahani (2015). mnlogit: Multinomial Logit Model. R package version 1.2.4. \url{https://CRAN.R-project.org/package=mnlogit}
 
 Agresti, A. (2002) \emph{Categorical Data}. Second edition. Wiley.
 }

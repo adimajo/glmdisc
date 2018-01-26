@@ -11,6 +11,7 @@
 #' @param m_start The maximum number of resulting categories for each variable wanted (default: 20).
 #' @param reg_type The model to use between discretized and continuous features (currently, only multinomial logistic regression ('poly') and ordered logistic regression ('polr') are supported ; default: 'poly'). WARNING: 'poly' requires the \code{mnlogit} package, 'polr' requires the \code{MASS} package.
 #' @param interact Boolean : True (default) if interaction detection is wanted (Warning: may be very memory/time-consuming).
+#' @param cores Number of cores to use in the parallel loops (defaults to NULL: see the foreach package). Currently not supported on Windows platforms.
 #' @keywords SEM, Gibbs, discretization
 #' @author Adrien Ehrhardt, Vincent Vandewalle, Christophe Biernacki, Philippe Heinrich.
 #' @seealso \code{\link{glm}}, \code{\link{multinom}}, \code{\link{polr}}
@@ -20,11 +21,12 @@
 #' The ‘‘discretization'' process, i.e. the transformation of \eqn{X} to \eqn{E} is done so as to achieve the best logistic regression model \eqn{p(y|e;\theta)}. It can be interpreted as a special case feature engineering algorithm.
 #' Subsequently, its outputs are: the optimal discretization scheme and the logistic regression model associated with it. We also provide the parameters that were provided to the function and the evolution of the criterion with respect to the algorithm's iterations.
 #' @importFrom stats predict
+#' @importFrom foreach %dopar%
 #' @export
 #' @references
 #' Celeux, G., Chauveau, D., Diebolt, J. (1995), On Stochastic Versions of the EM Algorithm. [Research Report] RR-2514, INRIA. 1995. <inria-00074164>
 #'
-#' Asad Hasan, Wang Zhiyu and Alireza S. Mahani (2015). mnlogit: Multinomial Logit Model. R package version 1.2.4. \url{https://CRAN.R-project.org/package=mnlogit}
+# #' Asad Hasan, Wang Zhiyu and Alireza S. Mahani (2015). mnlogit: Multinomial Logit Model. R package version 1.2.4. \url{https://CRAN.R-project.org/package=mnlogit}
 #'
 #' Agresti, A. (2002) \emph{Categorical Data}. Second edition. Wiley.
 #' @examples
@@ -42,7 +44,7 @@
 #' discretize(sem_disc,data.frame(x))
 
 
-glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,criterion='gini',iter=1000,m_start=20,reg_type='poly') {
+glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,criterion='gini',iter=1000,m_start=20,reg_type='poly',cores=NULL) {
 
      if (criterion %in% c('gini','aic','bic')) {
           if (length(labels)==length(predictors[,1])) {
@@ -114,6 +116,9 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                     }
                }
 
+               
+               doMC::registerDoMC(cores)
+               
                # SEM algorithm
                for (i in 1:iter){
 
@@ -281,7 +286,13 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                          new_logit <- RcppNumerical::fastLR(data_logit_new[ensemble[[1]],],labels[ensemble[[1]]])
                          alpha = exp(2*new_logit$loglikelihood-log(length(ensemble[[1]]))*length(new_logit$coefficients) - (2*model_reglog$loglikelihood-log(length(ensemble[[1]]))*length(model_reglog$coefficients)))*(p_delta_transition[pq])/(1-p_delta_transition[pq])
 
-                         print(alpha)
+                         if (pq %% d==0) {
+                              var_interact = c(pq %% d,d)
+                         } else {
+                              var_interact = c(pq %% d,pq %/% d)
+                         }
+                         
+                         print(paste0("Current interaction being tested is between variables ",var_interact[1]," and ",var_interact[2]," with a probability of acceptance of ",alpha))
                          if (sample(c(TRUE,FALSE),size=1,prob = c(min(alpha,1),1-min(alpha,1)))) {
                               delta <- delta_new
                          }
@@ -304,7 +315,7 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
 
                               # Polytomic or ordered logistic regression
                               if ((reg_type=='poly')&(types_data[j]=="numeric")) {
-                                   link[[j]] = nnet::multinom(e ~ x, data=data.frame(e=e[ensemble[[1]],j],x=predictors[ensemble[[1]],j]), start = link[[j]]$coefficients)
+                                   link[[j]] = nnet::multinom(e ~ x, data=data.frame(e=e[ensemble[[1]],j],x=predictors[ensemble[[1]],j]), start = link[[j]]$coefficients, trace = FALSE, Hess=FALSE, maxit=50)
                               } else if (types_data[j]=="numeric") {
                                    if (exists("link[[j]]$weights")) {
                                         link[[j]] = MASS::polr(e ~ x, data=data.frame(e = factor(as.numeric(ordered(e[ensemble[[1]],j],levels = names(sort(unlist(by(predictors[ensemble[[1]],j],e[ensemble[[1]],j],mean)))))), ordered=T), x = predictors[ensemble[[1]],j]), Hess = FALSE, model = FALSE, weights = link[[j]]$weights)
@@ -319,7 +330,9 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                          # p(y|e^j,e^-j) calculation
                          if ((m[j])>1) {
                               y_p = array(0,c(n,(m[j])))
-                              for (k in as.numeric(unlist(lev[[j]][[1]]))) {
+                              levels_to_sample <- unlist(lev[[j]][[1]])
+                              
+                              y_p <- foreach::foreach(k=1:length(levels_to_sample),.combine=cbind) %dopar% {
                                    modalites_k = data
                                    
                                    if (j>1) {
@@ -328,13 +341,13 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                                         modalites_k[,(2:((m[1])))] = matrix(0,nrow=n,ncol=(m[j])-1)
                                    }
                                    
-                                   if (paste0("X",j,k) %in% colnames(data)) {
-                                        modalites_k[,paste0("X",j,k)] = rep(1,n)
+                                   if (paste0("X",j,as.numeric(levels_to_sample[k])) %in% colnames(data)) {
+                                        modalites_k[,paste0("X",j,as.numeric(levels_to_sample[k]))] = rep(1,n)
                                    }
                                    
                                    p = predictlogisticRegression(modalites_k,logit$coefficients)
 
-                                   y_p[,which(unlist(lev[[j]][[1]])==k)] <- (labels*p+(1-labels)*(1-p))
+                                   (labels*p+(1-labels)*(1-p))
                               }
 
                               # p(e^j|reste) calculation
@@ -354,7 +367,9 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                               t <- prop.table.robust(t*y_p,1)
 
                               # Updating e^j
-                              e[,j] <- apply(t,1,function(p) sample(unlist(lev[[j]][[1]]),1,prob = p))
+                              
+                              
+                              e[,j] <- apply(t,1,function(p) sample(levels_to_sample,1,prob = p,replace = TRUE))
 
                               if (nlevels(as.factor(e[,j]))>1) {
                                    if (nlevels(as.factor(e[,j]))==m[j]) {
@@ -467,6 +482,8 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                          }
                     }
                     lev <- apply(e,2,function(col) list(levels(factor(col))))
+                    
+                    print(paste0("Iteration ",i," ended with a performance of ",criterion," = ", criterion_iter[[i]]))
                }
 
                # Output preparation and calculation
@@ -500,8 +517,7 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
           } else {
                print("labels and predictors must be of same length")
           }
-     }
-     else {
+     } else {
           print("criterion must be gini, aic or bic")
      }
 }
