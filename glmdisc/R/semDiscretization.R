@@ -11,7 +11,6 @@
 #' @param m_start The maximum number of resulting categories for each variable wanted (default: 20).
 #' @param reg_type The model to use between discretized and continuous features (currently, only multinomial logistic regression ('poly') and ordered logistic regression ('polr') are supported ; default: 'poly'). WARNING: 'poly' requires the \code{mnlogit} package, 'polr' requires the \code{MASS} package.
 #' @param interact Boolean : True (default) if interaction detection is wanted (Warning: may be very memory/time-consuming).
-#' @param cores Number of cores to use in the parallel loops (defaults to NULL: see the foreach package). Currently not supported on Windows platforms.
 #' @keywords SEM, Gibbs, discretization
 #' @author Adrien Ehrhardt, Vincent Vandewalle, Christophe Biernacki, Philippe Heinrich.
 #' @seealso \code{\link{glm}}, \code{\link{multinom}}, \code{\link{polr}}
@@ -21,7 +20,6 @@
 #' The ‘‘discretization'' process, i.e. the transformation of \eqn{X} to \eqn{E} is done so as to achieve the best logistic regression model \eqn{p(y|e;\theta)}. It can be interpreted as a special case feature engineering algorithm.
 #' Subsequently, its outputs are: the optimal discretization scheme and the logistic regression model associated with it. We also provide the parameters that were provided to the function and the evolution of the criterion with respect to the algorithm's iterations.
 #' @importFrom stats predict
-#' @importFrom foreach %dopar%
 #' @export
 #' @references
 #' Celeux, G., Chauveau, D., Diebolt, J. (1995), On Stochastic Versions of the EM Algorithm. [Research Report] RR-2514, INRIA. 1995. <inria-00074164>
@@ -44,7 +42,7 @@
 #' discretize(sem_disc,data.frame(x))
 
 
-glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,criterion='gini',iter=1000,m_start=20,reg_type='poly',cores=NULL) {
+glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,criterion='gini',iter=1000,m_start=20,reg_type='poly') {
 
      if (criterion %in% c('gini','aic','bic')) {
           if (length(labels)==length(predictors[,1])) {
@@ -116,9 +114,6 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                     }
                }
 
-               
-               doMC::registerDoMC(cores)
-               
                # SEM algorithm
                for (i in 1:iter){
 
@@ -332,7 +327,7 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                               y_p = array(0,c(n,(m[j])))
                               levels_to_sample <- unlist(lev[[j]][[1]])
                               
-                              y_p <- foreach::foreach(k=1:length(levels_to_sample),.combine=cbind) %dopar% {
+                              for (k in 1:length(levels_to_sample)) {
                                    modalites_k = data
                                    
                                    if (j>1) {
@@ -347,7 +342,7 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                                    
                                    p = predictlogisticRegression(modalites_k,logit$coefficients)
 
-                                   (labels*p+(1-labels)*(1-p))
+                                   y_p[,k] <- (labels*p+(1-labels)*(1-p))
                               }
 
                               # p(e^j|reste) calculation

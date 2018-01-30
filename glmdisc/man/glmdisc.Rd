@@ -26,8 +26,6 @@ glmdisc(predictors, labels, interact = TRUE, validation = TRUE,
 \item{m_start}{The maximum number of resulting categories for each variable wanted (default: 20).}
 
 \item{reg_type}{The model to use between discretized and continuous features (currently, only multinomial logistic regression ('poly') and ordered logistic regression ('polr') are supported ; default: 'poly'). WARNING: 'poly' requires the \code{mnlogit} package, 'polr' requires the \code{MASS} package.}
-
-\item{cores}{Number of cores to use in the parallel loops (defaults to NULL: see the foreach package). Currently not supported on Windows platforms.}
 }
 \description{
 This function discretizes a training set using an SEM-Gibbs based method (see References section).
