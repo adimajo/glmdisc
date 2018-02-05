@@ -27,7 +27,7 @@ discretize_link <- function(link,df) {
      d = ncol(df)
      types_data <- sapply(df[1,],class)
      if (sum(!(types_data %in% c("numeric","factor")))>0) {
-          stop("Unsupported data types. Columns of predictors must be numeric or factor.")
+          stop(simpleError("Unsupported data types. Columns of predictors must be numeric or factor."))
      }
      emap = array(0,c(n,d))
 

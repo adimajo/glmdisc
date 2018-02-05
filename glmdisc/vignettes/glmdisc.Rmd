@@ -205,7 +205,45 @@ As a consequence, we will draw random candidates $e$ approximately at the mode o
 
 To update, at each random draw, the parameters $\theta$ and $\alpha$ and propose a new discretization $e$, we use the following equation:
 $$p(e^j|x^j,y,e^{\{-j\}}) \propto p_\theta(y|e) p_{\alpha_j}(e^j|x^j)$$
-Note that we draw $e^j$ knowing all other variables, especially $e^{-j}$ so that we introduced a Gibbs sampler (see References section).
+Note that we draw $e^j$ knowing all other variables, especially $e^{-j}$: this is called a Gibbs sampler (see References section). It is an MCMC method which target distribution is $p(e|x,y)$.
+
+# Interaction discovery
+
+## What do "interactions" mean?
+
+In a continuous setting, if there is an interaction between features $k > l$, then the logistic regression model becomes $\text{logit}[p_\theta(1|x)] = \theta_0 + \sum_{j=1}^d \theta_j x^j + \theta_{kl} x^k x^l$. It amounts to adding some flexibility to the model by introducing a non-linearity, as was done with discretization.
+
+## Our proposal
+
+We consider that features interacting in the logistic regression model are unknown and denote by $\Delta$ the random matrix and $\delta$ its observation with $\delta_{kl} = 0$ for $k \leq l$, $\delta_{kl} = 1$ for $k > l$ if features $k$ and $l$ interact, $\delta_{kl} = 0$ otherwise.
+
+Introducing $\Delta$ as a latent variable as we have done for discretization, we get $p(\delta|x,y) \propto p_\theta(y|x,\delta) = \text{logit}^{-1} [\theta_0 + \sum_{j=1}^d \theta_j x^j + \sum_{k>l} \delta_{kl} \theta_{kl} x^k x^l]$.
+
+Again, a simple strategy would consist in estimating $\hat{\theta}_\delta$ for every value of $\Delta$ i.e. $2^{\frac{d(d-1)}{2}}$ models and compare their AIC or BIC values.
+
+As a consequence of this untractable approach, we propose an MCMC procedure to draw $\delta$ from $p(\delta|x,y)$.
+
+## An MCMC estimation procedure
+
+### The Metropolis-Hastings algorithm
+
+The Metropolis-Hastings algorithm (see References section) is an MCMC procedure which relies on:
+1. A proposal distribution $q_{kl}$, the conditional probability of proposing to change the current state of $\delta_{kl}$.
+2. The acceptance distribution $a_{kl}$, the conditional probability to accept changing the current state of $\delta_{kl}$.
+
+The transition probability is the product of these terms: $p_{kl} = q_{kl}a_{kl}$.
+
+### Proposal
+
+We must choose a proposal distribution $q_{kl}$. We suspect that a good hint for knowing if there effectively is an interaction between features $k$ and $l$ is to compare the bivariate logistic regression model with $x^k$ and $x^l$ to the logistic regression model containing $x^k$, $x^l$ and their interaction term. Comparison can be done via the BIC criterion for example: $\text{hint}_{kl} \propto \exp(-\text{BIC}(\text{with interaction}) + \text{BIC}(\text{without interaction}))$.
+
+Given the current state of $\Delta$ denoted by $\delta^{\text{current}}$, we want to propose changing the $\delta_{kl}$ entry if it is far from our "hint", i.e.: $q_{kl}=|\delta^{\text{current}}_{kl} - \text{hint}_{kl}|$.
+
+We draw $kl$ from $q_{kl}$ and subsequently obtain $\delta^{\text{new}}$ which $kl$ entry is $1-\delta^{\text{current}}_{kl}$.
+
+This gives $a_{kl} = min(1,\exp(-\text{BIC}(\delta^{\text{new}})+\text{BIC}(\delta^{\text{current}}))\frac{q_{kl}}{1-q_{kl}})$.
+
+This approach would work as a "stand-alone" model selection tool but it can also be included in the discretization algorithm described in the previous section. That was developed in the `glmdisc` package.
 
 # The `glmdisc` package
 
@@ -258,6 +296,65 @@ discretization <- glmdisc(x,y,iter=50,m_start=5,test=FALSE,validation=FALSE,crit
 ```{r, echo=FALSE,warning=FALSE, message=FALSE, results='hide',eval=TRUE}
 library(glmdisc)
 discretization <- glmdisc(x,y,iter=50,m_start=5,test=FALSE,validation=FALSE,criterion="aic",interact=FALSE)
+```
+
+For now, we simulated a discrete model without interactions. We can verify that our proposed approach for interaction discovery selects a model without interactions.
+
+```{r, echo=TRUE,warning=FALSE, message=FALSE, results='hide',eval=TRUE}
+all_formula <- list()
+
+for (l in 1:10) {
+     set.seed(l)
+     x = matrix(runif(300), nrow = 100, ncol = 3)
+     cuts = seq(0,1,length.out= 4)
+     xd = apply(x,2, function(col) as.numeric(cut(col,cuts)))
+     theta = t(matrix(c(0,0,0,2,2,2,-2,-2,-2),ncol=3,nrow=3))
+     log_odd = rowSums(t(sapply(seq_along(xd[,1]), function(row_id) sapply(seq_along(xd[row_id,]),
+     function(element) theta[xd[row_id,element],element]))))
+     y = rbinom(100,1,1/(1+exp(-log_odd)))
+     
+     discretization <- glmdisc(x,y,iter=50,m_start=5,test=FALSE,validation=FALSE,criterion="aic",interact=TRUE)
+     all_formula[[l]] <- discretization@best.disc$formulaOfBbestestLogisticRegression
+}
+
+barplot(table(grepl(":",all_formula)),names.arg=c("No interaction","One interaction"))
+
+```
+
+Conversely, we can simulate a discrete model with an interaction and report how many times the proposed algorithm detected the right interaction.
+
+```{r, echo=TRUE,warning=FALSE, message=FALSE,results='hide',eval=FALSE}
+# Not Run
+all_formula <- list()
+
+for (l in 1:10) {
+     set.seed(100+l)
+     x = matrix(runif(3000), nrow = 1000, ncol = 3)
+     cuts = seq(0,1,length.out= 4)
+     xd = apply(x,2, function(col) as.numeric(cut(col,cuts)))
+     theta = t(matrix(c(0,0,0,2,2,2,-2,-2,-2),ncol=3,nrow=3))
+     log_odd = matrix(0,1000,1)
+       for (i in 1:1000) {
+         log_odd[i] = 2*(xd[i,1]==1)+
+           (-2)*(xd[i,1]==2)+
+           2*(xd[i,2]==1)*(xd[i,2]==1)+
+           4*(xd[i,2]==2)*(xd[i,2]==2)+
+           (-2)*(xd[i,2]==1)*(xd[i,2]==2)+
+           (-4)*(xd[i,2]==2)*(xd[i,2]==1)+
+           1*(xd[i,2]==3)*(xd[i,2]==1)+
+           (-1)*(xd[i,2]==1)*(xd[i,2]==3)+
+           3*(xd[i,2]==3)*(xd[i,2]==2)+
+           (-1)*(xd[i,2]==2)*(xd[i,2]==3)
+       }
+     
+     y = rbinom(1000,1,1/(1+exp(-log_odd)))
+     
+     discretization <- glmdisc(x,y,iter=300,m_start=5,test=FALSE,validation=FALSE,criterion="aic",interact=TRUE)
+     all_formula[[l]] <- discretization@best.disc$formulaOfBbestestLogisticRegression
+}
+
+barplot(table(grepl(":",all_formula)),names.arg=c("No interaction","One interaction"))
+
 ```
 
 ### The `parameters` slot
@@ -331,10 +428,10 @@ plot(discretization@cont.data[,1],discretization@disc.data[,1])
 
 A few classical R methods have been adapted to the `glmdisc` S4 object.
 
-The `plot` function is the standard `plot.glm` method applied to the best discretization scheme found by the `glmdisc` function:
-```{r, echo=TRUE}
-# plot(discretization)
-```
+<!-- The `plot` function is the standard `plot.glm` method applied to the best discretization scheme found by the `glmdisc` function: -->
+<!-- ```{r, echo=TRUE} -->
+<!-- # plot(discretization) -->
+<!-- ``` -->
 
 The `print` function is the standard `print.summary.glm` method applied to the best discretization scheme found by the `glmdisc` function:
 ```{r, echo=TRUE}
@@ -375,11 +472,11 @@ The `discretization` package available from CRAN implements some existing superv
 
 To compare the result of such methods to the one we propose, the package `discretization` will be enhanced to support missing values (by putting them in a single class for example) and quantitative features (through a Chi2 grouping method for example).
 
-## Integration of interaction discovery
+<!-- ## Integration of interaction discovery -->
 
-Very often, predictive features $X$ "interact" with each other with respect to the response feature. This is classical in the context of Credit Scoring or biostatistics (only the simultaneous presence of several features - genes, SNP, etc. is predictive of a disease).
+<!-- Very often, predictive features $X$ "interact" with each other with respect to the response feature. This is classical in the context of Credit Scoring or biostatistics (only the simultaneous presence of several features - genes, SNP, etc. is predictive of a disease). -->
 
-With the growing number of potential predictors and the time required to manually analyze if an interaction should be added or not, there is a strong need for automatic procedures that screen potential interaction variables. This will be the subject of future work.
+<!-- With the growing number of potential predictors and the time required to manually analyze if an interaction should be added or not, there is a strong need for automatic procedures that screen potential interaction variables. This will be the subject of future work. -->
 
 ## Possibility of changing model assumptions
 
@@ -391,11 +488,11 @@ In the third section, we described two fundamental modelling hypotheses that wer
 
 These hypotheses are "building blocks" that could be changed at the modeller's will: discretization could optimize other models.
 
-## Make it faster
+<!-- ## Make it faster -->
 
-The current implementation is heavily based on R code. A lot of logistic regression are fit, either through `multinom`, `polr` or `glm` calls, which can probably be sped up by an intelligent initialization of their parameters and a limitation or their number of iterations.
+<!-- The current implementation is heavily based on R code. A lot of logistic regression are fit, either through `multinom`, `polr` or `glm` calls, which can probably be sped up by an intelligent initialization of their parameters and a limitation or their number of iterations. -->
 
-We also loop of qualitative features and their values, which is known to be slow in R. A C++ version of a Gibbs sampler (which is used here) described by Hadley Wickham in [Advanced R](http://adv-r.had.co.nz/Rcpp.html#rcpp-case-studies) shows a potential speed up by 40.
+<!-- We also loop of qualitative features and their values, which is known to be slow in R. A C++ version of a Gibbs sampler (which is used here) described by Hadley Wickham in [Advanced R](http://adv-r.had.co.nz/Rcpp.html#rcpp-case-studies) shows a potential speed up by 40. -->
 
 # References
 
@@ -404,3 +501,7 @@ Celeux, G., Chauveau, D., Diebolt, J. (1995), On Stochastic Versions of the EM A
 Agresti, A. (2002) **Categorical Data**. Second edition. Wiley.
 
 Ramírez‐Gallego, S., García, S., Mouriño‐Talín, H., Martínez‐Rego, D., Bolón‐Canedo, V., Alonso‐Betanzos, A. and Herrera, F. (2016). Data discretization: taxonomy and big data challenge. *Wiley Interdisciplinary Reviews: Data Mining and Knowledge Discovery*, 6(1), 5-21.
+
+Geman, S., & Geman, D. (1987). Stochastic relaxation, Gibbs distributions, and the Bayesian restoration of images. In *Readings in Computer Vision* (pp. 564-584).
+
+Hastings, W. K. (1970). Monte Carlo sampling methods using Markov chains and their applications. *Biometrika*, 57(1), 97-109.
