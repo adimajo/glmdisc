@@ -49,12 +49,6 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
      if (criterion %in% c('gini','aic','bic')) {
           if (length(labels)==length(predictors[,1])) {
 
-               prop.table.robust <- function (x, margin = NULL) {
-                    tab <- sweep(x, margin, margin.table(x, margin), "/", check.margin = FALSE)
-                    tab[which(is.na(tab))] <- 1/ncol(tab)
-                    tab
-               }
-               
                # Calculating lengths n and d and data types
                n = length(labels)
                d = length(predictors[1,])
@@ -419,14 +413,24 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                                    while (!length(ind_diff_train_test)==0) {
                                         if (reg_type=='poly') {
                                              if (!requireNamespace("nnet", quietly = TRUE)) {
-                                                  t = predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs")
+                                                  if ((types_data[j]=="numeric")) {
+                                                       t = predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs")
+                                                  } else {
+                                                       t = prop.table.robust(t(sapply(predictors[,j],function(row) link[[j]][,row])),1)
+                                                  }
                                              } else {
-                                                  # long_dataset <- data.frame(e = as.vector(sapply(e[,j],function(var) (lev_j[seq(1:as.numeric(m[j]))]==var))),x = as.vector(sapply(predictors[,j], function(var) rep(var,as.numeric(m[j])))), names = as.character(as.vector(rep(lev_j[seq(1:as.numeric(m[j]))],n))))
-                                                  t = predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs")
-                                                  # t[which(is.nan(t),arr.ind = TRUE)[,"row"],which(is.nan(t),arr.ind = TRUE)[,"col"]] = 1
+                                                  if ((types_data[j]=="numeric")) {
+                                                       t = predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs")
+                                                  } else {
+                                                       t = prop.table.robust(t(sapply(predictors[,j],function(row) link[[j]][,row])),1)
+                                                  }
                                              }
                                         } else {
-                                             t = tryCatch(predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs"), error = function(cond) matrix(c(1-predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="response"),predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="response")),ncol=2,dimnames = list(seq(1:n),c(min(levels(factor(e[ensemble[[1]],j]))),max(levels(factor(e[ensemble[[1]],j])))))))
+                                             if ((types_data[j]=="numeric")) {
+                                                  t = tryCatch(predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs"), error = function(cond) matrix(c(1-predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="response"),predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="response")),ncol=2,dimnames = list(seq(1:n),c(min(levels(factor(e[ensemble[[1]],j]))),max(levels(factor(e[ensemble[[1]],j])))))))
+                                             } else {
+                                                  t = prop.table.robust(t(sapply(predictors[,j],function(row) link[[j]][,row])),1)
+                                             }
                                         }
                                         t[ind_diff_train_test,emap[ensemble[[2]],j][ind_diff_train_test]] <- 0
                                         t <- prop.table.robust(t,1)
@@ -456,19 +460,29 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                                    while (!length(ind_diff_train_test)==0) {
                                         if (reg_type=='poly') {
                                              if (!requireNamespace("nnet", quietly = TRUE)) {
-                                                  t = predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs")
+                                                  if ((types_data[j]=="numeric")) {
+                                                       t = predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs")
+                                                  } else {
+                                                       t = prop.table.robust(t(sapply(predictors[,j],function(row) link[[j]][,row])),1)
+                                                  }
                                              } else {
-                                                  # long_dataset <- data.frame(e = as.vector(sapply(e[,j],function(var) (lev_j[seq(1:as.numeric(m[j]))]==var))),x = as.vector(sapply(predictors[,j], function(var) rep(var,as.numeric(m[j])))), names = as.character(as.vector(rep(lev_j[seq(1:as.numeric(m[j]))],n))))
-                                                  t = predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs")
-                                                  # t[which(is.nan(t),arr.ind = TRUE)[,"row"],which(is.nan(t),arr.ind = TRUE)[,"col"]] = 1
+                                                  if ((types_data[j]=="numeric")) {
+                                                       t = predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs")
+                                                  } else {
+                                                       t = prop.table.robust(t(sapply(predictors[,j],function(row) link[[j]][,row])),1)
+                                                  }
                                              }
                                         } else {
-                                             t = tryCatch(predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs"), error = function(cond) matrix(c(1-predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="response"),predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="response")),ncol=2,dimnames = list(seq(1:n),c(min(levels(factor(e[ensemble[[1]],j]))),max(levels(factor(e[ensemble[[1]],j])))))))
+                                             if ((types_data[j]=="numeric")) {
+                                                  t = tryCatch(predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs"), error = function(cond) matrix(c(1-predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="response"),predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="response")),ncol=2,dimnames = list(seq(1:n),c(min(levels(factor(e[ensemble[[1]],j]))),max(levels(factor(e[ensemble[[1]],j])))))))
+                                             } else {
+                                                  t = prop.table.robust(t(sapply(predictors[,j],function(row) link[[j]][,row])),1)
+                                             }
                                         }
-                                        t[ind_diff_train_test,emap[ensemble[[3]],j][ind_diff_train_test]] <- 0
+                                        t[ind_diff_train_test,emap[ensemble[[2]],j][ind_diff_train_test]] <- 0
                                         t <- prop.table.robust(t,1)
-                                        emap[ensemble[[3]],j][ind_diff_train_test] <- apply(t[ind_diff_train_test,,drop=FALSE],1,function(p) names(which.max(p)))
-                                        ind_diff_train_test <- which(e[ensemble[[3]],j]==setdiff(factor(e[ensemble[[3]],j]),factor(e[ensemble[[1]],j])))
+                                        emap[ensemble[[2]],j][ind_diff_train_test] <- apply(t[ind_diff_train_test,,drop=FALSE],1,function(p) names(which.max(p)))
+                                        ind_diff_train_test <- which(emap[ensemble[[2]],j]==setdiff(factor(emap[ensemble[[2]],j]),factor(emap[ensemble[[1]],j])))
                                    }
                               }
 
@@ -487,17 +501,17 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                best.disc = list(bestLogisticRegression = best_reglog,bestLinkFunction = best_link,formulaOfBbestestLogisticRegression = best_formula)
                
                if (validation) {
-                    if (criterion=="gini") {
+                    # if (criterion=="gini") {
                          if (test) performance = normalizedGini(labels[ensemble[[3]]],predictlogisticRegression(stats::model.matrix(best.disc[[3]],data=data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[3]],]))),best.disc[[1]]$coefficients)) else performance = normalizedGini(labels[ensemble[[2]]],predictlogisticRegression(stats::model.matrix(best.disc[[3]],data=data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[2]],]))),best.disc[[1]]$coefficients))
-                    } else {
-                         if (test) performance = -2*sum(labels[ensemble[[2]]]*predictlogisticRegression(stats::model.matrix(best.disc[[3]],data=data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[2]],]))),best.disc[[1]]$coefficients)+(1-labels[ensemble[[2]]])*(1-predictlogisticRegression(stats::model.matrix(best.disc[[3]],data=data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[2]],]))),best.disc[[1]]$coefficients))) else performance = criterion_iter[[current_best]]
-                    }
+                    # } else {
+                         # if (test) performance = -2*sum(labels[ensemble[[2]]]*predictlogisticRegression(stats::model.matrix(best.disc[[3]],data=data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[2]],]))),best.disc[[1]]$coefficients)+(1-labels[ensemble[[2]]])*(1-predictlogisticRegression(stats::model.matrix(best.disc[[3]],data=data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[2]],]))),best.disc[[1]]$coefficients))) else performance = criterion_iter[[current_best]]
+                    # }
                } else {
-                    if (criterion=="gini") {
+                    # if (criterion=="gini") {
                          if (test) performance = normalizedGini(labels[ensemble[[2]]],predictlogisticRegression(stats::model.matrix(best.disc[[3]],data=data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[2]],]))),best.disc[[1]]$coefficients)) else performance = normalizedGini(labels[ensemble[[1]]],best.disc[[1]]$fitted.values)
-                    } else {
-                         if (test) performance = -2*rowSums(labels[ensemble[[2]]]*predictlogisticRegression(stats::model.matrix(best.disc[[3]],data=discretize_link(best.disc[[2]],predictors[ensemble[[2]],])),best.disc[[1]]$coefficients)+(1-labels[ensemble[[2]]])*(1-predictlogisticRegression(stats::model.matrix(best.disc[[3]],data=discretize_link(best.disc[[2]],predictors[ensemble[[2]],])),best.disc[[1]]$coefficients))) else performance = criterion_iter[[current_best]]
-                    }
+                    # } else {
+                         # if (test) performance = -2*rowSums(labels[ensemble[[2]]]*predictlogisticRegression(stats::model.matrix(best.disc[[3]],data=data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[2]],]))),best.disc[[1]]$coefficients)+(1-labels[ensemble[[2]]])*(1-predictlogisticRegression(stats::model.matrix(best.disc[[3]],data=data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[2]],]))),best.disc[[1]]$coefficients))) else performance = criterion_iter[[current_best]]
+                    # }
                }
                
                

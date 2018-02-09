@@ -40,9 +40,9 @@ discretize_link <- function(link,df) {
                          colnames(t) <- c("1","2")
                     }
                } else {
-                    t = prop.table(t(sapply(df[,j],function(row) link[[j]][,row])),1)
+                    t = prop.table.robust(t(sapply(df[,j],function(row) link[[j]][,row])),1)
                }
-               emap[,j] <- apply(t,1,function(p) names(which.max(p)))
+               emap[,j] <- unlist(apply(t,1,function(p) names(which.max(p))))
           }
      } else if (types_data=="numeric") {
           # m = length(link$coefficients)/2 + 1
