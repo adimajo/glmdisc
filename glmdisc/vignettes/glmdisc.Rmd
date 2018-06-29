@@ -317,14 +317,14 @@ for (l in 1:10) {
      all_formula[[l]] <- discretization@best.disc$formulaOfBbestestLogisticRegression
 }
 
-barplot(table(grepl(":",all_formula)),names.arg=c("No interaction","One interaction"))
+#barplot(table(grepl(":",all_formula)),names.arg=c("No interaction","One interaction"),xlim = 2)
 
 ```
 
 Conversely, we can simulate a discrete model with an interaction and report how many times the proposed algorithm detected the right interaction.
 
-```{r, echo=TRUE,warning=FALSE, message=FALSE,results='hide',eval=FALSE}
-# Not Run
+```{r, echo=TRUE,warning=FALSE, message=FALSE, results='hide'}
+
 all_formula <- list()
 
 for (l in 1:10) {
@@ -335,25 +335,25 @@ for (l in 1:10) {
      theta = t(matrix(c(0,0,0,2,2,2,-2,-2,-2),ncol=3,nrow=3))
      log_odd = matrix(0,1000,1)
        for (i in 1:1000) {
-         log_odd[i] = 2*(xd[i,1]==1)+
-           (-2)*(xd[i,1]==2)+
-           2*(xd[i,2]==1)*(xd[i,2]==1)+
-           4*(xd[i,2]==2)*(xd[i,2]==2)+
-           (-2)*(xd[i,2]==1)*(xd[i,2]==2)+
-           (-4)*(xd[i,2]==2)*(xd[i,2]==1)+
-           1*(xd[i,2]==3)*(xd[i,2]==1)+
-           (-1)*(xd[i,2]==1)*(xd[i,2]==3)+
-           3*(xd[i,2]==3)*(xd[i,2]==2)+
-           (-1)*(xd[i,2]==2)*(xd[i,2]==3)
+          log_odd[i] = 2*(xd[i,1]==1)+
+               (-2)*(xd[i,1]==2)+
+               2*(xd[i,1]==1)*(xd[i,2]==1)+
+               4*(xd[i,1]==2)*(xd[i,2]==2)+
+               (-2)*(xd[i,2]==1)*(xd[i,3]==2)+
+               (-4)*(xd[i,2]==2)*(xd[i,3]==1)+
+               1*(xd[i,2]==3)*(xd[i,3]==1)+
+               (-1)*(xd[i,1]==1)*(xd[i,3]==3)+
+               3*(xd[i,1]==3)*(xd[i,3]==2)+
+               (-1)*(xd[i,1]==2)*(xd[i,3]==3)
        }
      
      y = rbinom(1000,1,1/(1+exp(-log_odd)))
      
-     discretization <- glmdisc(x,y,iter=300,m_start=5,test=FALSE,validation=FALSE,criterion="aic",interact=TRUE)
+     discretization <- glmdisc(x,y,iter=50,m_start=5,test=FALSE,validation=FALSE,criterion="aic",interact=TRUE)
      all_formula[[l]] <- discretization@best.disc$formulaOfBbestestLogisticRegression
 }
 
-barplot(table(grepl(":",all_formula)),names.arg=c("No interaction","One interaction"))
+#barplot(table(grepl(":",all_formula)),names.arg=c("No interaction","One interaction"),xlim = 2)
 
 ```
 
@@ -457,7 +457,7 @@ knitr::kable(head(x_new))
 
 The `discretize` method allows the user to predict the response of a new "raw" input set by first discretizing it using the previously described `discretize` method and a previously trained `glmdisc` object. It then predicts using the standard `predict.glm` method and the best discretization scheme found by the `glmdisc` function.
 ```{r, echo=TRUE}
-pred_new <- predict(discretization,x)
+pred_new <- predict(discretization,data.frame(x))
 ```
 
 ```{r, echo=FALSE, warning=FALSE}
@@ -481,10 +481,14 @@ To compare the result of such methods to the one we propose, the package `discre
 ## Possibility of changing model assumptions
 
 In the third section, we described two fundamental modelling hypotheses that were made:
->- The real probability density function $p(Y|X)$ can be approximated by a logistic regression $p_\theta(Y|E)$ on the discretized data $E$.
->- The nature of the relationship of $E^j$ to $X^j$ is:
->- A polytomous logistic regression if $X^j$ is continuous;
->- A contengency table if $X^j$ is qualitative.
+
+* The real probability density function $p(Y|X)$ can be approximated by a logistic regression $p_\theta(Y|E)$ on the discretized data $E$.
+
+* The nature of the relationship of $E^j$ to $X^j$ is:
+
++ A polytomous logistic regression if $X^j$ is continuous;
+
++ A contengency table if $X^j$ is qualitative.
 
 These hypotheses are "building blocks" that could be changed at the modeller's will: discretization could optimize other models.
 

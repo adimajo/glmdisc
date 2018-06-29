@@ -22,6 +22,7 @@
 #' The ‘‘discretization'' process, i.e. the transformation of \eqn{X} to \eqn{E} is done so as to achieve the best logistic regression model \eqn{p(y|e;\theta)}. It can be interpreted as a special case feature engineering algorithm.
 #' Subsequently, its outputs are: the optimal discretization scheme and the logistic regression model associated with it. We also provide the parameters that were provided to the function and the evolution of the criterion with respect to the algorithm's iterations.
 #' @importFrom stats predict
+#' @importFrom graphics plot
 #' @export
 #' @references
 #' Celeux, G., Chauveau, D., Diebolt, J. (1995), On Stochastic Versions of the EM Algorithm. [Research Report] RR-2514, INRIA. 1995. <inria-00074164>
@@ -49,6 +50,9 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
      if (criterion %in% c('gini','aic','bic')) {
           if (length(labels)==length(predictors[,1])) {
 
+               
+               noms_colonnes = colnames(predictors)
+               
                # Calculating lengths n and d and data types
                n = length(labels)
                d = length(predictors[1,])
@@ -278,9 +282,9 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                          alpha = exp(2*new_logit$loglikelihood-log(length(ensemble[[1]]))*length(new_logit$coefficients) - (2*model_reglog$loglikelihood-log(length(ensemble[[1]]))*length(model_reglog$coefficients)))*(p_delta_transition[pq])/(1-p_delta_transition[pq])
 
                          if (pq %% d==0) {
-                              var_interact = c(pq %% d,d)
+                              var_interact = c(noms_colonnes[pq %/% d],noms_colonnes[d])
                          } else {
-                              var_interact = c(pq %% d,pq %/% d)
+                              var_interact = c(noms_colonnes[pq %/% d+1],noms_colonnes[pq %% d])
                          }
                          
                          message("Current interaction being tested is between variables ",var_interact[1]," and ",var_interact[2]," with a probability of acceptance of ",alpha)
@@ -498,7 +502,9 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                }
 
                # Output preparation and calculation
-               best.disc = list(bestLogisticRegression = best_reglog,bestLinkFunction = best_link,formulaOfBbestestLogisticRegression = best_formula)
+               
+               ## 1st returned object
+               best.disc = list(bestLogisticRegression = best_reglog,bestLinkFunction = best_link,formulaOfBestLogisticRegression = best_formula)
                
                if (validation) {
                     # if (criterion=="gini") {
@@ -514,17 +520,42 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                     # }
                }
                
+               ## Good column names
+               
+               if (!is.null(noms_colonnes)) {
+                    for (j in (length(noms_colonnes):1)) {
+                         best.disc$formulaOfBestLogisticRegression = as.formula(sub(paste0("X",j),noms_colonnes[j],best.disc$formulaOfBestLogisticRegression))
+                    }
+               }
                
                if ((test)&(validation)) {
-                    return(methods::new(Class = "glmdisc", parameters = list(test = test,validation = validation,criterion = criterion,iter = iter,m_start = m_start,reg_type = reg_type), best.disc = best.disc, performance = list(performance = performance,criterionEvolution = criterion_iter), disc.data = data.frame(cbind(discretize_link(best.disc[[2]],predictors[ensemble[[3]],])),labels = labels[ensemble[[3]]]), cont.data = data.frame(cbind(predictors[ensemble[[3]],]),labels = labels[ensemble[[3]]])))
+                     disc.data = data.frame(cbind(discretize_link(best.disc[[2]],predictors[ensemble[[3]],])),labels = labels[ensemble[[3]]])
+                     
+                     if (!is.null(colnames(predictors))) {
+                         colnames(disc.data) = c(colnames(predictors),"labels")
+                     }
+                     
+                     return(methods::new(Class = "glmdisc", parameters = list(test = test,validation = validation,criterion = criterion,iter = iter,m_start = m_start,reg_type = reg_type, types_data = types_data), best.disc = best.disc, performance = list(performance = performance,criterionEvolution = criterion_iter), disc.data = disc.data, cont.data = data.frame(cbind(predictors[ensemble[[3]],]),labels = labels[ensemble[[3]]])))
                } else if (validation) {
-                    return(methods::new(Class = "glmdisc", parameters = list(test = test,validation = validation,criterion = criterion,iter = iter,m_start = m_start,reg_type = reg_type), best.disc = best.disc, performance = list(performance = performance,criterionEvolution = criterion_iter), disc.data = data.frame(cbind(discretize_link(best.disc[[2]],predictors[ensemble[[2]],])),labels = labels[ensemble[[2]]]), cont.data = data.frame(cbind(predictors[ensemble[[2]],]),labels = labels[ensemble[[2]]])))
+                    disc.data = data.frame(cbind(discretize_link(best.disc[[2]],predictors[ensemble[[2]],])),labels = labels[ensemble[[2]]])
+                    if (!is.null(colnames(predictors))) {
+                         colnames(disc.data) = c(colnames(predictors),"labels")
+                    }
+                    return(methods::new(Class = "glmdisc", parameters = list(test = test,validation = validation,criterion = criterion,iter = iter,m_start = m_start,reg_type = reg_type, types_data = types_data), best.disc = best.disc, performance = list(performance = performance,criterionEvolution = criterion_iter), disc.data = disc.data, cont.data = data.frame(cbind(predictors[ensemble[[2]],]),labels = labels[ensemble[[2]]])))
                } else if (test) {
-                    return(methods::new(Class = "glmdisc", parameters = list(test = test,validation = validation,criterion = criterion,iter = iter,m_start = m_start,reg_type = reg_type), best.disc = best.disc, performance = list(performance = performance,criterionEvolution = criterion_iter), disc.data = data.frame(cbind(discretize_link(best.disc[[2]],predictors[ensemble[[2]],])),labels = labels[ensemble[[2]]]), cont.data = data.frame(cbind(predictors[ensemble[[2]],]),labels = labels[ensemble[[2]]])))
+                    disc.data = data.frame(cbind(discretize_link(best.disc[[2]],predictors[ensemble[[2]],])),labels = labels[ensemble[[2]]])
+                    if (!is.null(colnames(predictors))) {
+                         colnames(disc.data) = c(colnames(predictors),"labels")
+                    }
+                    return(methods::new(Class = "glmdisc", parameters = list(test = test,validation = validation,criterion = criterion,iter = iter,m_start = m_start,reg_type = reg_type, types_data = types_data), best.disc = best.disc, performance = list(performance = performance,criterionEvolution = criterion_iter), disc.data = disc.data, cont.data = data.frame(cbind(predictors[ensemble[[2]],]),labels = labels[ensemble[[2]]])))
                } else {
-                    return(methods::new(Class = "glmdisc", parameters = list(test = test,validation = validation,criterion = criterion,iter = iter,m_start = m_start,reg_type = reg_type), best.disc = best.disc, performance = list(performance = performance,criterionEvolution = criterion_iter), disc.data = data.frame(cbind(discretize_link(best.disc[[2]],predictors[ensemble[[1]],])),labels = labels[ensemble[[1]]]), cont.data = data.frame(cbind(predictors[ensemble[[1]],]),labels = labels[ensemble[[1]]])))
+                    disc.data = data.frame(cbind(discretize_link(best.disc[[2]],predictors[ensemble[[1]],])),labels = labels[ensemble[[1]]])
+                    if (!is.null(colnames(predictors))) {
+                         colnames(disc.data) = c(colnames(predictors),"labels")
+                    }
+                    return(methods::new(Class = "glmdisc", parameters = list(test = test,validation = validation,criterion = criterion,iter = iter,m_start = m_start,reg_type = reg_type, types_data = types_data), best.disc = best.disc, performance = list(performance = performance,criterionEvolution = criterion_iter), disc.data = disc.data, cont.data = data.frame(cbind(predictors[ensemble[[1]],]),labels = labels[ensemble[[1]]])))
                }
-          
+               
           } else {
                stop(simpleError("labels and predictors must be of same length"))
           }
