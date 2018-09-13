@@ -2,6 +2,7 @@
 #'
 #' This function discretizes a training set using an SEM-Gibbs based method (see References section).
 #' It detects numerical features of the dataset and discretizes them ; values of categorical features (of type \code{factor}) are regrouped. This is done in a multivariate supervised way. Assessment of the correct model is done via AIC, BIC or test set error (see parameter \code{criterion}).
+#' Second-order interactions can be searched through the optional \code{interaction} parameter using a Metropolis-Hastings algorithm (see References section).
 #' @param predictors The matrix array containing the numerical or factor attributes to discretize.
 #' @param labels The actual labels of the provided predictors (0/1).
 #' @param validation Boolean : True if the algorithm should use predictors to construct a validation set on which to search for the best discretization scheme using the provided criterion (default: TRUE).
@@ -11,7 +12,7 @@
 #' @param m_start The maximum number of resulting categories for each variable wanted (default: 20).
 #' @param reg_type The model to use between discretized and continuous features (currently, only multinomial logistic regression ('poly') and ordered logistic regression ('polr') are supported ; default: 'poly'). WARNING: 'poly' requires the \code{mnlogit} package, 'polr' requires the \code{MASS} package.
 #' @param interact Boolean : True (default) if interaction detection is wanted (Warning: may be very memory/time-consuming).
-#' @param cores Number of cores to use in the parallel loops (defaults to NULL: see the foreach package). Currently not supported on Windows platforms.
+#' @param proportions The list of the proportions wanted for test and validation set. Not used when both test and validation are false. Only the first is used when there is only one of either test or validation that is set to TRUE. Produces an error when the sum is greater to one. Default: list(0.2,0.2) so that the training set has 0.6 of the input observations.
 #' @keywords SEM, Gibbs, discretization
 #' @author Adrien Ehrhardt, Vincent Vandewalle, Christophe Biernacki, Philippe Heinrich.
 #' @seealso \code{\link{glm}}, \code{\link{multinom}}, \code{\link{polr}}
@@ -21,7 +22,7 @@
 #' The ‘‘discretization'' process, i.e. the transformation of \eqn{X} to \eqn{E} is done so as to achieve the best logistic regression model \eqn{p(y|e;\theta)}. It can be interpreted as a special case feature engineering algorithm.
 #' Subsequently, its outputs are: the optimal discretization scheme and the logistic regression model associated with it. We also provide the parameters that were provided to the function and the evolution of the criterion with respect to the algorithm's iterations.
 #' @importFrom stats predict
-#' @importFrom foreach %dopar%
+#' @importFrom graphics plot
 #' @export
 #' @references
 #' Celeux, G., Chauveau, D., Diebolt, J. (1995), On Stochastic Versions of the EM Algorithm. [Research Report] RR-2514, INRIA. 1995. <inria-00074164>
@@ -44,16 +45,13 @@
 #' discretize(sem_disc,data.frame(x))
 
 
-glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,criterion='gini',iter=1000,m_start=20,reg_type='poly',cores=NULL) {
+glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,criterion='gini',iter=1000,m_start=20,reg_type='poly',proportions=c(0.2,0.2)) {
 
      if (criterion %in% c('gini','aic','bic')) {
           if (length(labels)==length(predictors[,1])) {
 
-               prop.table.robust <- function (x, margin = NULL) {
-                    tab <- sweep(x, margin, margin.table(x, margin), "/", check.margin = FALSE)
-                    tab[which(is.na(tab))] <- 1/ncol(tab)
-                    tab
-               }
+               
+               noms_colonnes = colnames(predictors)
                
                # Calculating lengths n and d and data types
                n = length(labels)
@@ -61,14 +59,14 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                types_data <- sapply(predictors[1,], class)
 
                if (sum(!(types_data %in% c("numeric","factor")))>0) {
-                    stop("Unsupported data types. Columns of predictors must be numeric or factor.")
+                    stop(simpleError("Unsupported data types. Columns of predictors must be numeric or factor."))
                }
 
                # Initializing list of calculated criterion among which to select the best.
                criterion_iter=list()
 
                # Obtain training, test and validation datasets.
-               ensemble <- cut_dataset(n,test=test,validation=validation)
+               ensemble <- cut_dataset(n,proportions,test=test,validation=validation)
 
                # Initializing variable E (discretization of X) at random.
                e = emap = array(0,c(n,d))
@@ -116,9 +114,6 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                     }
                }
 
-               
-               doMC::registerDoMC(cores)
-               
                # SEM algorithm
                for (i in 1:iter){
 
@@ -237,7 +232,7 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                          criterion_iter[[i]] = 2*model_reglog$loglikelihood-log(length(ensemble[[1]]))*length(model_reglog$coefficients)
                     } else if ((criterion %in% c('aic','bic'))&&(validation==TRUE)) {
                          criterion_iter[[i]] = sum(log(labels[ensemble[[2]]]*predictlogisticRegression(data_logit[ensemble[[2]],],model_reglog$coefficients) + (1-labels[ensemble[[2]]])*(1-labels[ensemble[[2]]]*predictlogisticRegression(data_logit[ensemble[[2]],],model_reglog$coefficients))))
-                    } else stop("validation must be boolean!")
+                    } else stop(simpleError("validation must be boolean!"))
 
 
                     if (criterion_iter[[i]] >= criterion_iter[[current_best]]) {
@@ -250,7 +245,7 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
 
                     if (interact==TRUE) {
                          p_delta_transition = abs(delta-p_delta)
-                         pq <- sample(1:d^2,prob=prop.table.robust(t(as.matrix(as.vector(p_delta_transition))),1),size=1)
+                         pq <- sample(1:d^2,prob=prop.table(t(as.matrix(as.vector(p_delta_transition))),1),size=1)
                          delta_new = delta
                          delta_new[pq] = 1-delta_new[pq]
                          if (sum(delta_new==1)>0) {
@@ -287,12 +282,12 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                          alpha = exp(2*new_logit$loglikelihood-log(length(ensemble[[1]]))*length(new_logit$coefficients) - (2*model_reglog$loglikelihood-log(length(ensemble[[1]]))*length(model_reglog$coefficients)))*(p_delta_transition[pq])/(1-p_delta_transition[pq])
 
                          if (pq %% d==0) {
-                              var_interact = c(pq %% d,d)
+                              var_interact = c(noms_colonnes[pq %/% d],noms_colonnes[d])
                          } else {
-                              var_interact = c(pq %% d,pq %/% d)
+                              var_interact = c(noms_colonnes[pq %/% d+1],noms_colonnes[pq %% d])
                          }
                          
-                         print(paste0("Current interaction being tested is between variables ",var_interact[1]," and ",var_interact[2]," with a probability of acceptance of ",alpha))
+                         message("Current interaction being tested is between variables ",var_interact[1]," and ",var_interact[2]," with a probability of acceptance of ",alpha)
                          if (sample(c(TRUE,FALSE),size=1,prob = c(min(alpha,1),1-min(alpha,1)))) {
                               delta <- delta_new
                          }
@@ -332,7 +327,7 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                               y_p = array(0,c(n,(m[j])))
                               levels_to_sample <- unlist(lev[[j]][[1]])
                               
-                              y_p <- foreach::foreach(k=1:length(levels_to_sample),.combine=cbind) %dopar% {
+                              for (k in 1:length(levels_to_sample)) {
                                    modalites_k = data
                                    
                                    if (j>1) {
@@ -347,7 +342,7 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                                    
                                    p = predictlogisticRegression(modalites_k,logit$coefficients)
 
-                                   (labels*p+(1-labels)*(1-p))
+                                   y_p[,k] <- (labels*p+(1-labels)*(1-p))
                               }
 
                               # p(e^j|reste) calculation
@@ -422,14 +417,24 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                                    while (!length(ind_diff_train_test)==0) {
                                         if (reg_type=='poly') {
                                              if (!requireNamespace("nnet", quietly = TRUE)) {
-                                                  t = predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs")
+                                                  if ((types_data[j]=="numeric")) {
+                                                       t = predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs")
+                                                  } else {
+                                                       t = prop.table.robust(t(sapply(predictors[,j],function(row) link[[j]][,row])),1)
+                                                  }
                                              } else {
-                                                  # long_dataset <- data.frame(e = as.vector(sapply(e[,j],function(var) (lev_j[seq(1:as.numeric(m[j]))]==var))),x = as.vector(sapply(predictors[,j], function(var) rep(var,as.numeric(m[j])))), names = as.character(as.vector(rep(lev_j[seq(1:as.numeric(m[j]))],n))))
-                                                  t = predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs")
-                                                  # t[which(is.nan(t),arr.ind = TRUE)[,"row"],which(is.nan(t),arr.ind = TRUE)[,"col"]] = 1
+                                                  if ((types_data[j]=="numeric")) {
+                                                       t = predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs")
+                                                  } else {
+                                                       t = prop.table.robust(t(sapply(predictors[,j],function(row) link[[j]][,row])),1)
+                                                  }
                                              }
                                         } else {
-                                             t = tryCatch(predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs"), error = function(cond) matrix(c(1-predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="response"),predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="response")),ncol=2,dimnames = list(seq(1:n),c(min(levels(factor(e[ensemble[[1]],j]))),max(levels(factor(e[ensemble[[1]],j])))))))
+                                             if ((types_data[j]=="numeric")) {
+                                                  t = tryCatch(predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs"), error = function(cond) matrix(c(1-predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="response"),predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="response")),ncol=2,dimnames = list(seq(1:n),c(min(levels(factor(e[ensemble[[1]],j]))),max(levels(factor(e[ensemble[[1]],j])))))))
+                                             } else {
+                                                  t = prop.table.robust(t(sapply(predictors[,j],function(row) link[[j]][,row])),1)
+                                             }
                                         }
                                         t[ind_diff_train_test,emap[ensemble[[2]],j][ind_diff_train_test]] <- 0
                                         t <- prop.table.robust(t,1)
@@ -459,19 +464,29 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                                    while (!length(ind_diff_train_test)==0) {
                                         if (reg_type=='poly') {
                                              if (!requireNamespace("nnet", quietly = TRUE)) {
-                                                  t = predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs")
+                                                  if ((types_data[j]=="numeric")) {
+                                                       t = predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs")
+                                                  } else {
+                                                       t = prop.table.robust(t(sapply(predictors[,j],function(row) link[[j]][,row])),1)
+                                                  }
                                              } else {
-                                                  # long_dataset <- data.frame(e = as.vector(sapply(e[,j],function(var) (lev_j[seq(1:as.numeric(m[j]))]==var))),x = as.vector(sapply(predictors[,j], function(var) rep(var,as.numeric(m[j])))), names = as.character(as.vector(rep(lev_j[seq(1:as.numeric(m[j]))],n))))
-                                                  t = predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs")
-                                                  # t[which(is.nan(t),arr.ind = TRUE)[,"row"],which(is.nan(t),arr.ind = TRUE)[,"col"]] = 1
+                                                  if ((types_data[j]=="numeric")) {
+                                                       t = predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs")
+                                                  } else {
+                                                       t = prop.table.robust(t(sapply(predictors[,j],function(row) link[[j]][,row])),1)
+                                                  }
                                              }
                                         } else {
-                                             t = tryCatch(predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs"), error = function(cond) matrix(c(1-predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="response"),predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="response")),ncol=2,dimnames = list(seq(1:n),c(min(levels(factor(e[ensemble[[1]],j]))),max(levels(factor(e[ensemble[[1]],j])))))))
+                                             if ((types_data[j]=="numeric")) {
+                                                  t = tryCatch(predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs"), error = function(cond) matrix(c(1-predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="response"),predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="response")),ncol=2,dimnames = list(seq(1:n),c(min(levels(factor(e[ensemble[[1]],j]))),max(levels(factor(e[ensemble[[1]],j])))))))
+                                             } else {
+                                                  t = prop.table.robust(t(sapply(predictors[,j],function(row) link[[j]][,row])),1)
+                                             }
                                         }
-                                        t[ind_diff_train_test,emap[ensemble[[3]],j][ind_diff_train_test]] <- 0
+                                        t[ind_diff_train_test,emap[ensemble[[2]],j][ind_diff_train_test]] <- 0
                                         t <- prop.table.robust(t,1)
-                                        emap[ensemble[[3]],j][ind_diff_train_test] <- apply(t[ind_diff_train_test,,drop=FALSE],1,function(p) names(which.max(p)))
-                                        ind_diff_train_test <- which(e[ensemble[[3]],j]==setdiff(factor(e[ensemble[[3]],j]),factor(e[ensemble[[1]],j])))
+                                        emap[ensemble[[2]],j][ind_diff_train_test] <- apply(t[ind_diff_train_test,,drop=FALSE],1,function(p) names(which.max(p)))
+                                        ind_diff_train_test <- which(emap[ensemble[[2]],j]==setdiff(factor(emap[ensemble[[2]],j]),factor(emap[ensemble[[1]],j])))
                                    }
                               }
 
@@ -483,41 +498,68 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                     }
                     lev <- apply(e,2,function(col) list(levels(factor(col))))
                     
-                    print(paste0("Iteration ",i," ended with a performance of ",criterion," = ", criterion_iter[[i]]))
+                    message("Iteration ",i," ended with a performance of ",criterion," = ", criterion_iter[[i]])
                }
 
                # Output preparation and calculation
-               best.disc = list(best_reglog,best_link,best_formula)
+               
+               ## 1st returned object
+               best.disc = list(bestLogisticRegression = best_reglog,bestLinkFunction = best_link,formulaOfBestLogisticRegression = best_formula)
                
                if (validation) {
-                    if (criterion=="gini") {
+                    # if (criterion=="gini") {
                          if (test) performance = normalizedGini(labels[ensemble[[3]]],predictlogisticRegression(stats::model.matrix(best.disc[[3]],data=data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[3]],]))),best.disc[[1]]$coefficients)) else performance = normalizedGini(labels[ensemble[[2]]],predictlogisticRegression(stats::model.matrix(best.disc[[3]],data=data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[2]],]))),best.disc[[1]]$coefficients))
-                    } else {
-                         if (test) performance = -2*sum(labels[ensemble[[2]]]*predictlogisticRegression(stats::model.matrix(best.disc[[3]],data=data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[2]],]))),best.disc[[1]]$coefficients)+(1-labels[ensemble[[2]]])*(1-predictlogisticRegression(stats::model.matrix(best.disc[[3]],data=data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[2]],]))),best.disc[[1]]$coefficients))) else performance = criterion_iter[[current_best]]
-                    }
+                    # } else {
+                         # if (test) performance = -2*sum(labels[ensemble[[2]]]*predictlogisticRegression(stats::model.matrix(best.disc[[3]],data=data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[2]],]))),best.disc[[1]]$coefficients)+(1-labels[ensemble[[2]]])*(1-predictlogisticRegression(stats::model.matrix(best.disc[[3]],data=data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[2]],]))),best.disc[[1]]$coefficients))) else performance = criterion_iter[[current_best]]
+                    # }
                } else {
-                    if (criterion=="gini") {
+                    # if (criterion=="gini") {
                          if (test) performance = normalizedGini(labels[ensemble[[2]]],predictlogisticRegression(stats::model.matrix(best.disc[[3]],data=data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[2]],]))),best.disc[[1]]$coefficients)) else performance = normalizedGini(labels[ensemble[[1]]],best.disc[[1]]$fitted.values)
-                    } else {
-                         if (test) performance = -2*rowSums(labels[ensemble[[2]]]*predictlogisticRegression(stats::model.matrix(best.disc[[3]],data=discretize_link(best.disc[[2]],predictors[ensemble[[2]],])),best.disc[[1]]$coefficients)+(1-labels[ensemble[[2]]])*(1-predictlogisticRegression(stats::model.matrix(best.disc[[3]],data=discretize_link(best.disc[[2]],predictors[ensemble[[2]],])),best.disc[[1]]$coefficients))) else performance = criterion_iter[[current_best]]
-                    }
+                    # } else {
+                         # if (test) performance = -2*rowSums(labels[ensemble[[2]]]*predictlogisticRegression(stats::model.matrix(best.disc[[3]],data=data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[2]],]))),best.disc[[1]]$coefficients)+(1-labels[ensemble[[2]]])*(1-predictlogisticRegression(stats::model.matrix(best.disc[[3]],data=data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[2]],]))),best.disc[[1]]$coefficients))) else performance = criterion_iter[[current_best]]
+                    # }
                }
                
+               ## Good column names
+               
+               if (!is.null(noms_colonnes)) {
+                    for (j in (length(noms_colonnes):1)) {
+                         best.disc$formulaOfBestLogisticRegression = as.formula(sub(paste0("X",j),noms_colonnes[j],best.disc$formulaOfBestLogisticRegression))
+                    }
+               }
                
                if ((test)&(validation)) {
-                    return(methods::new(Class = "glmdisc", parameters = list(test,validation,criterion,iter,m_start,reg_type), best.disc = best.disc, performance = list(performance,criterion_iter), disc.data = data.frame(cbind(discretize_link(best.disc[[2]],predictors[ensemble[[3]],])),labels = labels[ensemble[[3]]]), cont.data = data.frame(cbind(predictors[ensemble[[3]],]),labels = labels[ensemble[[3]]])))
+                     disc.data = data.frame(cbind(discretize_link(best.disc[[2]],predictors[ensemble[[3]],])),labels = labels[ensemble[[3]]])
+                     
+                     if (!is.null(colnames(predictors))) {
+                         colnames(disc.data) = c(colnames(predictors),"labels")
+                     }
+                     
+                     return(methods::new(Class = "glmdisc", parameters = list(test = test,validation = validation,criterion = criterion,iter = iter,m_start = m_start,reg_type = reg_type, types_data = types_data), best.disc = best.disc, performance = list(performance = performance,criterionEvolution = criterion_iter), disc.data = disc.data, cont.data = data.frame(cbind(predictors[ensemble[[3]],]),labels = labels[ensemble[[3]]])))
                } else if (validation) {
-                    return(methods::new(Class = "glmdisc", parameters = list(test,validation,criterion,iter,m_start,reg_type), best.disc = best.disc, performance = list(performance,criterion_iter), disc.data = data.frame(cbind(discretize_link(best.disc[[2]],predictors[ensemble[[2]],])),labels = labels[ensemble[[2]]]), cont.data = data.frame(cbind(predictors[ensemble[[2]],]),labels = labels[ensemble[[2]]])))
+                    disc.data = data.frame(cbind(discretize_link(best.disc[[2]],predictors[ensemble[[2]],])),labels = labels[ensemble[[2]]])
+                    if (!is.null(colnames(predictors))) {
+                         colnames(disc.data) = c(colnames(predictors),"labels")
+                    }
+                    return(methods::new(Class = "glmdisc", parameters = list(test = test,validation = validation,criterion = criterion,iter = iter,m_start = m_start,reg_type = reg_type, types_data = types_data), best.disc = best.disc, performance = list(performance = performance,criterionEvolution = criterion_iter), disc.data = disc.data, cont.data = data.frame(cbind(predictors[ensemble[[2]],]),labels = labels[ensemble[[2]]])))
                } else if (test) {
-                    return(methods::new(Class = "glmdisc", parameters = list(test,validation,criterion,iter,m_start,reg_type), best.disc = best.disc, performance = list(performance,criterion_iter), disc.data = data.frame(cbind(discretize_link(best.disc[[2]],predictors[ensemble[[2]],])),labels = labels[ensemble[[2]]]), cont.data = data.frame(cbind(predictors[ensemble[[2]],]),labels = labels[ensemble[[2]]])))
+                    disc.data = data.frame(cbind(discretize_link(best.disc[[2]],predictors[ensemble[[2]],])),labels = labels[ensemble[[2]]])
+                    if (!is.null(colnames(predictors))) {
+                         colnames(disc.data) = c(colnames(predictors),"labels")
+                    }
+                    return(methods::new(Class = "glmdisc", parameters = list(test = test,validation = validation,criterion = criterion,iter = iter,m_start = m_start,reg_type = reg_type, types_data = types_data), best.disc = best.disc, performance = list(performance = performance,criterionEvolution = criterion_iter), disc.data = disc.data, cont.data = data.frame(cbind(predictors[ensemble[[2]],]),labels = labels[ensemble[[2]]])))
                } else {
-                    return(methods::new(Class = "glmdisc", parameters = list(test,validation,criterion,iter,m_start,reg_type), best.disc = best.disc, performance = list(performance,criterion_iter), disc.data = data.frame(cbind(discretize_link(best.disc[[2]],predictors[ensemble[[1]],])),labels = labels[ensemble[[1]]]), cont.data = data.frame(cbind(predictors[ensemble[[1]],]),labels = labels[ensemble[[1]]])))
+                    disc.data = data.frame(cbind(discretize_link(best.disc[[2]],predictors[ensemble[[1]],])),labels = labels[ensemble[[1]]])
+                    if (!is.null(colnames(predictors))) {
+                         colnames(disc.data) = c(colnames(predictors),"labels")
+                    }
+                    return(methods::new(Class = "glmdisc", parameters = list(test = test,validation = validation,criterion = criterion,iter = iter,m_start = m_start,reg_type = reg_type, types_data = types_data), best.disc = best.disc, performance = list(performance = performance,criterionEvolution = criterion_iter), disc.data = disc.data, cont.data = data.frame(cbind(predictors[ensemble[[1]],]),labels = labels[ensemble[[1]]])))
                }
-          
+               
           } else {
-               print("labels and predictors must be of same length")
+               stop(simpleError("labels and predictors must be of same length"))
           }
      } else {
-          print("criterion must be gini, aic or bic")
+          stop(simpleError("criterion must be gini, aic or bic"))
      }
 }

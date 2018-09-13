@@ -9,7 +9,7 @@ Class \code{glmdisc} represents a discretization scheme associated with its opti
 \section{Slots}{
 
 \describe{
-\item{\code{parameters}}{The parameters associated with the used method.}
+\item{\code{parameters}}{The parameters associated with the method.}
 
 \item{\code{best.disc}}{The best discretization scheme found by the method given its parameters.}
 
