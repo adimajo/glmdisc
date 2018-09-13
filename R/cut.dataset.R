@@ -35,7 +35,7 @@ cut_dataset <- function(n,proportions,test=TRUE,validation=TRUE) {
                ind_train = sample.int(n,n)
                ind_test = ind_train[1:floor(proportions[1]*n)]
                ind_train = ind_train[(floor(proportions[1]*n)+1):n]
-               return(list(ind_train,ind_test))
+               return(list(ind_train,ind_test,NULL))
           }
      } else {
           if (validation==TRUE) {
@@ -43,10 +43,10 @@ cut_dataset <- function(n,proportions,test=TRUE,validation=TRUE) {
                ind_train = sample.int(n,n)
                ind_validation = ind_train[1:floor(proportions[1]*n)]
                ind_train = ind_train[(floor(proportions[1]*n)+1):n]
-               return(list(ind_train,ind_validation))
+               return(list(ind_train,ind_validation,NULL))
           } else {
                ind_train = sample.int(n,n)
-               return(list(ind_train))
+               return(list(ind_train,NULL,NULL))
           }
      }
 }

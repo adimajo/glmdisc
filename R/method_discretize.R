@@ -18,7 +18,7 @@ methods::setGeneric("discretize", function(object,...) attributes(object))
 
 methods::setMethod("discretize", methods::signature(object="glmdisc"), function(object,data) {
      # if (substr(object@method.name,1,3)=="sem") {
-     glmdisc:::discretize_link(object@best.disc[[2]],data)
+     glmdisc:::discretize_link(object@best.disc[[2]],data,object@parameters$m_start)
      # } else {
      # discretize_cutp(data,object@best.disc[[2]]@Disc.data,object@parameters[[1]])
      # }

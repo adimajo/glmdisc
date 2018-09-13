@@ -14,7 +14,7 @@
 methods::setGeneric("predict")
 
 predict.glmdisc <- function(object, predictors) {
-     data_disc = data.frame(discretize_link(object@best.disc[[2]],predictors))
+     data_disc = data.frame(discretize_link(object@best.disc[[2]],predictors,object@parameters$m_start))
      colnames(data_disc) = colnames(predictors)
      
      data_e = Filter(function(x)(length(unique(x))>1),data_disc)
