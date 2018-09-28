@@ -14,7 +14,7 @@ LaTeX: XeLaTeX
 
 BuildType: Package
 PackageUseDevtools: Yes
-PackageInstallArgs: --no-multiarch --with-keep.source
+PackageInstallArgs: -v; cd glmdisc; cp vignettes/*html inst/doc; R CMD INSTALL --no-multiarch --with-keep.source .; echo
 PackageRoxygenize: rd,collate,namespace,vignette
 
 QuitChildProcessesOnExit: Yes

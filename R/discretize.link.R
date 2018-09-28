@@ -29,7 +29,7 @@ discretize_link <- function(link,df,m_start) {
      # Cas complets
      continu_complete_case = !is.na(df)
      if (sum(!(types_data %in% c("numeric","factor")))>0) {
-          stop("Unsupported data types. Columns of predictors must be numeric or factor.")
+          stop(simpleError("Unsupported data types. Columns of predictors must be numeric or factor."))
      }
      emap = array(0,c(n,d))
 
@@ -53,9 +53,9 @@ discretize_link <- function(link,df,m_start) {
                     }
                     
                } else {
-                    t = prop.table(t(sapply(df[,j],function(row) link[[j]][,row])),1)
+                    t = prop.table.robust(t(sapply(df[,j],function(row) link[[j]][,row])),1)
                }
-               emap[,j] <- apply(t,1,function(p) names(which.max(p)))
+               emap[,j] <- unlist(apply(t,1,function(p) names(which.max(p))))
           }
      } else if (types_data=="numeric") {
           # m = length(link$coefficients)/2 + 1

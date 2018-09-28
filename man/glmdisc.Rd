@@ -6,7 +6,7 @@
 \usage{
 glmdisc(predictors, labels, interact = TRUE, validation = TRUE,
   test = TRUE, criterion = "gini", iter = 1000, m_start = 20,
-  reg_type = "poly", cores = NULL)
+  reg_type = "poly", proportions = c(0.2, 0.2))
 }
 \arguments{
 \item{predictors}{The matrix array containing the numerical or factor attributes to discretize.}
@@ -27,11 +27,12 @@ glmdisc(predictors, labels, interact = TRUE, validation = TRUE,
 
 \item{reg_type}{The model to use between discretized and continuous features (currently, only multinomial logistic regression ('poly') and ordered logistic regression ('polr') are supported ; default: 'poly'). WARNING: 'poly' requires the \code{mnlogit} package, 'polr' requires the \code{MASS} package.}
 
-\item{cores}{Number of cores to use in the parallel loops (defaults to NULL: see the foreach package). Currently not supported on Windows platforms.}
+\item{proportions}{The list of the proportions wanted for test and validation set. Not used when both test and validation are false. Only the first is used when there is only one of either test or validation that is set to TRUE. Produces an error when the sum is greater to one. Default: list(0.2,0.2) so that the training set has 0.6 of the input observations.}
 }
 \description{
 This function discretizes a training set using an SEM-Gibbs based method (see References section).
 It detects numerical features of the dataset and discretizes them ; values of categorical features (of type \code{factor}) are regrouped. This is done in a multivariate supervised way. Assessment of the correct model is done via AIC, BIC or test set error (see parameter \code{criterion}).
+Second-order interactions can be searched through the optional \code{interaction} parameter using a Metropolis-Hastings algorithm (see References section).
 }
 \details{
 This function finds the most appropriate discretization scheme for logistic regression. When provided with a continuous variable \eqn{X}, it tries to convert it to a categorical variable \eqn{E} which values uniquely correspond to intervals of the continuous variable \eqn{X}.
