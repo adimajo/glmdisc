@@ -4,11 +4,11 @@
 #' glmdisc and its associate method discretize.
 #'
 #' @section \code{\link{glmdisc}} function:
-#' The \code{\link{glmdisc}} function discretizes a training set using an SEM-Gibbs based method.
+#' The glmdisc function ...
 #'
 #'
 #' @section \code{\link{discretize}} function:
-#' The \code{\link{discretize}} function will discretize a new input dataset given a discretization scheme of S4 class \code{\link{glmdisc}}.
+#' The discretize function ...
 #'
 #' @author Adrien Ehrhardt, Vincent Vandewalle, Christophe Biernacki, Philippe Heinrich.
 #' @docType package

@@ -2,7 +2,7 @@
 % Please edit documentation in R/RcppExports.R
 \name{predictlogisticRegression}
 \alias{predictlogisticRegression}
-\title{Predicting using a logistic regression fitted with RCpp::fast_LR.}
+\title{Leading NA}
 \usage{
 predictlogisticRegression(test, parameters)
 }
@@ -12,6 +12,7 @@ predictlogisticRegression(test, parameters)
 \item{parameters}{A vector containing the logistic regression parameters}
 }
 \description{
-This function returns a numeric vector containing the probability of each observation of being of class 1 given a vector of logistic
-regression parameters (usually estimated through RCpp::fast_LR).
+This function returns a logical vector identifying if 
+there are leading NA, marking the leadings NA as TRUE and
+everything else as FALSE.
 }

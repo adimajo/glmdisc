@@ -18,13 +18,14 @@ License: GPL (>= 2)
 Encoding: UTF-8
 LazyData: true
 Imports:
-    gam,
     nnet,
     RcppNumerical,
     methods,
     MASS,
     graphics,
-    Rcpp (>= 0.12.13)
+    Rcpp (>= 0.12.13),
+    foreach,
+    doMC
 LinkingTo: Rcpp, RcppEigen, RcppNumerical
 URL: https://adimajo.github.io
 BugReports: https://github.com/adimajo/glmdisc/issues
