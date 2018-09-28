@@ -21,11 +21,13 @@
 # #' discretize_link(link,as.data.frame(x))
 
 
-discretize_link <- function(link,df) {
+discretize_link <- function(link,df,m_start) {
 
      n = nrow(df)
      d = ncol(df)
      types_data <- sapply(df[1,],class)
+     # Cas complets
+     continu_complete_case = !is.na(df)
      if (sum(!(types_data %in% c("numeric","factor")))>0) {
           stop("Unsupported data types. Columns of predictors must be numeric or factor.")
      }
@@ -34,11 +36,22 @@ discretize_link <- function(link,df) {
      if (d>1) {
           for (j in (1:d)) {
                if (types_data[j]=="numeric") {
-                    t = predict(link[[j]], newdata = data.frame(x = df[,j]), type="probs")
+                    t = predict(link[[j]], newdata = data.frame(x = df[continu_complete_case[,j],j]), type="probs")
+                    
                     if (is.vector(t)) {
                          t = cbind(1-t,t)
                          colnames(t) <- c("1","2")
                     }
+                    
+                    if (sum(!continu_complete_case[,j])>0) {
+                         t_bis = matrix(NA,nrow = nrow(df), ncol = ncol(t) +1)
+                         t_bis[continu_complete_case[,j],1:ncol(t)] = t
+                         t_bis[continu_complete_case[,j],ncol(t)+1] = 0
+                         t_bis[!continu_complete_case[,j],] = t(matrix(c(rep(0,ncol(t)),1),nrow = ncol(t)+1,ncol=sum(!continu_complete_case[,j])))
+                         colnames(t_bis) = c(colnames(t),m_start+1)
+                         t = t_bis
+                    }
+                    
                } else {
                     t = prop.table(t(sapply(df[,j],function(row) link[[j]][,row])),1)
                }
