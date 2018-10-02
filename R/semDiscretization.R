@@ -419,7 +419,11 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                                              
                                              reste <- stats::model.matrix(stats::as.formula("~e[,j]"),data=data.frame(e[,j]))[,-1]
                                              data[,paste0("X",j,levels(as.factor(e[,j])))[paste0("X",j,levels(as.factor(e[,j]))) %in% colnames(data)]][,-1] <- reste
-                                             data[,paste0("X",j,levels(as.factor(e[,j])))[paste0("X",j,levels(as.factor(e[,j]))) %in% colnames(data)]][,1] <- as.numeric(rowSums(reste)==0)
+                                             if (nlevels(as.factor(e[,j]))==2) {
+                                                  data[,paste0("X",j,levels(as.factor(e[,j])))[paste0("X",j,levels(as.factor(e[,j]))) %in% colnames(data)]][,1] <- as.numeric(reste==0)
+                                             } else {
+                                                  data[,paste0("X",j,levels(as.factor(e[,j])))[paste0("X",j,levels(as.factor(e[,j]))) %in% colnames(data)]][,1] <- as.numeric(rowSums(reste)==0)
+                                             }
                                         }
                                    }
                               } else {
@@ -540,13 +544,13 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                
                if (validation) {
                     # if (criterion=="gini") {
-                         if (test) performance = normalizedGini(labels[ensemble[[3]]],predictlogisticRegression(stats::model.matrix(best.disc[[3]],data=data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[3]],],m_start))),best.disc[[1]]$coefficients)) else performance = normalizedGini(labels[ensemble[[2]]],predictlogisticRegression(stats::model.matrix(best.disc[[3]],data=data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[2]],],m_start))),best.disc[[1]]$coefficients))
+                         if (test) performance = normalizedGini(as.numeric(labels[ensemble[[3]]]),predictlogisticRegression(stats::model.matrix(best.disc[[3]],data=data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[3]],],m_start))),best.disc[[1]]$coefficients)) else performance = normalizedGini(as.numeric(labels[ensemble[[2]]]),predictlogisticRegression(stats::model.matrix(best.disc[[3]],data=data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[2]],],m_start))),best.disc[[1]]$coefficients))
                     # } else {
                          # if (test) performance = -2*sum(labels[ensemble[[2]]]*predictlogisticRegression(stats::model.matrix(best.disc[[3]],data=data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[2]],]))),best.disc[[1]]$coefficients)+(1-labels[ensemble[[2]]])*(1-predictlogisticRegression(stats::model.matrix(best.disc[[3]],data=data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[2]],]))),best.disc[[1]]$coefficients))) else performance = criterion_iter[[current_best]]
                     # }
                } else {
                     # if (criterion=="gini") {
-                         if (test) performance = normalizedGini(labels[ensemble[[2]]],predictlogisticRegression(stats::model.matrix(best.disc[[3]],data=data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[2]],],m_start))),best.disc[[1]]$coefficients)) else performance = normalizedGini(labels[ensemble[[1]]],best.disc[[1]]$fitted.values)
+                         if (test) performance = normalizedGini(as.numeric(labels[ensemble[[2]]]),predictlogisticRegression(stats::model.matrix(best.disc[[3]],data=data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[2]],],m_start))),best.disc[[1]]$coefficients)) else performance = normalizedGini(as.numeric(labels[ensemble[[1]]]),best.disc[[1]]$fitted.values)
                     # } else {
                          # if (test) performance = -2*rowSums(labels[ensemble[[2]]]*predictlogisticRegression(stats::model.matrix(best.disc[[3]],data=data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[2]],]))),best.disc[[1]]$coefficients)+(1-labels[ensemble[[2]]])*(1-predictlogisticRegression(stats::model.matrix(best.disc[[3]],data=data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[2]],]))),best.disc[[1]]$coefficients))) else performance = criterion_iter[[current_best]]
                     # }
