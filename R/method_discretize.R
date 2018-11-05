@@ -5,16 +5,16 @@
 #' @name discretize
 #' @rdname discretize-methods
 #' @exportMethod discretize
-#' @description This defines the generic method "discretize" which will discretize a new input dataset given a discretization scheme of S4 class \code{\link{discretization}}.
+#' @description This defines the generic method "discretize" which will discretize a new input dataset given a discretization scheme of S4 class \code{\link{glmdisc}}.
 
 methods::setGeneric("discretize", function(object,...) attributes(object))
 
 
-# #' Method for discretizing a new input dataset given a discretization scheme of class \code{\link{glmdisc}}.
-# #' @rdname discretize-methods
-# #' @name discretize
-# #' @aliases discretize,glmdisc-method
-# #' @description This defines the method "discretize" which will discretize a new input dataset given a discretization scheme of S4 class \code{\link{glmdisc}}
+#' Method for discretizing a new input dataset given a discretization scheme of class \code{\link{glmdisc}}.
+#' @rdname discretize-methods
+#' @name discretize
+#' @aliases discretize,glmdisc-method
+#' @description This defines the method "discretize" which will discretize a new input dataset given a discretization scheme of S4 class \code{\link{glmdisc}}
 
 methods::setMethod("discretize", methods::signature(object="glmdisc"), function(object,data) {
      # if (substr(object@method.name,1,3)=="sem") {

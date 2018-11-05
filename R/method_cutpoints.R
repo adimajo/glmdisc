@@ -8,11 +8,11 @@
 methods::setGeneric("cutpoints", function(object,...) attributes(object))
 
 
-# #' Method for obtaining the cutpoints and / or regroupments of a discretization of class \code{\link{glmdisc}}.
-# #' @rdname cutpoints-methods
-# #' @name cutpoints
-# #' @aliases cutpoints,cutpoints-method
-# #' @description This defines the method "cutpoints" which will output the cutpoints found by the S4 class \code{\link{glmdisc}}.
+#' Method for obtaining the cutpoints and / or regroupments of a discretization of class \code{\link{glmdisc}}.
+#' @rdname cutpoints-methods
+#' @name cutpoints
+#' @aliases cutpoints,cutpoints-method
+#' @description This defines the method "cutpoints" which will output the cutpoints found by the S4 class \code{\link{glmdisc}}.
 
 methods::setMethod("cutpoints", methods::signature(object="glmdisc"), function(object) {
      
@@ -23,7 +23,7 @@ methods::setMethod("cutpoints", methods::signature(object="glmdisc"), function(o
      }
                
      for (j in which(object@parameters$types_data=="numeric")) {
-          data_disc = data.frame(disc = sem_disc@disc.data[,j],cont = sem_disc@cont.data[,j])
+          data_disc = data.frame(disc = glmdisc@disc.data[,j],cont = glmdisc@cont.data[,j])
           
           cut1 = aggregate(cont ~ disc, data = data_disc, min)
           cut2 = aggregate(cont ~ disc, data = data_disc, max)

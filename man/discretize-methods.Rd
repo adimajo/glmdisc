@@ -2,9 +2,12 @@
 % Please edit documentation in R/method_discretize.R
 \name{discretize}
 \alias{discretize}
+\alias{discretize,glmdisc-method}
 \title{Prediction on a raw test set of the best logistic regression model on discretized data.}
 \description{
-This defines the generic method "discretize" which will discretize a new input dataset given a discretization scheme of S4 class \code{\link{discretization}}.
+This defines the generic method "discretize" which will discretize a new input dataset given a discretization scheme of S4 class \code{\link{glmdisc}}.
+
+This defines the method "discretize" which will discretize a new input dataset given a discretization scheme of S4 class \code{\link{glmdisc}}
 }
 \details{
 This function discretizes a user-provided test dataset given a discretization scheme provided by an S4 "glmdisc" object.
