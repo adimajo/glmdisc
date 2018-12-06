@@ -88,7 +88,7 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                     if (m_start > nlevels(predictors[,j])) {
                          e[,j] = emap[,j] = as.factor(sample(1:nlevels(predictors[,j]),n,replace = TRUE))
                     } else {
-                         e[,j] = emap[,j] = as.factor(sample(1:m_start),n,replace = TRUE)
+                         e[,j] = emap[,j] = as.factor(sample(1:m_start,n,replace = TRUE))
                     }
                }
 
