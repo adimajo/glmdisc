@@ -83,7 +83,13 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                for (j in which(types_data=="factor")) {
                     # e[continu_complete_case[,j],j] = emap[continu_complete_case[,j],j] = as.factor(sample(1:nlevels(predictors[,j]),n,replace = TRUE))
                     # e[!continu_complete_case[,j],j] = emap[!continu_complete_case[,j],j] = nlevels(predictors[,j])+1
-                    e[,j] = emap[,j] = as.factor(sample(1:nlevels(predictors[,j]),n,replace = TRUE))
+                    # e[,j] = emap[,j] = as.factor(sample(1:nlevels(predictors[,j]),n,replace = TRUE))
+                    
+                    if (m_start > nlevels(predictors[,j])) {
+                         e[,j] = emap[,j] = as.factor(sample(1:nlevels(predictors[,j]),n,replace = TRUE))
+                    } else {
+                         e[,j] = emap[,j] = as.factor(sample(1:m_start),n,replace = TRUE)
+                    }
                }
 
                m = rep(m_start,d)
