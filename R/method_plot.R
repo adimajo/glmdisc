@@ -1,14 +1,23 @@
-#' Plots for the discretized data.
+#' Plots for the discretized / grouped data.
 #'
+#' 
 #' @exportMethod plot
-#' @param object The S4 discretization object.
+#' @name plot
+#' @aliases plot
+#' @docType methods
 #' @keywords test, discretization, plot
 #' @importFrom gam s
-
+#' 
 if (!isGeneric("plot")) {
      methods::setGeneric("plot", function(x,y,...) standardGeneric("plot"))
 }
 
+#' Plots for the discretized data.
+#' 
+#' 
+#' @rdname plot
+#' @aliases plot,glmdisc,ANY-method
+#' @param x The S4 \code{\link{glmdisc}} object to plot.
 plot.glmdisc <- function(x) {
      
      # Graph 1 : ROC CURVE
@@ -33,7 +42,7 @@ plot.glmdisc <- function(x) {
      for (j in which(x@parameters$types_data=="numeric")) {
           modele_gam = gam::gam(stats::as.formula(paste("labels ~",paste("s(",gsub("+", ",5) + s(",as.character(x@best.disc$formulaOfBestLogisticRegression)[2], fixed=TRUE),",5)"))), data = x@cont.data, family = "binomial")
           gam::plot.Gam(modele_gam,ask=FALSE,terms=paste0("s(",colnames(x@disc.data)[j],", 5)"), se=TRUE, main = paste("Plot of a GAM fit to attribute",colnames(x@disc.data)[j]))
-          par(ask=TRUE)
+          graphics::par(ask=TRUE)
      }
      #par(ask=TRUE)
      
@@ -42,15 +51,14 @@ plot.glmdisc <- function(x) {
           print(table(factor(x@disc.data[,j]),factor(x@cont.data[,j])))
      }
      
-     on.exit(par(ask=FALSE))
+     on.exit(graphics::par(ask=FALSE))
 }
 
-#' Method for predicting on a new input dataset given a discretization scheme and its associated model of class \code{\link{glmdisc}}.
-#' @rdname plot-methods
-#' @name plot
-#' @aliases plot,glmdisc-method
-#' @description This defines the method "plot" which will plot some useful graphs for the discretization scheme of S4 class \code{\link{glmdisc}}
-
+#' @rdname plot
+#' @name plot,glmdisc,missing-method
+#' @aliases plot,glmdisc,missing-method
+#' @description This defines the \code{\link{plot}} method which will plot some useful graphs for the discretization scheme of S4 class \code{\link{glmdisc}}
+# #' @param glmdisc The S4 glmdisc object to plot.
 methods::setMethod(f = "plot", signature = c(x="glmdisc",y="missing"), definition = plot.glmdisc)
 
 

@@ -566,7 +566,7 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                
                if (!is.null(noms_colonnes)) {
                     for (j in (length(noms_colonnes):1)) {
-                         best.disc$formulaOfBestLogisticRegression = as.formula(sub(paste0("X",j),noms_colonnes[j],best.disc$formulaOfBestLogisticRegression))
+                         best.disc$formulaOfBestLogisticRegression = stats::as.formula(sub(paste0("X",j),noms_colonnes[j],best.disc$formulaOfBestLogisticRegression))
                     }
                }
                

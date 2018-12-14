@@ -2,8 +2,11 @@
 % Please edit documentation in R/method_cutpoints.R
 \name{cutpoints}
 \alias{cutpoints}
-\alias{cutpoints,cutpoints-method}
-\title{Method for obtaining the cutpoints and / or regroupments of a discretization of class \code{\link{glmdisc}}.}
+\alias{cutpoints,glmdisc-method}
+\title{Obtaining the cutpoints and / or regroupments of a discretization.}
 \description{
-This defines the method "cutpoints" which will output the cutpoints found by the S4 class \code{\link{glmdisc}}.
+This defines the generic method "cutpoints" which will provide the cutpoints of a discretization scheme of S4 class \code{\link{glmdisc}}.
+}
+\details{
+The method returns a list of cutpoints and / or regroupments of a discretization of class \code{\link{glmdisc}}.
 }

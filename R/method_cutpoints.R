@@ -1,18 +1,19 @@
-#' Method for obtaining the cutpoints and / or regroupments of a discretization of class \code{\link{glmdisc}}.
-# #' @rdname cutpoints-methods
+#' Obtaining the cutpoints and / or regroupments of a discretization.
+#' 
+#' The method returns a list of cutpoints and / or regroupments of a discretization of class \code{\link{glmdisc}}.
 #' @name cutpoints
-#' @aliases cutpoints,cutpoints-method
+#' @rdname cutpoints
 #' @exportMethod cutpoints
-#' @description This defines the method "cutpoints" which will output the cutpoints found by the S4 class \code{\link{glmdisc}}.
+#' @description This defines the generic method "cutpoints" which will provide the cutpoints of a discretization scheme of S4 class \code{\link{glmdisc}}.
 
 methods::setGeneric("cutpoints", function(object,...) attributes(object))
 
-
-#' Method for obtaining the cutpoints and / or regroupments of a discretization of class \code{\link{glmdisc}}.
-#' @rdname cutpoints-methods
+#' Obtaining the cutpoints and / or regroupments of a discretization.
+#' 
+#' @rdname cutpoints
 #' @name cutpoints
-#' @aliases cutpoints,cutpoints-method
-#' @description This defines the method "cutpoints" which will output the cutpoints found by the S4 class \code{\link{glmdisc}}.
+#' @aliases cutpoints,glmdisc-method
+# #' @description This defines the method to provide the cutpoints of a trained glmdisc.
 
 methods::setMethod("cutpoints", methods::signature(object="glmdisc"), function(object) {
      
@@ -25,8 +26,8 @@ methods::setMethod("cutpoints", methods::signature(object="glmdisc"), function(o
      for (j in which(object@parameters$types_data=="numeric")) {
           data_disc = data.frame(disc = glmdisc@disc.data[,j],cont = glmdisc@cont.data[,j])
           
-          cut1 = aggregate(cont ~ disc, data = data_disc, min)
-          cut2 = aggregate(cont ~ disc, data = data_disc, max)
+          cut1 = stats::aggregate(cont ~ disc, data = data_disc, min)
+          cut2 = stats::aggregate(cont ~ disc, data = data_disc, max)
           
           cut1 = cut1[order(cut1$cont),]
           cut2 = cut2[order(cut2$cont),]
