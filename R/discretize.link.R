@@ -36,24 +36,33 @@ discretize_link <- function(link,df,m_start) {
      if (d>1) {
           for (j in (1:d)) {
                if (types_data[j]=="numeric") {
-                    t = predict(link[[j]], newdata = data.frame(x = df[continu_complete_case[,j],j]), type="probs")
+                    if (!is.null(link[[j]])) {
+                         t = predict(link[[j]], newdata = data.frame(x = df[continu_complete_case[,j],j]), type="probs")
                     
-                    if (is.vector(t)) {
-                         t = cbind(1-t,t)
-                         colnames(t) <- c("1","2")
+                         if (is.vector(t)) {
+                              t = cbind(1-t,t)
+                              colnames(t) <- c("1","2")
+                         }
+                         
+                         if (sum(!continu_complete_case[,j])>0) {
+                              t_bis = matrix(NA,nrow = nrow(df), ncol = ncol(t) +1)
+                              t_bis[continu_complete_case[,j],1:ncol(t)] = t
+                              t_bis[continu_complete_case[,j],ncol(t)+1] = 0
+                              t_bis[!continu_complete_case[,j],] = t(matrix(c(rep(0,ncol(t)),1),nrow = ncol(t)+1,ncol=sum(!continu_complete_case[,j])))
+                              colnames(t_bis) = c(colnames(t),m_start+1)
+                              t = t_bis
+                         }
+                    } else {
+                         t = matrix(1, nrow = n, ncol = 1)
+                         colnames(t) = "1"
                     }
-                    
-                    if (sum(!continu_complete_case[,j])>0) {
-                         t_bis = matrix(NA,nrow = nrow(df), ncol = ncol(t) +1)
-                         t_bis[continu_complete_case[,j],1:ncol(t)] = t
-                         t_bis[continu_complete_case[,j],ncol(t)+1] = 0
-                         t_bis[!continu_complete_case[,j],] = t(matrix(c(rep(0,ncol(t)),1),nrow = ncol(t)+1,ncol=sum(!continu_complete_case[,j])))
-                         colnames(t_bis) = c(colnames(t),m_start+1)
-                         t = t_bis
-                    }
-                    
                } else {
-                    t = prop.table.robust(t(sapply(df[,j],function(row) link[[j]][,row])),1)
+                    if (!is.null(link[[j]])) {
+                         t = prop.table.robust(t(sapply(df[,j],function(row) link[[j]][,row])),1)
+                    } else {
+                         t = matrix(1, nrow = n, ncol = 1)
+                         colnames(t) = "1"
+                    }
                }
                emap[,j] <- unlist(apply(t,1,function(p) names(which.max(p))))
           }
