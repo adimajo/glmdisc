@@ -14,12 +14,12 @@
 #' @param interact Boolean : True (default) if interaction detection is wanted (Warning: may be very memory/time-consuming).
 #' @param proportions The list of the proportions wanted for test and validation set. Not used when both test and validation are false. Only the first is used when there is only one of either test or validation that is set to TRUE. Produces an error when the sum is greater to one. Default: list(0.2,0.2) so that the training set has 0.6 of the input observations.
 #' @keywords SEM, Gibbs, discretization
-#' @author Adrien Ehrhardt, Vincent Vandewalle, Christophe Biernacki, Philippe Heinrich.
+#' @author Adrien Ehrhardt.
 #' @seealso \code{\link{glm}}, \code{\link{multinom}}, \code{\link{polr}}
 #' @details
-#' This function finds the most appropriate discretization scheme for logistic regression. When provided with a continuous variable \eqn{X}, it tries to convert it to a categorical variable \eqn{E} which values uniquely correspond to intervals of the continuous variable \eqn{X}.
-#' When provided with a categorical variable \eqn{X}, it tries to find the best regroupement of its values and subsequently creates categorical variable \eqn{E}. The goal is to perform supervised learning with logistic regression so that you have to specify a target variable \eqn{Y} denoted by \code{labels}.
-#' The ‘‘discretization'' process, i.e. the transformation of \eqn{X} to \eqn{E} is done so as to achieve the best logistic regression model \eqn{p(y|e;\theta)}. It can be interpreted as a special case feature engineering algorithm.
+#' This function finds the most appropriate discretization scheme for logistic regression. When provided with a continuous variable \eqn{X}, it tries to convert it to a categorical variable \eqn{Q} which values uniquely correspond to intervals of the continuous variable \eqn{X}.
+#' When provided with a categorical variable \eqn{X}, it tries to find the best regroupement of its values and subsequently creates categorical variable \eqn{Q}. The goal is to perform supervised learning with logistic regression so that you have to specify a target variable \eqn{Y} denoted by \code{labels}.
+#' The ‘‘discretization'' process, i.e. the transformation of \eqn{X} to \eqn{Q} is done so as to achieve the best logistic regression model \eqn{p(y|e;\theta)}. It can be interpreted as a special case feature engineering algorithm.
 #' Subsequently, its outputs are: the optimal discretization scheme and the logistic regression model associated with it. We also provide the parameters that were provided to the function and the evolution of the criterion with respect to the algorithm's iterations.
 #' @importFrom stats predict
 #' @import caret
@@ -43,18 +43,11 @@
 #' y = rbinom(100,1,1/(1+exp(-log_odd)))
 #'
 #' sem_disc <- glmdisc(x,y,iter=50,m_start=4,test=FALSE,validation=FALSE,criterion="aic")
-#' discretize(sem_disc,data.frame(x))
-
-
+#' print(sem_disc)
 glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,criterion='gini',iter=1000,m_start=20,reg_type='poly',proportions=c(0.2,0.2)) {
 
-     
-     contr.ltfr = caret::contr.ltfr
-     
      if (criterion %in% c('gini','aic','bic')) {
           if (length(labels)==length(predictors[,1])) {
-
-               
                noms_colonnes = colnames(predictors)
                
                # Complete rows
@@ -78,7 +71,7 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                ensemble[[2]] = 1:n %in% ensemble[[2]]
                ensemble[[3]] = 1:n %in% ensemble[[3]]
                
-               # Initializing variable E (discretization of X) at random.
+               # Initializing variable Q (discretization of X) at random.
                e = emap = array(0,c(n,d))
                for (j in which(types_data=="numeric")) {
                     e[continu_complete_case[,j],j] = emap[continu_complete_case[,j],j] = as.factor(sample(1:m_start,sum(continu_complete_case[,j]),replace = TRUE))
@@ -128,6 +121,10 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                     # The proposal distribution of Metropolis-Hastings, p_delta, is calculated as follows
                     for (j in 1:(d-1)) {
                          for (k in (j+1):d) {
+                              #print(j)
+                              #print(k)
+                              if(nlevels(factor(predictors[continu_complete_case[,j]&continu_complete_case[,k]&ensemble[[1]],j]))==1) stop(paste0("Some levels are scarce such that feature ",j," only has 1 level in train. Try with validation = F"))
+                              if(nlevels(factor(predictors[continu_complete_case[,j]&continu_complete_case[,k]&ensemble[[1]],k]))==1) stop(paste0("Some levels are scarce such that feature ",k," only has 1 level in train. Try with validation = F"))
                               sans_inter <- stats::glm(labels ~ X1 + X2, family=stats::binomial(link="logit"), data=data.frame(labels = labels[continu_complete_case[,j]&continu_complete_case[,k]&ensemble[[1]]],X1 = predictors[continu_complete_case[,j]&continu_complete_case[,k]&ensemble[[1]],j],X2 = predictors[continu_complete_case[,j]&continu_complete_case[,k]&ensemble[[1]],k]))
                               avec_inter <- stats::glm(labels ~ X1 + X2 + X1:X2, family=stats::binomial(link="logit"), data=data.frame(labels = labels[continu_complete_case[,j]&continu_complete_case[,k]&ensemble[[1]]],X1 = predictors[continu_complete_case[,j]&continu_complete_case[,k]&ensemble[[1]],j],X2 = predictors[continu_complete_case[,j]&continu_complete_case[,k]&ensemble[[1]],k]))
                               p_delta[j,k] <- 1/(1+exp(-sans_inter$deviance - log(sum(ensemble[[1]]))*length(sans_inter$coefficients) + avec_inter$deviance + log(sum(ensemble[[1]]))*length(avec_inter$coefficients)))
@@ -438,7 +435,7 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                                              # print(paste0("X",j,"_",lev[[j]][[1]][which(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))[-1]]))
                                              # 
                                              # print(colnames(data))
-                                             print("here again!")
+                                             # print("here again!")
                                              
                                              data[,paste0("X",j,"_",lev[[j]][[1]][which(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))])] <- matrix(0,nrow = n, ncol = sum(!lev[[j]][[1]] %in% levels(as.factor(e[,j]))))
                                              data[,paste0("X",j,"_",levels(as.factor(e[,j])))[paste0("X",j,levels(as.factor(e[,j]))) %in% colnames(data)]] <- stats::model.matrix(stats::as.formula("~e[,j]"),data=data.frame(e[,j]))[,-1]
@@ -454,19 +451,19 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                                              # print(which(!lev[[j]][[1]] %in% levels(as.factor(e[,j]))))
                                              # print(paste0("X",j,"_",lev[[j]][[1]][which(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))[-1]]))
                                              # print(colnames(data))
-                                             print("here again again!")
+                                             # print("here again again!")
                                              
                                              if (length(which(!lev[[j]][[1]] %in% levels(as.factor(e[,j]))))>1) {
-                                                  print("there!")
-                                                  print(lev[[j]][[1]])
-                                                  print(levels(as.factor(e[,j])))
-                                                  print(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))
-                                                  print(which(!lev[[j]][[1]] %in% levels(as.factor(e[,j]))))
-                                                  print(which(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))[-1])
-                                                  print(lev[[j]][[1]][which(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))[-1]])
-                                                  print(matrix(0,nrow = n, ncol = sum(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))))
-                                                  print(paste0("X",j,"_",lev[[j]][[1]][which(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))[-1]]))
-                                                  print(data[,paste0("X",j,"_",lev[[j]][[1]][which(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))[-1]])])
+                                                  # print("there!")
+                                                  # print(lev[[j]][[1]])
+                                                  # print(levels(as.factor(e[,j])))
+                                                  # print(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))
+                                                  # print(which(!lev[[j]][[1]] %in% levels(as.factor(e[,j]))))
+                                                  # print(which(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))[-1])
+                                                  # print(lev[[j]][[1]][which(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))[-1]])
+                                                  # print(matrix(0,nrow = n, ncol = sum(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))))
+                                                  # print(paste0("X",j,"_",lev[[j]][[1]][which(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))[-1]]))
+                                                  # print(data[,paste0("X",j,"_",lev[[j]][[1]][which(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))[-1]])])
                                                   
                                                   data[,paste0("X",j,"_",lev[[j]][[1]][which(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))[-1]])] <- matrix(0,nrow = n, ncol = sum(!lev[[j]][[1]] %in% levels(as.factor(e[,j]))))
                                              }
@@ -481,7 +478,7 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                                         }
                                    }
                               } else {
-                                   print("here!")
+                                   # print("here!")
                                    data[,paste0("X",j,"_",lev[[j]][[1]][which(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))])] <- matrix(0,nrow = n, ncol = sum(!lev[[j]][[1]] %in% levels(as.factor(e[,j]))))
                               }
                               

@@ -23,13 +23,15 @@ simple_roc <- function(labels, scores){
 
 
 #' Wrapper for \code{\link[caret]{contr.ltfr}}
-#' 
+#'
 #' Simply redirects the call to \code{\link[caret]{contr.ltfr}}, this is done
 #' to avoid errors when the caret namespace is not attached.
-#' 
+#'
 #' @param ... \code{\link[caret]{contr.ltfr}} parameters.
 #' @export
 #' @keywords internal
+#' @examples
+#' contr.ltfr(2)
 contr.ltfr <- function(...)
 {
      caret::contr.ltfr(...)

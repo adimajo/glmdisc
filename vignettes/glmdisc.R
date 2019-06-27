@@ -81,10 +81,12 @@ y = rbinom(100,1,1/(1+exp(-log_odd)))
 
 ## ---- echo=TRUE,warning=FALSE, message=FALSE, results='hide',eval=FALSE----
 #  library(glmdisc)
+#  set.seed(1)
 #  discretization <- glmdisc(x,y,iter=50,m_start=5,test=FALSE,validation=FALSE,criterion="aic",interact=FALSE)
 
 ## ---- echo=FALSE,warning=FALSE, message=FALSE, results='hide',eval=TRUE----
 library(glmdisc)
+set.seed(1)
 discretization <- glmdisc(x,y,iter=50,m_start=5,test=FALSE,validation=FALSE,criterion="aic",interact=FALSE)
 
 ## ---- echo=TRUE,warning=FALSE, message=FALSE, results='hide',eval=TRUE----

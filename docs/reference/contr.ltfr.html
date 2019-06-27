@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>glmdisc: A package for discretizing continuous features, grouping categorical features' values and optimizing it for logistic regression. — glmdisc-package • glmdisc</title>
+<title>Wrapper for <code><a href='http://www.rdocumentation.org/packages/caret/topics/dummyVars'>contr.ltfr</a></code> — contr.ltfr • glmdisc</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -30,10 +30,10 @@
 
 
 
-<meta property="og:title" content="glmdisc: A package for discretizing continuous features, grouping categorical features' values and optimizing it for logistic regression. — glmdisc-package" />
+<meta property="og:title" content="Wrapper for <code><a href='http://www.rdocumentation.org/packages/caret/topics/dummyVars'>contr.ltfr</a></code> — contr.ltfr" />
 
-<meta property="og:description" content="The glmdisc package provides two important functions:
-glmdisc and its associate method discretize." />
+<meta property="og:description" content="Simply redirects the call to contr.ltfr, this is done
+to avoid errors when the caret namespace is not attached." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -96,64 +96,42 @@ glmdisc and its associate method discretize." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>glmdisc: A package for discretizing continuous features, grouping categorical features' values and optimizing it for logistic regression.</h1>
+    <h1>Wrapper for <code><a href='http://www.rdocumentation.org/packages/caret/topics/dummyVars'>contr.ltfr</a></code></h1>
     
-    <div class="hidden name"><code>glmdisc-package.Rd</code></div>
+    <div class="hidden name"><code>contr.ltfr.Rd</code></div>
     </div>
 
     <div class="ref-description">
     
-    <p>The glmdisc package provides two important functions:
-glmdisc and its associate method discretize.</p>
+    <p>Simply redirects the call to <code><a href='http://www.rdocumentation.org/packages/caret/topics/dummyVars'>contr.ltfr</a></code>, this is done
+to avoid errors when the caret namespace is not attached.</p>
     
     </div>
 
-        
-    <h2 class="hasAnchor" id="glmdisc-function"><a class="anchor" href="#glmdisc-function"></a><code><a href='glmdisc.html'>glmdisc</a></code> function</h2>
-
+    <pre class="usage"><span class='fu'>contr.ltfr</span>(<span class='no'>...</span>)</pre>
     
-    <p>The <code><a href='glmdisc.html'>glmdisc</a></code> function discretizes a training set using an SEM-Gibbs based method.</p>
-    
-    <h2 class="hasAnchor" id="discretize-function"><a class="anchor" href="#discretize-function"></a><code><a href='discretize.html'>discretize</a></code> function</h2>
-
-    
-    <p>The <code><a href='discretize.html'>discretize</a></code> function will discretize a new input dataset given a discretization scheme of S4 class <code><a href='glmdisc.html'>glmdisc</a></code>.</p>
-    
-    <h2 class="hasAnchor" id="cutpoints-function"><a class="anchor" href="#cutpoints-function"></a><code><a href='cutpoints-method.html'>cutpoints</a></code> function</h2>
-
-    
-    <p>The <code><a href='cutpoints-method.html'>cutpoints</a></code> function will provide the cutpoints / groupings of a discretization scheme of S4 class <code><a href='glmdisc.html'>glmdisc</a></code> in a list.</p>
-    
-    <h2 class="hasAnchor" id="predict-function"><a class="anchor" href="#predict-function"></a><code><a href='predict.html'>predict</a></code> function</h2>
-
-    
-    <p>The <code><a href='predict.html'>predict</a></code> function will discretize a raw test set, given a provided discretization scheme of S4 class <code><a href='glmdisc.html'>glmdisc</a></code>, using the <code><a href='discretize.html'>discretize</a></code> function and return the predicted probabilities.</p>
-    
-    <h2 class="hasAnchor" id="miscellaneous"><a class="anchor" href="#miscellaneous"></a>Miscellaneous</h2>
-
-    
-    <p>We provide as well the classical <code>show</code>, <code>print</code>, <code>summary</code> functions, as well as <code><a href='normalizedGini.html'>normalizedGini</a></code> that is used to calculate the Gini index (a classical Credit Scoring goodness-of-fit indicator).</p>
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
+    <table class="ref-arguments">
+    <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>...</th>
+      <td><p><code><a href='http://www.rdocumentation.org/packages/caret/topics/dummyVars'>contr.ltfr</a></code> parameters.</p></td>
+    </tr>
+    </table>
     
 
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'><span class='fu'>contr.ltfr</span>(<span class='fl'>2</span>)</div><div class='output co'>#&gt;   1 2
+#&gt; 1 1 0
+#&gt; 2 0 1</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
-      
-      <li><a href="#glmdisc-function"><code><a href='glmdisc.html'>glmdisc</a></code> function</a></li>
-
-      <li><a href="#discretize-function"><code><a href='discretize.html'>discretize</a></code> function</a></li>
-
-      <li><a href="#cutpoints-function"><code><a href='cutpoints-method.html'>cutpoints</a></code> function</a></li>
-
-      <li><a href="#predict-function"><code><a href='predict.html'>predict</a></code> function</a></li>
-
-      <li><a href="#miscellaneous">Miscellaneous</a></li>
-          </ul>
-
-    <h2>Author</h2>
-    
-Adrien Ehrhardt.
+      <li><a href="#arguments">Arguments</a></li>
+            
+      <li><a href="#examples">Examples</a></li>
+    </ul>
 
   </div>
 </div>

@@ -2,7 +2,7 @@ Package: glmdisc
 Type: Package
 Title: Discretization and Grouping for Logistic Regression
 Version: 0.1
-Date: 2018-12-06
+Date: 2019-04-01
 Authors@R: c(person("Adrien", "Ehrhardt", email = "adrien.ehrhardt@inria.fr",
                   role = c("aut", "cre")),
                   person("Vincent", "Vandewalle", email = "vincent.vandewalle@inria.fr",
@@ -12,13 +12,12 @@ Authors@R: c(person("Adrien", "Ehrhardt", email = "adrien.ehrhardt@inria.fr",
                   person("Philippe", "Heinrich", email = "philippe.heinrich@univ-lille1.fr",
                   role = c("ctb")))
 Maintainer: Adrien Ehrhardt <adrien.ehrhardt@inria.fr>
-Description: An SEM algorithm associated with a Gibbs sampler which purpose is feature engineering for logistic regression.
-     Continuous features are discretized and categorical features' values are grouped to produce a better logistic regression model.
+Description: A Stochastic-Expectation-Maximization (SEM) algorithm (Celeux et al. (1995) <https://hal.inria.fr/inria-00074164>) associated with a Gibbs sampler which purpose is to learn a constrained representation for logistic regression that is called quantization (Ehrhardt et al. (2019) <arXiv:1903.08920>). Continuous features are discretized and categorical features' values are grouped to produce a better logistic regression model. Pairwise interactions between quantized features are dynamically added to the model through a Metropolis-Hastings algorithm (Hastings, W. K. (1970) <doi:10.1093/biomet/57.1.97>).
 License: GPL (>= 2)
 Encoding: UTF-8
 LazyData: true
 Imports:
-    caret,
+    caret (>= 6.0-82),
     gam,
     nnet,
     RcppNumerical,
@@ -34,3 +33,18 @@ Suggests:
     knitr,
     rmarkdown
 VignetteBuilder: knitr
+Collate: 
+    'RcppExports.R'
+    'allClasses.R'
+    'cut.dataset.R'
+    'discretize.link.R'
+    'generic_cutpoints.R'
+    'generic_discretize.R'
+    'glmdisc.R'
+    'method_cutpoints.R'
+    'method_discretize.R'
+    'method_plot.R'
+    'method_predict.R'
+    'methods_disc.R'
+    'normalizedGini.R'
+    'semDiscretization.R'

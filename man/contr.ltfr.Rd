@@ -13,4 +13,7 @@ contr.ltfr(...)
 Simply redirects the call to \code{\link[caret]{contr.ltfr}}, this is done
 to avoid errors when the caret namespace is not attached.
 }
+\examples{
+contr.ltfr(2)
+}
 \keyword{internal}

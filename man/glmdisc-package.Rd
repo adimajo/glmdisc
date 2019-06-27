@@ -34,5 +34,5 @@ We provide as well the classical \code{\link{show}}, \code{\link{print}}, \code{
 }
 
 \author{
-Adrien Ehrhardt, Vincent Vandewalle, Christophe Biernacki, Philippe Heinrich.
+Adrien Ehrhardt.
 }

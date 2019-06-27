@@ -23,7 +23,7 @@
 #' We provide as well the classical \code{\link{show}}, \code{\link{print}}, \code{\link{summary}} functions, as well as \code{\link{normalizedGini}} that is used to calculate the Gini index (a classical Credit Scoring goodness-of-fit indicator).
 #' 
 #' 
-#' @author Adrien Ehrhardt, Vincent Vandewalle, Christophe Biernacki, Philippe Heinrich.
+#' @author Adrien Ehrhardt.
 #' @docType package
 #' @importFrom Rcpp evalCpp
 #' @useDynLib glmdisc

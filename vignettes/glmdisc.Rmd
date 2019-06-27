@@ -37,14 +37,14 @@ knitr::kable(data.frame(Job=c("Craftsman","Technician","Executive","Office emplo
 
 ## Notations
 
-In the rest of the vignette, the random vector $X=(X^j)_1^d$ will designate the predictive features, i.e. the characteristics of a client. The random variable $Y \in \{0,1\}$ will designate the label, i.e. if the client has defaulted ($Y=1$) or not ($Y=0$).
+In the rest of the vignette, the random vector $X=(X_j)_1^d$ will designate the predictive features, i.e. the characteristics of a client. The random variable $Y \in \{0,1\}$ will designate the label, i.e. if the client has defaulted ($Y=1$) or not ($Y=0$).
 
 We are provided with an i.i.d. sample $(\bar{x},\bar{y}) = (x_i,y_i)_1^n$ consisting in $n$ observations of $X$ and $Y$.
 
 ## Logistic regression
 
 The logistic regression model assumes the following relation between $X$ (supposed continuous here) and $Y$:
-$$\ln \left( \frac{p_\theta(Y=1|x)}{p_\theta(Y=0|x)} \right) = \theta_0 + \sum_{j=1}^d \theta_j*x^j  $$
+$$\ln \left( \frac{p_\theta(Y=1|x)}{p_\theta(Y=0|x)} \right) = \theta_0 + \sum_{j=1}^d \theta_j*x_j  $$
 where $\theta = (\theta_j)_0^d$ are estimated using $(\bar{x},\bar{y})$.
 
 Clearly, the model assumes linearity of the logit transform of the response $Y$ with respect to $X$.
@@ -107,7 +107,7 @@ lines(x,pred_disc_logit,type="p",col="blue")
 
 ### Too many values per categorical feature
 
-When provided with categorical features, the logistic regression model fits a coefficient for all its values (except one which is taken as a reference). A common problem arises when there are too many values as each value will be taken by a small number of observations $x_i^j$ which makes the estimation of a logistic regression coefficient unstable:
+When provided with categorical features, the logistic regression model fits a coefficient for all its values (except one which is taken as a reference). A common problem arises when there are too many values as each value will be taken by a small number of observations $x_{i,j}$ which makes the estimation of a logistic regression coefficient unstable:
 
 ```{r, echo=TRUE, results='asis'}
 x_disc_bad_idea <- factor(cut(x,c(-Inf,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,+Inf)),labels = c(1,2,3,4,5,6,7,8,9,10))
@@ -154,23 +154,23 @@ All intervals crossing $0$ are non-significant! We should group factor values to
 
 ## Notations
 
-Let $E=(E^j)_1^d$ be the latent discretized transform of $X$, i.e. taking values in $\{0,\ldots,m_j\}$ where the number of values of each covariate $m_j$ is also latent.
+Let $Q=(Q_j)_1^d$ be the latent discretized transform of $X$, i.e. taking values in $\{0,\ldots,m_j\}$ where the number of values of each covariate $m_j$ is also latent.
 
 The fitted logistic regression model is now:
-$$\ln \left( \frac{p_\theta(Y=1|e)}{p_\theta(Y=0|e)} \right) = \theta_0 + \sum_{j=1}^d \sum_{k=1}^{m_j} \theta^j_k*\mathbb{1}_{e^j=k}$$
-Clearly, the number of parameters has grown which allows for flexible approximation of the true underlying model $p(Y|E)$.
+$$\ln \left( \frac{p_\theta(Y=1|q)}{p_\theta(Y=0|q)} \right) = \theta_0 + \sum_{j=1}^d \sum_{k=1}^{m_j} \theta_j^k*\mathbb{1}_{q_j=k}$$
+Clearly, the number of parameters has grown which allows for flexible approximation of the true underlying model $p(Y|Q)$.
 
 ## Best discretization?
 
-Our goal is to obtain the model $p_\theta(Y|e)$ with best predictive power. As $E$ and $\theta$ are both optimized, a formal goodness-of-fit criterion could be:
+Our goal is to obtain the model $p_\theta(Y|e)$ with best predictive power. As $Q$ and $\theta$ are both optimized, a formal goodness-of-fit criterion could be:
 $$ (\hat{\theta},\hat{\bar{e}}) = \arg \max_{\theta,\bar{e}} \text{AIC}(p_\theta(\bar{y}|\bar{e})) $$
 where AIC stands for Akaike Information Criterion.
 
 ## Combinatorics
 
-The problem seems well-posed: if we were able to generate all discretization schemes transforming $X$ to $E$, learn $p_\theta(y|e)$ for each of them and compare their AIC values, the problem would be solved.
+The problem seems well-posed: if we were able to generate all discretization schemes transforming $X$ to $Q$, learn $p_\theta(y|e)$ for each of them and compare their AIC values, the problem would be solved.
 
-Unfortunately, there are way too many candidates to follow this procedure. Suppose we want to construct $k$ intervals of $E^j$ given $n$ distinct $(x^j_i)_1^n$. There is $n \choose k$ models. The true value of $k$ is unknown, so it must be looped over. Finally, as logistic regression is a multivariate model, the discretization of $E^j$ can influence the discretization of $E^k$, $k \neq j$. 
+Unfortunately, there are way too many candidates to follow this procedure. Suppose we want to construct $k$ intervals of $Q_j$ given $n$ distinct $(x_{i,j})_1^n$. There is $n \choose k$ models. The true value of $k$ is unknown, so it must be looped over. Finally, as logistic regression is a multivariate model, the discretization of $Q_j$ can influence the discretization of $Q^k$, $k \neq j$. 
 
 As a consequence, existing approaches to discretization (in particular discretization of continuous attributes) rely on strong assumptions to simplify the search of good candidates as can be seen in the review of Ramírez‐Gallego, S. et al. (2016) - see References section.
 
@@ -178,46 +178,46 @@ As a consequence, existing approaches to discretization (in particular discretiz
 
 ## Likelihood estimation
 
-$E$ can be introduced in $p(Y|X)$:
+$Q$ can be introduced in $p(Y|X)$:
 $$\forall \: x,y, \; p(y|x) = \sum_e p(y|x,e)p(e|x)$$
 
-First, we assume that all information about $Y$ in $X$ is already contained in $E$ so that:
-$$\forall \: x,y,e, \; p(y|x,e)=p(y|e)$$
-Second, we assume the conditional independence of $E^j$ given $X^j$, i.e. knowing $X^j$, the discretization $E^j$ is independent of the other features $X^k$ and $E^k$ for all $k \neq j$:
-$$\forall \:x, k\neq j, \; E^j | x^j \perp E^k | x^k$$
+First, we assume that all information about $Y$ in $X$ is already contained in $Q$ so that:
+$$\forall \: x,y,q, \; p(y|x,q)=p(y|q)$$
+Second, we assume the conditional independence of $Q_j$ given $X_j$, i.e. knowing $X_j$, the discretization $Q_j$ is independent of the other features $X^k$ and $Q^k$ for all $k \neq j$:
+$$\forall \:x, k\neq j, \; Q_j | x_j \perp Q_k | x_k$$
 The first equation becomes:
-$$\forall \: x,y, \; p(y|x) = \sum_e p(y|e) \prod_{j=1}^d p(e^j|x^j)$$
-As said earlier, we consider only logistic regression models on discretized data $p_\theta(y|e)$. Additionnally, it seems like we have to make further assumptions on the nature of the relationship of $e^j$ to $x^j$. We chose to use polytomous logistic regressions for continuous $X^j$ and contengency tables for qualitative $X^j$. This is an arbitrary choice and future versions will include the possibility of plugging your own model.
+$$\forall \: x,y, \; p(y|x) = \sum_q p(y|q) \prod_{j=1}^d p(q_j|x_j)$$
+As said earlier, we consider only logistic regression models on discretized data $p_\theta(y|e)$. Additionnally, it seems like we have to make further assumptions on the nature of the relationship of $q_j$ to $x_j$. We chose to use polytomous logistic regressions for continuous $X_j$ and contengency tables for qualitative $X_j$. This is an arbitrary choice and future versions will include the possibility of plugging your own model.
 
 The first equation becomes:
-$$\forall \: x,y, \; p(y|x) = \sum_e p_\theta(y|e) \prod_{j=1}^d p_{\alpha_j}(e^j|x^j)$$
+$$\forall \: x,y, \; p(y|x) = \sum_q p_\theta(y|q) \prod_{j=1}^d p_{\alpha_j}(q_j|x_j)$$
 
 ## The SEM algorithm
 
 It is still hard to optimize over $p(y|x;\theta,\alpha)$ as the number of candidate discretizations is gigantic as said earlier.
 
-However, calculating $p(y,e|x)$ is easy:
-$$\forall \: x,y, \; p(y,e|x) = p_\theta(y|e) \prod_{j=1}^d p_{\alpha_j}(e^j|x^j)$$
+However, calculating $p(y,q|x)$ is easy:
+$$\forall \: x,y, \; p(y,q|x) = p_\theta(y|q) \prod_{j=1}^d p_{\alpha_j}(q_j|x_j)$$
 
 As a consequence, we will draw random candidates $e$ approximately at the mode of the distribution $p(y,\cdot|x)$ using an SEM algorithm (see References section).
 
 ## Gibbs sampling
 
 To update, at each random draw, the parameters $\theta$ and $\alpha$ and propose a new discretization $e$, we use the following equation:
-$$p(e^j|x^j,y,e^{\{-j\}}) \propto p_\theta(y|e) p_{\alpha_j}(e^j|x^j)$$
-Note that we draw $e^j$ knowing all other variables, especially $e^{-j}$: this is called a Gibbs sampler (see References section). It is an MCMC method which target distribution is $p(e|x,y)$.
+$$p(q_j|x_j,y,q_{\{-j\}}) \propto p_\theta(y|q) p_{\alpha_j}(q_j|x_j)$$
+Note that we draw $q_j$ knowing all other variables, especially $q_{-\{j\}}$: this is called a Gibbs sampler (see References section). It is an MCMC method which target distribution is $p(q|x,y)$.
 
 # Interaction discovery
 
 ## What do "interactions" mean?
 
-In a continuous setting, if there is an interaction between features $k > l$, then the logistic regression model becomes $\text{logit}[p_\theta(1|x)] = \theta_0 + \sum_{j=1}^d \theta_j x^j + \theta_{kl} x^k x^l$. It amounts to adding some flexibility to the model by introducing a non-linearity, as was done with discretization.
+In a continuous setting, if there is an interaction between features $k > l$, then the logistic regression model becomes $\text{logit}[p_\theta(1|x)] = \theta_0 + \sum_{j=1}^d \theta_j x_j + \theta_{kl} x^k x^l$. It amounts to adding some flexibility to the model by introducing a non-linearity, as was done with discretization.
 
 ## Our proposal
 
 We consider that features interacting in the logistic regression model are unknown and denote by $\Delta$ the random matrix and $\delta$ its observation with $\delta_{kl} = 0$ for $k \leq l$, $\delta_{kl} = 1$ for $k > l$ if features $k$ and $l$ interact, $\delta_{kl} = 0$ otherwise.
 
-Introducing $\Delta$ as a latent variable as we have done for discretization, we get $p(\delta|x,y) \propto p_\theta(y|x,\delta) = \text{logit}^{-1} [\theta_0 + \sum_{j=1}^d \theta_j x^j + \sum_{k>l} \delta_{kl} \theta_{kl} x^k x^l]$.
+Introducing $\Delta$ as a latent variable as we have done for discretization, we get $p(\delta|x,y) \propto p_\theta(y|x,\delta) = \text{logit}^{-1} [\theta_0 + \sum_{j=1}^d \theta_j x_j + \sum_{k>l} \delta_{kl} \theta_{kl} x^k x^l]$.
 
 Again, a simple strategy would consist in estimating $\hat{\theta}_\delta$ for every value of $\Delta$ i.e. $2^{\frac{d(d-1)}{2}}$ models and compare their AIC or BIC values.
 
@@ -235,7 +235,7 @@ The transition probability is the product of these terms: $p_{kl} = q_{kl}a_{kl}
 
 ### Proposal
 
-We must choose a proposal distribution $q_{kl}$. We suspect that a good hint for knowing if there effectively is an interaction between features $k$ and $l$ is to compare the bivariate logistic regression model with $x^k$ and $x^l$ to the logistic regression model containing $x^k$, $x^l$ and their interaction term. Comparison can be done via the BIC criterion for example: $\text{hint}_{kl} \propto \exp(-\text{BIC}(\text{with interaction}) + \text{BIC}(\text{without interaction}))$.
+We must choose a proposal distribution $q_{kl}$. We suspect that a good hint for knowing if there effectively is an interaction between features $k$ and $l$ is to compare the bivariate logistic regression model with $x_k$ and $x_l$ to the logistic regression model containing $x_k$, $x_l$ and their interaction term. Comparison can be done via the BIC criterion for example: $\text{hint}_{kl} \propto \exp(-\text{BIC}(\text{with interaction}) + \text{BIC}(\text{without interaction}))$.
 
 Given the current state of $\Delta$ denoted by $\delta^{\text{current}}$, we want to propose changing the $\delta_{kl}$ entry if it is far from our "hint", i.e.: $q_{kl}=|\delta^{\text{current}}_{kl} - \text{hint}_{kl}|$.
 
@@ -259,20 +259,20 @@ The `validation` and `test` boolean parameters control if the provided dataset s
 
 The `criterion` parameters lets the user choose between standard model selection statistics like `aic` and `bic` and the `gini` index performance measure (proportional to the more traditional AUC measure). Note that if `validation=TRUE`, there is no need to penalize the log-likelihood and `aic` and `bic` become equivalent. On the contrary if `criterion="gini"` and `validation=FALSE` then the algorithm may overfit the training data.
 
-The `m_start` parameter controls the maximum number of categories of $E^j$ for $X^j$ continuous. The SEM algorithm will start with random $E^j$ taking values in $\{1,m_{\text{start}}\}$. For qualitative features $X^j$, $E^j$ is initialized with as many values as $X^j$ so that `m_start` has no effect.
+The `m_start` parameter controls the maximum number of categories of $Q_j$ for $X_j$ continuous. The SEM algorithm will start with random $Q_j$ taking values in $\{1,m_{\text{start}}\}$. For qualitative features $X_j$, $Q_j$ is initialized with as many values as $X_j$ so that `m_start` has no effect.
 
-The `reg_type` parameter controls the model used to fit $E^j$ to continuous $X^j$. The default behavior (`reg_type=poly`) uses `multinom` from the `nnet` package which is a polytomous logistic regression (see References section). The other `reg_type` value is `polr` from the `MASS` package which is an ordered logistic regression (simpler to estimate but less flexible as it fits way fewer parameters).
+The `reg_type` parameter controls the model used to fit $Q_j$ to continuous $X_j$. The default behavior (`reg_type=poly`) uses `multinom` from the `nnet` package which is a polytomous logistic regression (see References section). The other `reg_type` value is `polr` from the `MASS` package which is an ordered logistic regression (simpler to estimate but less flexible as it fits way fewer parameters).
 
-Empirical studies show that with a reasonably small training dataset ($\leq 100 000$ rows) and a small `m_start` parameter ($\leq 20$), approximately $500$ to $1500$ iterations are largely sufficient to obtain a satisfactory model $p_\theta(y|e)$.
+Empirical studies show that with a reasonably small training dataset ($\leq 100 000$ rows) and a small `m_start` parameter ($\leq 20$), approximately $500$ to $1500$ iterations are largely sufficient to obtain a satisfactory model $p_\theta(y|q)$.
 
 ### Internals
 
-First, the discretized version $E$ of $X$ is initialized at random using the user-provided maximum number of values for quantitative values through the `m_start` parameter.
+First, the discretized version $Q$ of $X$ is initialized at random using the user-provided maximum number of values for quantitative values through the `m_start` parameter.
 
 Then we iterate `times`:
-First, the model $p_\theta(y|e)$, where $e$ denotes the current value of $E$, is adjusted. Then, for each feature $X^j$, the model $p_{\alpha_j}(e|x)$ is adjusted (depending on the type of $X^j$ it can be a polytomous logistic regression or a contengency table). Finally, we draw a new candidate $e^j$ with probability $p_\theta(y|e)p_{\alpha_j}(e^j|x^j)$.
+First, the model $p_\theta(y|q)$, where $q$ denotes the current value of $Q$, is adjusted. Then, for each feature $X_j$, the model $p_{\alpha_j}(q|x)$ is adjusted (depending on the type of $X_j$ it can be a polytomous logistic regression or a contengency table). Finally, we draw a new candidate $q_j$ with probability $p_\theta(y|q)p_{\alpha_j}(q_j|x_j)$.
 
-The performance metric chosen through the `criterion` parameter determines the best candidate $e$.
+The performance metric chosen through the `criterion` parameter determines the best candidate $q$.
 
 ### Results
 
@@ -290,11 +290,13 @@ y = rbinom(100,1,1/(1+exp(-log_odd)))
 The `glmdisc` function will try to "recover" the hidden true discretization `xd` when provided only with `x` and `y`:
 ```{r, echo=TRUE,warning=FALSE, message=FALSE, results='hide',eval=FALSE}
 library(glmdisc)
+set.seed(1)
 discretization <- glmdisc(x,y,iter=50,m_start=5,test=FALSE,validation=FALSE,criterion="aic",interact=FALSE)
 ```
 
 ```{r, echo=FALSE,warning=FALSE, message=FALSE, results='hide',eval=TRUE}
 library(glmdisc)
+set.seed(1)
 discretization <- glmdisc(x,y,iter=50,m_start=5,test=FALSE,validation=FALSE,criterion="aic",interact=FALSE)
 ```
 
@@ -482,13 +484,13 @@ To compare the result of such methods to the one we propose, the package `discre
 
 In the third section, we described two fundamental modelling hypotheses that were made:
 
-* The real probability density function $p(Y|X)$ can be approximated by a logistic regression $p_\theta(Y|E)$ on the discretized data $E$.
+* The real probability density function $p(Y|X)$ can be approximated by a logistic regression $p_\theta(Y|Q)$ on the discretized data $Q$.
 
-* The nature of the relationship of $E^j$ to $X^j$ is:
+* The nature of the relationship of $Q_j$ to $X_j$ is:
 
-+ A polytomous logistic regression if $X^j$ is continuous;
++ A polytomous logistic regression if $X_j$ is continuous;
 
-+ A contengency table if $X^j$ is qualitative.
++ A contengency table if $X_j$ is qualitative.
 
 These hypotheses are "building blocks" that could be changed at the modeller's will: discretization could optimize other models.
 
