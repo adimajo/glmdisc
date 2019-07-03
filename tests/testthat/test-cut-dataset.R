@@ -6,16 +6,16 @@ test_that("prop.table.robust works with 0 values", {
 
 test_that("cut_dataset works with only validation", {
      test_de_cut = cut_dataset(20, c(0.1), test = F, validation = T)
-     expect_type(test_de_cut, "integer")
-     expect_type(test_de_cut, "integer")
-     expect_null(test_de_cut)
+     expect_type(test_de_cut[[1]], "integer")
+     expect_type(test_de_cut[[2]], "integer")
+     expect_null(test_de_cut[[3]])
 })
 
 test_that("cut_dataset works with only test", {
      test_de_cut = cut_dataset(20, c(0.1), test = T, validation = F)
-     expect_type(test_de_cut, "integer")
-     expect_type(test_de_cut, "integer")
-     expect_null(test_de_cut)
+     expect_type(test_de_cut[[1]], "integer")
+     expect_type(test_de_cut[[2]], "integer")
+     expect_null(test_de_cut[[3]])
 })
 
 test_that("cut_dataset errors with test and validation and only one proportion", {
@@ -23,7 +23,7 @@ test_that("cut_dataset errors with test and validation and only one proportion",
 })
 
 test_that("cut_dataset works with test and validation", {
-     test_de_cut = cut_dataset(20, c(0.1, 0.1), test = T, validation = F)
+     test_de_cut = cut_dataset(20, c(0.1, 0.1), test = T, validation = T)
      expect_type(test_de_cut[[1]], "integer")
      expect_type(test_de_cut[[2]], "integer")
      expect_type(test_de_cut[[3]], "integer")
