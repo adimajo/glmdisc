@@ -46,19 +46,16 @@ predict.glmdisc <- function(object, predictors) {
      # colnames(new_df) = object@parameters$encoder$facVars[!object@parameters$encoder$facVars %in% colnames(data_e)]
      # data_e <- cbind(data_e,new_df)
      
-     
      # Levels not in the training set but in the test set are removed
      for (var in object@parameters$encoder$facVars) {
           if (length(levels(data_e[,var])[!(levels(data_e[,var]) %in% unlist(unname(object@parameters$encoder$lvls[var])))]) > 0) {
                data_e <- data_e[-which(data_e[,var] == levels(data_e[,var])[!(levels(data_e[,var]) %in% unlist(unname(object@parameters$encoder$lvls[var])))]),]
-               print(paste("levels", paste(levels(data_e[,var])[(!levels(data_e[,var]) %in% unlist(unname(object@parameters$encoder$lvls[var])))], collapse = ", "), "of feature", var, "were removed from test set."))
+               warning(paste("levels", paste(levels(data_e[,var])[(!levels(data_e[,var]) %in% unlist(unname(object@parameters$encoder$lvls[var])))], collapse = ", "), "of feature", var, "were removed from test set."))
           }
      }
 
      data = predict(object = object@parameters$encoder, newdata = data_e)
      
-     #print(ncol(data))
-     #print(length(object@best.disc[[1]]$coefficients))
      predictlogisticRegression(data,object@best.disc[[1]]$coefficients)
 }
 
