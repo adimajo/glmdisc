@@ -29,7 +29,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">glmdisc</a>
-        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.1</span>
+        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2</span>
       </span>
     </div>
 
@@ -59,16 +59,20 @@
       
       </header><div class="row">
   <div class="contents col-md-9">
-    <div id="glmdisc" class="section level1">
+    
+
+<div id="glmdisc" class="section level1">
 <div class="page-header"><h1 class="hasAnchor">
 <a href="#glmdisc" class="anchor"></a>glmdisc</h1></div>
 <p>The goal of glmdisc is to discretize continuous features, merge factor levels, and sparsely introduce interactions in logistic regression models.</p>
 <div id="installation" class="section level2">
 <h2 class="hasAnchor">
 <a href="#installation" class="anchor"></a>Installation</h2>
-<p>You can install glmdisc from github with:</p>
+<p>You can install the development version of <code>glmdisc</code> from Github with:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="co"># install.packages("devtools")</span></a>
 <a class="sourceLine" id="cb1-2" data-line-number="2">devtools<span class="op">::</span><span class="kw"><a href="http://www.rdocumentation.org/packages/devtools/topics/reexports">install_github</a></span>(<span class="st">"adimajo/glmdisc"</span>, <span class="dt">build_vignettes =</span> <span class="ot">TRUE</span>)</a></code></pre></div>
+<p>Or alternatively directly from CRAN:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="kw">install.packages</span>(<span class="st">"glmdisc"</span>)</a></code></pre></div>
 </div>
 <div id="example" class="section level2">
 <h2 class="hasAnchor">
@@ -76,6 +80,7 @@
 <p>For further instructions, go to vignettes &gt; glmdisc.Rmd or go through the vignette directly in RStudio by typing “vignette(‘glmdisc’)” once the package is installed and loaded.</p>
 </div>
 </div>
+
   </div>
 
   <div class="col-md-3" id="sidebar">
@@ -103,7 +108,14 @@
 </ul>
 </div>
 
-  </div>
+  <div class="dev-status">
+<h2>Dev status</h2>
+<ul class="list-unstyled">
+<li><a href="https://travis-ci.org/adimajo/glmdisc"><img src="https://travis-ci.org/adimajo/glmdisc.svg?branch=master" alt="Travis build status"></a></li>
+<li><a href="https://codecov.io/github/adimajo/glmdisc?branch=master"><img src="https://codecov.io/gh/adimajo/glmdisc/branch/master/graph/badge.svg" alt="Coverage status"></a></li>
+</ul>
+</div>
+</div>
 </div>
 
 
