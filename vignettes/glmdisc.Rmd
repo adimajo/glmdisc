@@ -4,7 +4,7 @@ author: "Adrien Ehrhardt"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{`glmdisc} package}
+  %\VignetteIndexEntry{`glmdisc` package}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -290,7 +290,7 @@ y = rbinom(100,1,1/(1+exp(-log_odd)))
 The `glmdisc` function will try to "recover" the hidden true discretization `xd` when provided only with `x` and `y`:
 ```{r, echo=TRUE,warning=FALSE, message=FALSE, results='hide',eval=FALSE}
 library(glmdisc)
-set.seed(1)
+set.seed(123)
 discretization <- glmdisc(x,y,iter=50,m_start=5,test=FALSE,validation=FALSE,criterion="aic",interact=FALSE)
 ```
 

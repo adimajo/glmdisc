@@ -66,6 +66,4 @@ Agresti, A. (2002) \emph{Categorical Data}. Second edition. Wiley.
 \author{
 Adrien Ehrhardt.
 }
-\keyword{Gibbs,}
-\keyword{SEM,}
-\keyword{discretization}
+\concept{SEM Gibbs discretization}

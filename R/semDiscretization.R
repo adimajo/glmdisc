@@ -13,7 +13,7 @@
 #' @param reg_type The model to use between discretized and continuous features (currently, only multinomial logistic regression ('poly') and ordered logistic regression ('polr') are supported ; default: 'poly'). WARNING: 'poly' requires the \code{mnlogit} package, 'polr' requires the \code{MASS} package.
 #' @param interact Boolean : True (default) if interaction detection is wanted (Warning: may be very memory/time-consuming).
 #' @param proportions The list of the proportions wanted for test and validation set. Not used when both test and validation are false. Only the first is used when there is only one of either test or validation that is set to TRUE. Produces an error when the sum is greater to one. Default: list(0.2,0.2) so that the training set has 0.6 of the input observations.
-#' @keywords SEM, Gibbs, discretization
+#' @concept SEM Gibbs discretization
 #' @author Adrien Ehrhardt.
 #' @seealso \code{\link{glm}}, \code{\link{multinom}}, \code{\link{polr}}
 #' @details

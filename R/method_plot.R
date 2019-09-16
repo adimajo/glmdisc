@@ -8,7 +8,7 @@ NULL
 #' @name plot
 #' @aliases plot
 #' @docType methods
-#' @keywords test, discretization, plot
+#' @concept test discretization plot
 #' @importFrom gam s
 #' 
 if (!isGeneric("plot")) {

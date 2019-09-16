@@ -30,6 +30,4 @@ y = rbinom(100,1,1/(1+exp(-log_odd)))
 sem_disc <- glmdisc(x,y,iter=50,m_start=4,test=FALSE,validation=FALSE,criterion="aic")
 plot(sem_disc)
 }
-\keyword{discretization,}
-\keyword{plot}
-\keyword{test,}
+\concept{test discretization plot}

@@ -21,5 +21,4 @@ normalizedGini(c(1,1,1,0,0),c(0.7,0.9,0.5,0.6,0.3))
 \author{
 Adrien Ehrhardt
 }
-\keyword{gini,}
-\keyword{index}
+\concept{gini index}

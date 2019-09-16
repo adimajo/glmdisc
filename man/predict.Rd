@@ -41,7 +41,4 @@ y = rbinom(100,1,1/(1+exp(-log_odd)))
 sem_disc <- glmdisc(x,y,iter=50,m_start=4,test=FALSE,validation=FALSE,criterion="aic")
 predict(sem_disc, data.frame(x))
 }
-\keyword{discretization,}
-\keyword{predict,}
-\keyword{prediction}
-\keyword{test,}
+\concept{test discretization predict prediction}

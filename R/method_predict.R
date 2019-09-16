@@ -6,7 +6,7 @@ NULL
 #' This function discretizes a user-provided test dataset given a discretization scheme provided by an S4 "glmdisc" object.
 #' It then applies the learnt logistic regression model and outputs its prediction (see \code{\link{predict.glm}}).
 #' @exportMethod predict
-#' @keywords test, discretization, predict, prediction
+#' @concept test discretization predict prediction
 #' @docType methods
 #' @name predict
 #' @aliases predict
