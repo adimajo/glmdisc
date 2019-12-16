@@ -4,14 +4,21 @@
 \alias{discretize}
 \alias{discretize,glmdisc-method}
 \title{Prediction on a raw test set of the best logistic regression model on discretized / grouped data.}
-\description{
-This defines the generic method "discretize" which will discretize a new input dataset given a discretization scheme of S4 class \code{\link{glmdisc}}.
+\usage{
+discretize(object, data)
 
-This defines the method "discretize" which will discretize a new input dataset given a discretization scheme of S4 class \code{\link{glmdisc}}
+\S4method{discretize}{glmdisc}(object, data)
 }
-\details{
+\arguments{
+\item{object}{glmdisc object}
+
+\item{data}{the data to discretize according to the provided discretization scheme}
+}
+\description{
 This function discretizes a user-provided test dataset given a discretization scheme provided by an S4 \code{\link{glmdisc}} object.
 It then applies the learnt logistic regression model and outputs its prediction (see \code{\link{predict.glm}}).
+
+This defines the method "discretize" which will discretize a new input dataset given a discretization scheme of S4 class \code{\link{glmdisc}}
 }
 \examples{
 # Simulation of a discretized logit model

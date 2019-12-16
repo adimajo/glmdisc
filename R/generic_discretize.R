@@ -8,6 +8,8 @@ NULL
 #' @name discretize
 #' @rdname discretize
 #' @exportMethod discretize
+#' @param object glmdisc object
+#' @param data the data to discretize according to the provided discretization scheme
 #' @author Adrien Ehrhardt.
-#' @description This defines the generic method "discretize" which will discretize a new input dataset given a discretization scheme of S4 class \code{\link{glmdisc}}.
-methods::setGeneric("discretize", function(object,...) attributes(object))
+# #' @description This defines the generic method "discretize" which will discretize a new input dataset given a discretization scheme of S4 class \code{\link{glmdisc}}.
+methods::setGeneric("discretize", function(object,data) attributes(object))

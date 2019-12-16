@@ -4,9 +4,18 @@
 \alias{glmdisc}
 \title{Model-based multivariate discretization for logistic regression.}
 \usage{
-glmdisc(predictors, labels, interact = TRUE, validation = TRUE,
-  test = TRUE, criterion = "gini", iter = 1000, m_start = 20,
-  reg_type = "poly", proportions = c(0.2, 0.2))
+glmdisc(
+  predictors,
+  labels,
+  interact = TRUE,
+  validation = TRUE,
+  test = TRUE,
+  criterion = "gini",
+  iter = 1000,
+  m_start = 20,
+  reg_type = "poly",
+  proportions = c(0.2, 0.2)
+)
 }
 \arguments{
 \item{predictors}{The matrix array containing the numerical or factor attributes to discretize.}

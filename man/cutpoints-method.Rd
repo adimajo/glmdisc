@@ -5,7 +5,14 @@
 \alias{cutpoints}
 \alias{cutpoints,glmdisc-method}
 \title{Obtaining the cutpoints and / or regroupments of a discretization.}
+\usage{
+cutpoints(object)
+
+\S4method{cutpoints}{glmdisc}(object)
+}
 \arguments{
+\item{object}{generic glmdisc object}
+
 \item{glmdisc}{The trained glmdisc S4 object.}
 }
 \description{

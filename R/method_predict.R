@@ -11,6 +11,7 @@ NULL
 #' @name predict
 #' @aliases predict
 #' @description This defines the method "discretize" which will discretize a new input dataset given a discretization scheme of S4 class \code{\link{glmdisc}}
+#' @param ... Essai
 methods::setGeneric("predict")
 
 #' Prediction on a raw test set of the best logistic regression model on discretized data.

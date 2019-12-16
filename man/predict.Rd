@@ -8,10 +8,16 @@
 \alias{predict,glmdisc-method}
 \title{Prediction on a raw test set of the best logistic regression model on discretized data.}
 \usage{
+predict(object, ...)
+
 predict.glmdisc(object, predictors)
+
+\S4method{predict}{glmdisc}(object, predictors)
 }
 \arguments{
 \item{object}{The S4 discretization object.}
+
+\item{...}{Essai}
 
 \item{predictors}{The test dataframe to discretize and for which we wish to have predictions.}
 }

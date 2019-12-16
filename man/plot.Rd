@@ -9,6 +9,8 @@
 \title{Plots for the discretized / grouped data.}
 \usage{
 plot.glmdisc(x)
+
+\S4method{plot}{glmdisc,missing}(x)
 }
 \arguments{
 \item{x}{The S4 \code{\link{glmdisc}} object to plot.}
