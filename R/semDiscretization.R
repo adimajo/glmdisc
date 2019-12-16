@@ -135,7 +135,7 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                # SEM algorithm
                for (i in 1:iter){
 
-                    if (sum(m == 1)==d) {break ; message("Early stopping rule: all variables discretized in one value")}
+                    if (sum(apply(e,2,function(el) nlevels(as.factor(el))) == 1)==d) {break ; message("Early stopping rule: all variables discretized in one value")}
 
                     data_e = Filter(function(x)(length(unique(x))>1),data.frame(apply(e,2,factor)))
                     data_emap = Filter(function(x)(length(unique(x))>1),data.frame(apply(emap,2,factor)))
