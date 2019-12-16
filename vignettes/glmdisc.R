@@ -1,4 +1,4 @@
-## ----setup, include = FALSE----------------------------------------------
+## ----setup, include = FALSE---------------------------------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
@@ -7,10 +7,10 @@ knitr::opts_chunk$set(
   fig.height = 4
 )
 
-## ---- echo=FALSE, results='asis'-----------------------------------------
+## ---- echo=FALSE, results='asis'----------------------------------------------
 knitr::kable(data.frame(Job=c("Craftsman","Technician","Executive","Office employee"),Habitation = c("Owner","Renter","Starter","By family"),Time_in_job = c(10,20,5,2), Children = c(0,1,2,3), Family_status=  c("Divorced","Widower","Single","Married"),Default = c("No","No","Yes","No")))
 
-## ---- echo=TRUE, results='asis'------------------------------------------
+## ---- echo=TRUE, results='asis'-----------------------------------------------
 x = matrix(runif(1000), nrow = 1000, ncol = 1)
 p = 1/(1+exp(-3*x^5))
 y = rbinom(1000,1,p)
@@ -18,17 +18,17 @@ modele_lin <- glm(y ~ x, family = binomial(link="logit"))
 pred_lin <- predict(modele_lin,as.data.frame(x),type="response")
 pred_lin_logit <- predict(modele_lin,as.data.frame(x))
 
-## ---- echo=FALSE---------------------------------------------------------
+## ---- echo=FALSE--------------------------------------------------------------
 knitr::kable(head(data.frame(True_prob = p,Pred_lin = pred_lin)))
 
-## ---- echo=TRUE, results='asis'------------------------------------------
+## ---- echo=TRUE, results='asis'-----------------------------------------------
 x_disc <- factor(cut(x,c(-Inf,0.5,0.7,0.8,0.9,+Inf)),labels = c(1,2,3,4,5))
 modele_disc <- glm(y ~ x_disc, family = binomial(link="logit"))
 pred_disc <- predict(modele_disc,as.data.frame(x_disc),type="response")
 pred_disc_logit <- predict(modele_disc,as.data.frame(x_disc))
 
 
-## ---- echo=FALSE---------------------------------------------------------
+## ---- echo=FALSE--------------------------------------------------------------
 
 knitr::kable(head(data.frame(True_prob = p,Pred_lin = pred_lin,Pred_disc = pred_disc)))
 plot(x,3*x^5,main = "Estimated logit transform of p(Y|X)", ylab = "p(Y|X) under different models")
@@ -36,10 +36,10 @@ lines(x,pred_lin_logit,type="p",col="red")
 lines(x,pred_disc_logit,type="p",col="blue")
 
 
-## ---- echo=TRUE, results='asis'------------------------------------------
+## ---- echo=TRUE, results='asis'-----------------------------------------------
 x_disc_bad_idea <- factor(cut(x,c(-Inf,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,+Inf)),labels = c(1,2,3,4,5,6,7,8,9,10))
 
-## ---- echo=FALSE, results='asis'-----------------------------------------
+## ---- echo=FALSE, results='asis'----------------------------------------------
 liste_coef <- list()
 
 for (k in 1:10) {
@@ -70,7 +70,7 @@ plot (row.names(stats_coef), stats_coef[,1],ylab="Estimated coefficient",xlab="F
 segments(as.numeric(row.names(stats_coef)), stats_coef[,1]-stats_coef[,2],as.numeric(row.names(stats_coef)),stats_coef[,1]+stats_coef[,2])
 lines(row.names(stats_coef),rep(0,length(row.names(stats_coef))),col="red")
 
-## ---- echo=TRUE, results='asis'------------------------------------------
+## ---- echo=TRUE, results='asis'-----------------------------------------------
 x = matrix(runif(300), nrow = 100, ncol = 3)
 cuts = seq(0,1,length.out= 4)
 xd = apply(x,2, function(col) as.numeric(cut(col,cuts)))
@@ -79,17 +79,17 @@ log_odd = rowSums(t(sapply(seq_along(xd[,1]), function(row_id) sapply(seq_along(
 function(element) theta[xd[row_id,element],element]))))
 y = rbinom(100,1,1/(1+exp(-log_odd)))
 
-## ---- echo=TRUE,warning=FALSE, message=FALSE, results='hide',eval=FALSE----
+## ---- echo=TRUE,warning=FALSE, message=FALSE, results='hide',eval=FALSE-------
 #  library(glmdisc)
 #  set.seed(123)
 #  discretization <- glmdisc(x,y,iter=50,m_start=5,test=FALSE,validation=FALSE,criterion="aic",interact=FALSE)
 
-## ---- echo=FALSE,warning=FALSE, message=FALSE, results='hide',eval=TRUE----
+## ---- echo=FALSE,warning=FALSE, message=FALSE, results='hide',eval=TRUE-------
 library(glmdisc)
 set.seed(1)
 discretization <- glmdisc(x,y,iter=50,m_start=5,test=FALSE,validation=FALSE,criterion="aic",interact=FALSE)
 
-## ---- echo=TRUE,warning=FALSE, message=FALSE, results='hide',eval=TRUE----
+## ---- echo=TRUE,warning=FALSE, message=FALSE, results='hide',eval=TRUE--------
 all_formula <- list()
 
 for (l in 1:10) {
@@ -109,7 +109,7 @@ for (l in 1:10) {
 #barplot(table(grepl(":",all_formula)),names.arg=c("No interaction","One interaction"),xlim = 2)
 
 
-## ---- echo=TRUE,warning=FALSE, message=FALSE, results='hide'-------------
+## ---- echo=TRUE,warning=FALSE, message=FALSE, results='hide'------------------
 
 all_formula <- list()
 
@@ -142,52 +142,52 @@ for (l in 1:10) {
 #barplot(table(grepl(":",all_formula)),names.arg=c("No interaction","One interaction"),xlim = 2)
 
 
-## ---- echo=TRUE----------------------------------------------------------
+## ---- echo=TRUE---------------------------------------------------------------
 discretization@parameters
 
-## ---- echo=TRUE----------------------------------------------------------
+## ---- echo=TRUE---------------------------------------------------------------
 discretization@best.disc[[1]]
 
 # The first link function is:
 discretization@best.disc[[2]][[1]]
 
-## ---- echo=TRUE----------------------------------------------------------
+## ---- echo=TRUE---------------------------------------------------------------
 discretization@performance[[1]]
 
-## ---- echo=TRUE----------------------------------------------------------
+## ---- echo=TRUE---------------------------------------------------------------
 discretization@performance[[2]][1:5]
 
-## ---- echo=TRUE, eval=FALSE----------------------------------------------
+## ---- echo=TRUE, eval=FALSE---------------------------------------------------
 #  discretization@disc.data
 
-## ---- echo=FALSE---------------------------------------------------------
+## ---- echo=FALSE--------------------------------------------------------------
 knitr::kable(head(discretization@disc.data))
 
-## ---- echo=TRUE,eval=FALSE-----------------------------------------------
+## ---- echo=TRUE,eval=FALSE----------------------------------------------------
 #  discretization@cont.data
 
-## ---- echo=FALSE---------------------------------------------------------
+## ---- echo=FALSE--------------------------------------------------------------
 knitr::kable(head(discretization@cont.data))
 
-## ---- echo=FALSE---------------------------------------------------------
+## ---- echo=FALSE--------------------------------------------------------------
 plot(x[,1],xd[,1])
 plot(discretization@cont.data[,1],discretization@disc.data[,1])
 
-## ---- echo=TRUE----------------------------------------------------------
+## ---- echo=TRUE---------------------------------------------------------------
 print(discretization)
 
-## ---- echo=TRUE----------------------------------------------------------
+## ---- echo=TRUE---------------------------------------------------------------
 show(discretization)
 
-## ---- echo=TRUE, results='asis'------------------------------------------
+## ---- echo=TRUE, results='asis'-----------------------------------------------
 x_new <- discretize(discretization,x)
 
-## ---- echo=FALSE, warning=FALSE------------------------------------------
+## ---- echo=FALSE, warning=FALSE-----------------------------------------------
 knitr::kable(head(x_new))
 
-## ---- echo=TRUE----------------------------------------------------------
+## ---- echo=TRUE---------------------------------------------------------------
 pred_new <- predict(discretization,data.frame(x))
 
-## ---- echo=FALSE, warning=FALSE------------------------------------------
+## ---- echo=FALSE, warning=FALSE-----------------------------------------------
 knitr::kable(head(pred_new))
 
