@@ -135,14 +135,14 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                # SEM algorithm
                for (i in 1:iter){
 
-                    if (sum(apply(e,2,function(el) nlevels(as.factor(el))) == 1)==d) {break ; message("Early stopping rule: all variables discretized in one value")}
+                    if (sum(apply(e,2,function(el) nlevels(as.factor(el))) == 1)==d) {message("Early stopping rule: all variables discretized in one value") ; break}
 
                     data_e = Filter(function(x)(length(unique(x))>1),data.frame(apply(e,2,factor)))
                     data_emap = Filter(function(x)(length(unique(x))>1),data.frame(apply(emap,2,factor)))
                     data = data.frame(e,labels = labels)
                     data_logit = data.frame(emap,labels = labels)
 
-                    if (ncol(data_emap)==0) {break ; message("Early stopping rule: all variables discretized in one value")}
+                    if (ncol(data_emap)==0) {message("Early stopping rule: all variables discretized in one value") ; break}
                     
                     # ejecter and ejecter_logit encode feature locations of features that have only one levels and are thus excluded from the model
                     if (interact==TRUE) {
