@@ -345,6 +345,8 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                                         link[[j]] = stats::glm(e ~ x, data=data.frame(e = factor(e[continu_complete_case[,j]&ensemble[[1]],j]), x = predictors[continu_complete_case[,j]&ensemble[[1]],j]), family = stats::binomial(link="logit"), model = FALSE)
                                    }
                               }
+                         } else {
+                              link[[j]] = NA
                          }
 
                          # p(y|e^j,e^-j) calculation
