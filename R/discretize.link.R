@@ -36,7 +36,7 @@ discretize_link <- function(link,df,m_start) {
      if (d>1) {
           for (j in (1:d)) {
                if (types_data[j]=="numeric") {
-                    if (!is.na(link[[j]])) {
+                    if (sum(is.na(link[[j]]))==0) {
                          t = predict(link[[j]], newdata = data.frame(x = df[continu_complete_case[,j],j]), type="probs")
                     
                          if (is.vector(t)) {
