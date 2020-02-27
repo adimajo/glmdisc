@@ -423,61 +423,47 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                                              data[,(2:(m[1]))] = stats::model.matrix(stats::as.formula("~e"),data=data.frame("e"=factor(e[,j])))[,-1]
                                         }
                                    } else {
-                                        if (which(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))[1]>1) {
-                                             
-                                             # print(1)
-                                             # print(j)
-                                             # print(m[j])
-                                             # print(levels(as.factor(e[,j])))
-                                             # print(lev[[j]][[1]])
-                                             # print((!lev[[j]][[1]] %in% levels(as.factor(e[,j]))))
-                                             # print(which(!lev[[j]][[1]] %in% levels(as.factor(e[,j]))))
-                                             # print(lev[[j]][[1]][which(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))])
-                                             # print(paste0("X",j,"_",lev[[j]][[1]][which(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))]))
-                                             # print(paste0("X",j,"_",lev[[j]][[1]][which(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))[-1]]))
-                                             # 
-                                             # print(colnames(data))
-                                             # print("here again!")
+                                        # if (which(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))[1]>1) {
                                              
                                              data[,paste0("X",j,"_",lev[[j]][[1]][which(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))])] <- matrix(0,nrow = n, ncol = sum(!lev[[j]][[1]] %in% levels(as.factor(e[,j]))))
                                              data[,paste0("X",j,"_",levels(as.factor(e[,j])))[paste0("X",j,levels(as.factor(e[,j]))) %in% colnames(data)]] <- stats::model.matrix(stats::as.formula("~e[,j]"),data=data.frame(e[,j]))[,-1]
                                         
-                                        } else {
-                                             
-                                             # print(2)
-                                             # print(j)
-                                             # print(m[j])
-                                             # print(levels(as.factor(e[,j])))
-                                             # print(lev[[j]][[1]])
-                                             # print((!lev[[j]][[1]] %in% levels(as.factor(e[,j]))))
-                                             # print(which(!lev[[j]][[1]] %in% levels(as.factor(e[,j]))))
-                                             # print(paste0("X",j,"_",lev[[j]][[1]][which(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))[-1]]))
-                                             # print(colnames(data))
-                                             # print("here again again!")
-                                             
-                                             if (length(which(!lev[[j]][[1]] %in% levels(as.factor(e[,j]))))>1) {
-                                                  # print("there!")
-                                                  # print(lev[[j]][[1]])
-                                                  # print(levels(as.factor(e[,j])))
-                                                  # print(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))
-                                                  # print(which(!lev[[j]][[1]] %in% levels(as.factor(e[,j]))))
-                                                  # print(which(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))[-1])
-                                                  # print(lev[[j]][[1]][which(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))[-1]])
-                                                  # print(matrix(0,nrow = n, ncol = sum(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))))
-                                                  # print(paste0("X",j,"_",lev[[j]][[1]][which(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))[-1]]))
-                                                  # print(data[,paste0("X",j,"_",lev[[j]][[1]][which(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))[-1]])])
-                                                  
-                                                  data[,paste0("X",j,"_",lev[[j]][[1]][which(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))[-1]])] <- matrix(0,nrow = n, ncol = sum(!lev[[j]][[1]] %in% levels(as.factor(e[,j]))))
-                                             }
-                                             
-                                             reste <- stats::model.matrix(stats::as.formula("~e[,j]"),data=data.frame(e[,j]))[,-1]
-                                             data[,paste0("X",j,"_",levels(as.factor(e[,j])))[paste0("X",j,levels(as.factor(e[,j]))) %in% colnames(data)]][,-1] <- reste
-                                             if (nlevels(as.factor(e[,j]))==2) {
-                                                  data[,paste0("X",j,"_",levels(as.factor(e[,j])))[paste0("X",j,"_",levels(as.factor(e[,j]))) %in% colnames(data)]][,1] <- as.numeric(reste==0)
-                                             } else {
-                                                  data[,paste0("X",j,"_",levels(as.factor(e[,j])))[paste0("X",j,"_",levels(as.factor(e[,j]))) %in% colnames(data)]][,1] <- as.numeric(rowSums(reste)==0)
-                                             }
-                                        }
+                                        # } else {
+                                        #      
+                                        #      print(2)
+                                        #      print(j)
+                                        #      print(m[j])
+                                        #      print(levels(as.factor(e[,j])))
+                                        #      print(lev[[j]][[1]])
+                                        #      print((!lev[[j]][[1]] %in% levels(as.factor(e[,j]))))
+                                        #      print(which(!lev[[j]][[1]] %in% levels(as.factor(e[,j]))))
+                                        #      print(paste0("X",j,"_",lev[[j]][[1]][which(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))[-1]]))
+                                        #      print(colnames(data))
+                                        #      print("here again again!")
+                                        #      
+                                        #      if (length(which(!lev[[j]][[1]] %in% levels(as.factor(e[,j]))))>1) {
+                                        #           # print("there!")
+                                        #           # print(lev[[j]][[1]])
+                                        #           # print(levels(as.factor(e[,j])))
+                                        #           # print(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))
+                                        #           # print(which(!lev[[j]][[1]] %in% levels(as.factor(e[,j]))))
+                                        #           # print(which(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))[-1])
+                                        #           # print(lev[[j]][[1]][which(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))[-1]])
+                                        #           # print(matrix(0,nrow = n, ncol = sum(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))))
+                                        #           # print(paste0("X",j,"_",lev[[j]][[1]][which(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))[-1]]))
+                                        #           # print(data[,paste0("X",j,"_",lev[[j]][[1]][which(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))[-1]])])
+                                        #           
+                                        #           data[,paste0("X",j,"_",lev[[j]][[1]][which(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))[-1]])] <- matrix(0,nrow = n, ncol = sum(!lev[[j]][[1]] %in% levels(as.factor(e[,j]))))
+                                        #      }
+                                        # 
+                                        #      reste <- stats::model.matrix(stats::as.formula("~e[,j]"),data=data.frame(e[,j]))[,-1]
+                                        #      data[,paste0("X",j,"_",levels(as.factor(e[,j])))[paste0("X",j,levels(as.factor(e[,j]))) %in% colnames(data)]][,-1] <- reste
+                                        #      if (nlevels(as.factor(e[,j]))==2) {
+                                        #           data[,paste0("X",j,"_",levels(as.factor(e[,j])))[paste0("X",j,"_",levels(as.factor(e[,j]))) %in% colnames(data)]][,1] <- as.numeric(reste==0)
+                                        #      } else {
+                                        #           data[,paste0("X",j,"_",levels(as.factor(e[,j])))[paste0("X",j,"_",levels(as.factor(e[,j]))) %in% colnames(data)]][,1] <- as.numeric(rowSums(reste)==0)
+                                        #      }
+                                        # }
                                    }
                               } else {
                                    # print("here!")
