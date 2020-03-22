@@ -37,7 +37,7 @@ discretize_link <- function(link,df,m_start) {
           for (j in (1:d)) {
                if (types_data[j]=="numeric") {
                     if (sum(is.na(link[[j]]))==0) {
-                         t = predict(link[[j]], newdata = data.frame(x = df[continu_complete_case[,j],j]), type="probs")
+                         t = predict(link[[j]], newdata = data.frame(x = df[continu_complete_case[,j],j], stringsAsFactors=TRUE), type="probs")
                     
                          if (is.vector(t)) {
                               t = cbind(1-t,t)
@@ -71,7 +71,7 @@ discretize_link <- function(link,df,m_start) {
           # lev = c("1",sapply(names(link$coefficients[seq(2,length(link$coefficients),2)]), function(lev_name) substr(lev_name,start=3,stop=nchar(lev_name))))
           # long_dataset <- data.frame(x = as.vector(sapply(df, function(var) rep(var,m))), names = as.character(as.vector(rep(lev[seq(1:m)],n))))
           # t = predict(link, newdata = long_dataset, choiceVar = "names", type="probs")
-          t = predict(link, newdata = data.frame(x = df), type="probs")
+          t = predict(link, newdata = data.frame(x = df, stringsAsFactors=TRUE), type="probs")
           emap[,1] <- apply(t,1,function(p) names(which.max(p)))
      } else {
           t = prop.table(t(sapply(df,function(row) link[,row])),1)

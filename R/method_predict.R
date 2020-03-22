@@ -34,7 +34,7 @@ methods::setGeneric("predict")
 #' sem_disc <- glmdisc(x,y,iter=50,m_start=4,test=FALSE,validation=FALSE,criterion="aic")
 #' predict(sem_disc, data.frame(x))
 predict.glmdisc <- function(object, predictors) {
-     data_disc = data.frame(discretize_link(object@best.disc[[2]],predictors,object@parameters$m_start))
+     data_disc = data.frame(discretize_link(object@best.disc[[2]],predictors,object@parameters$m_start), stringsAsFactors=TRUE)
      #colnames(data_disc) = colnames(predictors)
      
      # Features with only one level are out of the model

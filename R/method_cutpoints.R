@@ -29,7 +29,7 @@ methods::setMethod("cutpoints", methods::signature(object="glmdisc"), function(o
      }
                
      for (j in which(object@parameters$types_data=="numeric")) {
-          data_disc = data.frame(disc = object@disc.data[,j],cont = object@cont.data[,j])
+          data_disc = data.frame(disc = object@disc.data[,j],cont = object@cont.data[,j], stringsAsFactors=TRUE)
           
           cut1 = stats::aggregate(cont ~ disc, data = data_disc, min)
           cut2 = stats::aggregate(cont ~ disc, data = data_disc, max)

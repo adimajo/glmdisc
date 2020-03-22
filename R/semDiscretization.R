@@ -125,8 +125,8 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                               #print(k)
                               if(nlevels(factor(predictors[continu_complete_case[,j]&continu_complete_case[,k]&ensemble[[1]],j]))==1) stop(paste0("Some levels are scarce such that feature ",j," only has 1 level in train. Try with validation = F"))
                               if(nlevels(factor(predictors[continu_complete_case[,j]&continu_complete_case[,k]&ensemble[[1]],k]))==1) stop(paste0("Some levels are scarce such that feature ",k," only has 1 level in train. Try with validation = F"))
-                              sans_inter <- stats::glm(labels ~ X1 + X2, family=stats::binomial(link="logit"), data=data.frame(labels = labels[continu_complete_case[,j]&continu_complete_case[,k]&ensemble[[1]]],X1 = predictors[continu_complete_case[,j]&continu_complete_case[,k]&ensemble[[1]],j],X2 = predictors[continu_complete_case[,j]&continu_complete_case[,k]&ensemble[[1]],k]))
-                              avec_inter <- stats::glm(labels ~ X1 + X2 + X1:X2, family=stats::binomial(link="logit"), data=data.frame(labels = labels[continu_complete_case[,j]&continu_complete_case[,k]&ensemble[[1]]],X1 = predictors[continu_complete_case[,j]&continu_complete_case[,k]&ensemble[[1]],j],X2 = predictors[continu_complete_case[,j]&continu_complete_case[,k]&ensemble[[1]],k]))
+                              sans_inter <- stats::glm(labels ~ X1 + X2, family=stats::binomial(link="logit"), data=data.frame(labels = labels[continu_complete_case[,j]&continu_complete_case[,k]&ensemble[[1]]],X1 = predictors[continu_complete_case[,j]&continu_complete_case[,k]&ensemble[[1]],j],X2 = predictors[continu_complete_case[,j]&continu_complete_case[,k]&ensemble[[1]],k], stringsAsFactors = TRUE))
+                              avec_inter <- stats::glm(labels ~ X1 + X2 + X1:X2, family=stats::binomial(link="logit"), data=data.frame(labels = labels[continu_complete_case[,j]&continu_complete_case[,k]&ensemble[[1]]],X1 = predictors[continu_complete_case[,j]&continu_complete_case[,k]&ensemble[[1]],j],X2 = predictors[continu_complete_case[,j]&continu_complete_case[,k]&ensemble[[1]],k], stringsAsFactors = TRUE))
                               p_delta[j,k] <- 1/(1+exp(-sans_inter$deviance - log(sum(ensemble[[1]]))*length(sans_inter$coefficients) + avec_inter$deviance + log(sum(ensemble[[1]]))*length(avec_inter$coefficients)))
                          }
                     }
@@ -137,10 +137,10 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
 
                     if (sum(apply(e,2,function(el) nlevels(as.factor(el))) == 1)==d) {message("Early stopping rule: all variables discretized in one value") ; break}
 
-                    data_e = Filter(function(x)(length(unique(x))>1),data.frame(apply(e,2,factor)))
-                    data_emap = Filter(function(x)(length(unique(x))>1),data.frame(apply(emap,2,factor)))
-                    data = data.frame(e,labels = labels)
-                    data_logit = data.frame(emap,labels = labels)
+                    data_e = Filter(function(x)(length(unique(x))>1), data.frame(apply(e,2,factor), stringsAsFactors = TRUE))
+                    data_emap = Filter(function(x)(length(unique(x))>1),data.frame(apply(emap,2,factor), stringsAsFactors = TRUE))
+                    data = data.frame(e,labels = labels, stringsAsFactors = TRUE)
+                    data_logit = data.frame(emap,labels = labels, stringsAsFactors = TRUE)
 
                     if (ncol(data_emap)==0) {message("Early stopping rule: all variables discretized in one value") ; break}
                     
@@ -335,14 +335,14 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
 
                               # Polytomic or ordered logistic regression
                               if ((reg_type=='poly')&(types_data[j]=="numeric")) {
-                                   link[[j]] = nnet::multinom(e ~ x, data=data.frame(e=e[continu_complete_case[,j]&ensemble[[1]],j],x=predictors[continu_complete_case[,j]&ensemble[[1]],j]), start = link[[j]]$coefficients, trace = FALSE, Hess=FALSE, maxit=50)
+                                   link[[j]] = nnet::multinom(e ~ x, data=data.frame(e=e[continu_complete_case[,j]&ensemble[[1]],j],x=predictors[continu_complete_case[,j]&ensemble[[1]],j], stringsAsFactors = TRUE), start = link[[j]]$coefficients, trace = FALSE, Hess=FALSE, maxit=50)
                               } else if (types_data[j]=="numeric") {
                                    if (exists("link[[j]]$weights")) {
-                                        link[[j]] = MASS::polr(e ~ x, data=data.frame(e = factor(as.numeric(ordered(e[continu_complete_case[,j]&ensemble[[1]],j],levels = names(sort(unlist(by(predictors[continu_complete_case[,j]&ensemble[[1]],j],e[continu_complete_case[,j]&ensemble[[1]],j],mean)))))), ordered=T), x = predictors[continu_complete_case[,j]&ensemble[[1]],j]), Hess = FALSE, model = FALSE, weights = link[[j]]$weights)
+                                        link[[j]] = MASS::polr(e ~ x, data=data.frame(e = factor(as.numeric(ordered(e[continu_complete_case[,j]&ensemble[[1]],j],levels = names(sort(unlist(by(predictors[continu_complete_case[,j]&ensemble[[1]],j],e[continu_complete_case[,j]&ensemble[[1]],j],mean)))))), ordered=T), x = predictors[continu_complete_case[,j]&ensemble[[1]],j], stringsAsFactors=TRUE), Hess = FALSE, model = FALSE, weights = link[[j]]$weights)
                                    } else if (nlevels(as.factor(e[continu_complete_case[ensemble[[1]],j],][ensemble[[1]],j]))>2) {
-                                        link[[j]] = MASS::polr(e ~ x, data=data.frame(e = factor(as.numeric(ordered(e[continu_complete_case[,j]&ensemble[[1]],j],levels = names(sort(unlist(by(predictors[continu_complete_case[,j]&ensemble[[1]],j],e[continu_complete_case[,j]&ensemble[[1]],j],mean)))))), ordered=T), x = predictors[continu_complete_case[,j]&ensemble[[1]],j]), Hess = FALSE, model = FALSE)
+                                        link[[j]] = MASS::polr(e ~ x, data=data.frame(e = factor(as.numeric(ordered(e[continu_complete_case[,j]&ensemble[[1]],j],levels = names(sort(unlist(by(predictors[continu_complete_case[,j]&ensemble[[1]],j],e[continu_complete_case[,j]&ensemble[[1]],j],mean)))))), ordered=T), x = predictors[continu_complete_case[,j]&ensemble[[1]],j], stringsAsFactors=TRUE), Hess = FALSE, model = FALSE)
                                    } else {
-                                        link[[j]] = stats::glm(e ~ x, data=data.frame(e = factor(e[continu_complete_case[,j]&ensemble[[1]],j]), x = predictors[continu_complete_case[,j]&ensemble[[1]],j]), family = stats::binomial(link="logit"), model = FALSE)
+                                        link[[j]] = stats::glm(e ~ x, data=data.frame(e = factor(e[continu_complete_case[,j]&ensemble[[1]],j]), x = predictors[continu_complete_case[,j]&ensemble[[1]],j], stringsAsFactors=TRUE), family = stats::binomial(link="logit"), model = FALSE)
                                    }
                               }
                          } else {
@@ -376,7 +376,7 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                               if ((types_data[j]=="numeric")) {
                                    
                                    
-                                   t = predict(link[[j]], newdata = data.frame(x = predictors[continu_complete_case[,j],][,j]),type="probs")
+                                   t = predict(link[[j]], newdata = data.frame(x = predictors[continu_complete_case[,j],][,j], stringsAsFactors=TRUE),type="probs")
                                    
                                    if (is.vector(t)) {
                                         t = cbind(1-t,t)
@@ -418,15 +418,15 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                               if (nlevels(as.factor(e[,j]))>1) {
                                    if (nlevels(as.factor(e[,j]))==m[j]) {
                                         if (j>1) {
-                                             data[,((3-j+sum((m[1:(j-1)]))):(1-j+sum((m[1:j]))))] = stats::model.matrix(stats::as.formula("~e"),data=data.frame("e"=factor(e[,j])))[,-1]
+                                             data[,((3-j+sum((m[1:(j-1)]))):(1-j+sum((m[1:j]))))] = stats::model.matrix(stats::as.formula("~e"),data=data.frame("e"=factor(e[,j]), stringsAsFactors=TRUE))[,-1]
                                         } else {
-                                             data[,(2:(m[1]))] = stats::model.matrix(stats::as.formula("~e"),data=data.frame("e"=factor(e[,j])))[,-1]
+                                             data[,(2:(m[1]))] = stats::model.matrix(stats::as.formula("~e"),data=data.frame("e"=factor(e[,j]), stringsAsFactors = TRUE))[,-1]
                                         }
                                    } else {
                                         # if (which(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))[1]>1) {
                                              
                                              data[,paste0("X",j,"_",lev[[j]][[1]][which(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))])] <- matrix(0,nrow = n, ncol = sum(!lev[[j]][[1]] %in% levels(as.factor(e[,j]))))
-                                             data[,paste0("X",j,"_",levels(as.factor(e[,j])))[paste0("X",j,levels(as.factor(e[,j]))) %in% colnames(data)]] <- stats::model.matrix(stats::as.formula("~e[,j]"),data=data.frame(e[,j]))[,-1]
+                                             data[,paste0("X",j,"_",levels(as.factor(e[,j])))[paste0("X",j,levels(as.factor(e[,j]))) %in% colnames(data)]] <- stats::model.matrix(stats::as.formula("~e[,j]"),data=data.frame(e[,j], stringsAsFactors = TRUE))[,-1]
                                         
                                         # } else {
                                         #      
@@ -494,20 +494,20 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                                         if (reg_type=='poly') {
                                              if (!requireNamespace("nnet", quietly = TRUE)) {
                                                   if ((types_data[j]=="numeric")) {
-                                                       t = predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs")
+                                                       t = predict(link[[j]], newdata = data.frame(x = predictors[,j], stringsAsFactors=TRUE),type="probs")
                                                   } else {
                                                        t = prop.table.robust(t(sapply(predictors[,j],function(row) link[[j]][,row])),1)
                                                   }
                                              } else {
                                                   if ((types_data[j]=="numeric")) {
-                                                       t = predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs")
+                                                       t = predict(link[[j]], newdata = data.frame(x = predictors[,j], stringsAsFactors=TRUE),type="probs")
                                                   } else {
                                                        t = prop.table.robust(t(sapply(predictors[,j],function(row) link[[j]][,row])),1)
                                                   }
                                              }
                                         } else {
                                              if ((types_data[j]=="numeric")) {
-                                                  t = tryCatch(predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs"), error = function(cond) matrix(c(1-predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="response"),predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="response")),ncol=2,dimnames = list(seq(1:n),c(min(levels(factor(e[ensemble[[1]],j]))),max(levels(factor(e[ensemble[[1]],j])))))))
+                                                  t = tryCatch(predict(link[[j]], newdata = data.frame(x = predictors[,j], stringsAsFactors=TRUE),type="probs"), error = function(cond) matrix(c(1-predict(link[[j]], newdata = data.frame(x = predictors[,j], stringsAsFactors = TRUE),type="response"),predict(link[[j]], newdata = data.frame(x = predictors[,j], stringsAsFactors=TRUE),type="response")),ncol=2,dimnames = list(seq(1:n),c(min(levels(factor(e[ensemble[[1]],j]))),max(levels(factor(e[ensemble[[1]],j])))))))
                                              } else {
                                                   t = prop.table.robust(t(sapply(predictors[,j],function(row) link[[j]][,row])),1)
                                              }
@@ -541,20 +541,20 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                                         if (reg_type=='poly') {
                                              if (!requireNamespace("nnet", quietly = TRUE)) {
                                                   if ((types_data[j]=="numeric")) {
-                                                       t = predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs")
+                                                       t = predict(link[[j]], newdata = data.frame(x = predictors[,j], stringsAsFactors = TRUE),type="probs")
                                                   } else {
                                                        t = prop.table.robust(t(sapply(predictors[,j],function(row) link[[j]][,row])),1)
                                                   }
                                              } else {
                                                   if ((types_data[j]=="numeric")) {
-                                                       t = predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs")
+                                                       t = predict(link[[j]], newdata = data.frame(x = predictors[,j], stringsAsFactors = TRUE),type="probs")
                                                   } else {
                                                        t = prop.table.robust(t(sapply(predictors[,j],function(row) link[[j]][,row])),1)
                                                   }
                                              }
                                         } else {
                                              if ((types_data[j]=="numeric")) {
-                                                  t = tryCatch(predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="probs"), error = function(cond) matrix(c(1-predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="response"),predict(link[[j]], newdata = data.frame(x = predictors[,j]),type="response")),ncol=2,dimnames = list(seq(1:n),c(min(levels(factor(e[ensemble[[1]],j]))),max(levels(factor(e[ensemble[[1]],j])))))))
+                                                  t = tryCatch(predict(link[[j]], newdata = data.frame(x = predictors[,j], stringsAsFactors = TRUE),type="probs"), error = function(cond) matrix(c(1-predict(link[[j]], newdata = data.frame(x = predictors[,j], stringsAsFactors = TRUE),type="response"),predict(link[[j]], newdata = data.frame(x = predictors[,j], stringsAsFactors = TRUE),type="response")),ncol=2,dimnames = list(seq(1:n),c(min(levels(factor(e[ensemble[[1]],j]))),max(levels(factor(e[ensemble[[1]],j])))))))
                                              } else {
                                                   t = prop.table.robust(t(sapply(predictors[,j],function(row) link[[j]][,row])),1)
                                              }
@@ -585,8 +585,8 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                if (validation) {
                     # if (criterion=="gini") {
                          if (test) {
-                              encoder = dummyVars(best.disc[[3]],data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[1]],],m_start)), fullRank = FALSE, sep = "_")
-                              newdata = data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[3]],],m_start))
+                              encoder = dummyVars(best.disc[[3]],data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[1]],],m_start), stringsAsFactors = TRUE), fullRank = FALSE, sep = "_")
+                              newdata = data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[3]],],m_start), stringsAsFactors = TRUE)
                               labels_test = as.numeric(labels[ensemble[[3]]])
                               
                               for (var in encoder$facVars) {
@@ -602,8 +602,8 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                               
                               performance = normalizedGini(labels_test,predictlogisticRegression(data_test,best.disc[[1]]$coefficients))
                          } else {
-                              encoder = dummyVars(best.disc[[3]],data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[1]],],m_start)), fullRank = FALSE, sep = "_")
-                              newdata = data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[2]],],m_start))
+                              encoder = dummyVars(best.disc[[3]],data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[1]],],m_start), stringsAsFactors = TRUE), fullRank = FALSE, sep = "_")
+                              newdata = data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[2]],],m_start), stringsAsFactors = TRUE)
                               labels_validation = as.numeric(labels[ensemble[[2]]])
                               
                               for (var in encoder$facVars) {
@@ -625,8 +625,8 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                } else {
                     # if (criterion=="gini") {
                          if (test) {
-                              encoder = dummyVars(best.disc[[3]],data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[1]],],m_start)), fullRank = FALSE, sep = "_")
-                              newdata = data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[2]],],m_start))
+                              encoder = dummyVars(best.disc[[3]],data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[1]],],m_start), stringsAsFactors = TRUE), fullRank = FALSE, sep = "_")
+                              newdata = data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[2]],],m_start), stringsAsFactors = TRUE)
                               labels_test = as.numeric(labels[ensemble[[2]]])
                               for (var in encoder$facVars) {
                                    suppressed_ind <- newdata[,var] == levels(newdata[,var])[!levels(newdata[,var]) %in% unlist(unname(encoder$lvls[var]))]
@@ -636,12 +636,12 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                                         print(paste("levels", paste(levels(newdata[,var])[(!levels(newdata) %in% unlist(unname(encoder$lvls[var])))], collapse = ", "), "of feature", var, "were removed from test set."))
                                    }
                               }
-                              data_test = predict(object = encoder, newdata = data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[2]],],m_start)))
+                              data_test = predict(object = encoder, newdata = data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[2]],],m_start), stringsAsFactors = TRUE))
                               
                               
                               performance = normalizedGini(labels_test,predictlogisticRegression(data_test,best.disc[[1]]$coefficients))
                          } else {
-                              encoder = dummyVars(best.disc[[3]],data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[1]],],m_start)), fullRank = FALSE, sep = "_")
+                              encoder = dummyVars(best.disc[[3]],data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[1]],],m_start), stringsAsFactors = TRUE), fullRank = FALSE, sep = "_")
                               #newdata = data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[1]],],m_start))
                               performance = normalizedGini(as.numeric(labels[ensemble[[1]]]),best.disc[[1]]$fitted.values)
                          }
@@ -659,31 +659,31 @@ glmdisc <- function(predictors,labels,interact=TRUE,validation=TRUE,test=TRUE,cr
                }
                
                if ((test)&(validation)) {
-                     disc.data = data.frame(cbind(discretize_link(best.disc[[2]],predictors[ensemble[[3]],],m_start)),labels = labels[ensemble[[3]]])
+                     disc.data = data.frame(cbind(discretize_link(best.disc[[2]],predictors[ensemble[[3]],],m_start), stringsAsFactors = TRUE),labels = labels[ensemble[[3]]])
                      
                      if (!is.null(colnames(predictors))) {
                          colnames(disc.data) = c(colnames(predictors),"labels")
                      }
                      
-                     return(methods::new(Class = "glmdisc", parameters = list(test = test,validation = validation,criterion = criterion,iter = iter,m_start = m_start,reg_type = reg_type, types_data = types_data, encoder = encoder), best.disc = best.disc, performance = list(performance = performance,criterionEvolution = criterion_iter), disc.data = disc.data, cont.data = data.frame(cbind(predictors[ensemble[[3]],]),labels = labels[ensemble[[3]]])))
+                     return(methods::new(Class = "glmdisc", parameters = list(test = test,validation = validation,criterion = criterion,iter = iter,m_start = m_start,reg_type = reg_type, types_data = types_data, encoder = encoder), best.disc = best.disc, performance = list(performance = performance,criterionEvolution = criterion_iter), disc.data = disc.data, cont.data = data.frame(cbind(predictors[ensemble[[3]],]),labels = labels[ensemble[[3]]], stringsAsFactors = TRUE)))
                } else if (validation) {
-                    disc.data = data.frame(cbind(discretize_link(best.disc[[2]],predictors[ensemble[[2]],],m_start)),labels = labels[ensemble[[2]]])
+                    disc.data = data.frame(cbind(discretize_link(best.disc[[2]],predictors[ensemble[[2]],],m_start), stringsAsFactors = TRUE),labels = labels[ensemble[[2]]])
                     if (!is.null(colnames(predictors))) {
                          colnames(disc.data) = c(colnames(predictors),"labels")
                     }
-                    return(methods::new(Class = "glmdisc", parameters = list(test = test,validation = validation,criterion = criterion,iter = iter,m_start = m_start,reg_type = reg_type, types_data = types_data, encoder = encoder), best.disc = best.disc, performance = list(performance = performance,criterionEvolution = criterion_iter), disc.data = disc.data, cont.data = data.frame(cbind(predictors[ensemble[[2]],]),labels = labels[ensemble[[2]]])))
+                    return(methods::new(Class = "glmdisc", parameters = list(test = test,validation = validation,criterion = criterion,iter = iter,m_start = m_start,reg_type = reg_type, types_data = types_data, encoder = encoder), best.disc = best.disc, performance = list(performance = performance,criterionEvolution = criterion_iter), disc.data = disc.data, cont.data = data.frame(cbind(predictors[ensemble[[2]],], stringsAsFactors=TRUE),labels = labels[ensemble[[2]]], stringsAsFactors = TRUE)))
                } else if (test) {
-                    disc.data = data.frame(cbind(discretize_link(best.disc[[2]],predictors[ensemble[[2]],],m_start)),labels = labels[ensemble[[2]]])
+                    disc.data = data.frame(cbind(discretize_link(best.disc[[2]],predictors[ensemble[[2]],],m_start), stringsAsFactors = TRUE),labels = labels[ensemble[[2]]])
                     if (!is.null(colnames(predictors))) {
                          colnames(disc.data) = c(colnames(predictors),"labels")
                     }
-                    return(methods::new(Class = "glmdisc", parameters = list(test = test,validation = validation,criterion = criterion,iter = iter,m_start = m_start,reg_type = reg_type, types_data = types_data, encoder = encoder), best.disc = best.disc, performance = list(performance = performance,criterionEvolution = criterion_iter), disc.data = disc.data, cont.data = data.frame(cbind(predictors[ensemble[[2]],]),labels = labels[ensemble[[2]]])))
+                    return(methods::new(Class = "glmdisc", parameters = list(test = test,validation = validation,criterion = criterion,iter = iter,m_start = m_start,reg_type = reg_type, types_data = types_data, encoder = encoder), best.disc = best.disc, performance = list(performance = performance,criterionEvolution = criterion_iter), disc.data = disc.data, cont.data = data.frame(cbind(predictors[ensemble[[2]],], stringsAsFactors=TRUE),labels = labels[ensemble[[2]]], stringsAsFactors = TRUE)))
                } else {
-                    disc.data = data.frame(cbind(discretize_link(best.disc[[2]],predictors[ensemble[[1]],],m_start)),labels = labels[ensemble[[1]]])
+                    disc.data = data.frame(cbind(discretize_link(best.disc[[2]],predictors[ensemble[[1]],],m_start)),labels = labels[ensemble[[1]]], stringsAsFactors=TRUE)
                     if (!is.null(colnames(predictors))) {
                          colnames(disc.data) = c(colnames(predictors),"labels")
                     }
-                    return(methods::new(Class = "glmdisc", parameters = list(test = test,validation = validation,criterion = criterion,iter = iter,m_start = m_start,reg_type = reg_type, types_data = types_data, encoder = encoder), best.disc = best.disc, performance = list(performance = performance,criterionEvolution = criterion_iter), disc.data = disc.data, cont.data = data.frame(cbind(predictors[ensemble[[1]],]),labels = labels[ensemble[[1]]])))
+                    return(methods::new(Class = "glmdisc", parameters = list(test = test,validation = validation,criterion = criterion,iter = iter,m_start = m_start,reg_type = reg_type, types_data = types_data, encoder = encoder), best.disc = best.disc, performance = list(performance = performance,criterionEvolution = criterion_iter), disc.data = disc.data, cont.data = data.frame(cbind(predictors[ensemble[[1]],]),labels = labels[ensemble[[1]]], stringsAsFactors = TRUE)))
                }
                
           } else {
