@@ -21,63 +21,61 @@
 # #' discretize_link(link,as.data.frame(x))
 
 
-discretize_link <- function(link,df,m_start) {
+discretize_link <- function(link, df, m_start) {
+  n <- nrow(df)
+  d <- ncol(df)
+  types_data <- sapply(df[1, ], class)
+  # Cas complets
+  continu_complete_case <- !is.na(df)
+  if (sum(!(types_data %in% c("numeric", "factor"))) > 0) {
+    stop(simpleError("Unsupported data types. Columns of predictors must be numeric or factor."))
+  }
+  emap <- array(0, c(n, d))
 
-     n = nrow(df)
-     d = ncol(df)
-     types_data <- sapply(df[1,],class)
-     # Cas complets
-     continu_complete_case = !is.na(df)
-     if (sum(!(types_data %in% c("numeric","factor")))>0) {
-          stop(simpleError("Unsupported data types. Columns of predictors must be numeric or factor."))
-     }
-     emap = array(0,c(n,d))
+  if (d > 1) {
+    for (j in (1:d)) {
+      if (types_data[j] == "numeric") {
+        if (sum(is.na(link[[j]])) == 0) {
+          t <- predict(link[[j]], newdata = data.frame(x = df[continu_complete_case[, j], j], stringsAsFactors = TRUE), type = "probs")
 
-     if (d>1) {
-          for (j in (1:d)) {
-               if (types_data[j]=="numeric") {
-                    if (sum(is.na(link[[j]]))==0) {
-                         t = predict(link[[j]], newdata = data.frame(x = df[continu_complete_case[,j],j], stringsAsFactors=TRUE), type="probs")
-                    
-                         if (is.vector(t)) {
-                              t = cbind(1-t,t)
-                              colnames(t) <- c("1","2")
-                         }
-                         
-                         if (sum(!continu_complete_case[,j])>0) {
-                              t_bis = matrix(NA,nrow = nrow(df), ncol = ncol(t) +1)
-                              t_bis[continu_complete_case[,j],1:ncol(t)] = t
-                              t_bis[continu_complete_case[,j],ncol(t)+1] = 0
-                              t_bis[!continu_complete_case[,j],] = t(matrix(c(rep(0,ncol(t)),1),nrow = ncol(t)+1,ncol=sum(!continu_complete_case[,j])))
-                              colnames(t_bis) = c(colnames(t),m_start+1)
-                              t = t_bis
-                         }
-                    } else {
-                         t = matrix(1, nrow = n, ncol = 1)
-                         colnames(t) = "1"
-                    }
-               } else {
-                    if (!is.null(link[[j]])) {
-                         t = prop.table.robust(t(sapply(df[,j],function(row) link[[j]][,row])),1)
-                    } else {
-                         t = matrix(1, nrow = n, ncol = 1)
-                         colnames(t) = "1"
-                    }
-               }
-               emap[,j] <- unlist(apply(t,1,function(p) names(which.max(p))))
+          if (is.vector(t)) {
+            t <- cbind(1 - t, t)
+            colnames(t) <- c("1", "2")
           }
-     } else if (types_data=="numeric") {
-          # m = length(link$coefficients)/2 + 1
-          # lev = c("1",sapply(names(link$coefficients[seq(2,length(link$coefficients),2)]), function(lev_name) substr(lev_name,start=3,stop=nchar(lev_name))))
-          # long_dataset <- data.frame(x = as.vector(sapply(df, function(var) rep(var,m))), names = as.character(as.vector(rep(lev[seq(1:m)],n))))
-          # t = predict(link, newdata = long_dataset, choiceVar = "names", type="probs")
-          t = predict(link, newdata = data.frame(x = df, stringsAsFactors=TRUE), type="probs")
-          emap[,1] <- apply(t,1,function(p) names(which.max(p)))
-     } else {
-          t = prop.table(t(sapply(df,function(row) link[,row])),1)
-          emap[,1] <- apply(t,1,function(p) names(which.max(p)))
-     }
 
-     return(emap)
+          if (sum(!continu_complete_case[, j]) > 0) {
+            t_bis <- matrix(NA, nrow = nrow(df), ncol = ncol(t) + 1)
+            t_bis[continu_complete_case[, j], 1:ncol(t)] <- t
+            t_bis[continu_complete_case[, j], ncol(t) + 1] <- 0
+            t_bis[!continu_complete_case[, j], ] <- t(matrix(c(rep(0, ncol(t)), 1), nrow = ncol(t) + 1, ncol = sum(!continu_complete_case[, j])))
+            colnames(t_bis) <- c(colnames(t), m_start + 1)
+            t <- t_bis
+          }
+        } else {
+          t <- matrix(1, nrow = n, ncol = 1)
+          colnames(t) <- "1"
+        }
+      } else {
+        if (!is.null(link[[j]])) {
+          t <- prop.table.robust(t(sapply(df[, j], function(row) link[[j]][, row])), 1)
+        } else {
+          t <- matrix(1, nrow = n, ncol = 1)
+          colnames(t) <- "1"
+        }
+      }
+      emap[, j] <- unlist(apply(t, 1, function(p) names(which.max(p))))
+    }
+  } else if (types_data == "numeric") {
+    # m = length(link$coefficients)/2 + 1
+    # lev = c("1",sapply(names(link$coefficients[seq(2,length(link$coefficients),2)]), function(lev_name) substr(lev_name,start=3,stop=nchar(lev_name))))
+    # long_dataset <- data.frame(x = as.vector(sapply(df, function(var) rep(var,m))), names = as.character(as.vector(rep(lev[seq(1:m)],n))))
+    # t = predict(link, newdata = long_dataset, choiceVar = "names", type="probs")
+    t <- predict(link, newdata = data.frame(x = df, stringsAsFactors = TRUE), type = "probs")
+    emap[, 1] <- apply(t, 1, function(p) names(which.max(p)))
+  } else {
+    t <- prop.table(t(sapply(df, function(row) link[, row])), 1)
+    emap[, 1] <- apply(t, 1, function(p) names(which.max(p)))
+  }
 
+  return(emap)
 }

@@ -9,20 +9,20 @@
 #'
 #' @section \code{\link{discretize}} function:
 #' The \code{\link{discretize}} function will discretize a new input dataset given a discretization scheme of S4 class \code{\link{glmdisc}}.
-#' 
-#' 
+#'
+#'
 #' @section \code{\link{cutpoints}} function:
 #' The \code{\link{cutpoints}} function will provide the cutpoints / groupings of a discretization scheme of S4 class \code{\link{glmdisc}} in a list.
-#' 
-#' 
+#'
+#'
 #' @section \code{\link{predict}} function:
 #' The \code{\link{predict}} function will discretize a raw test set, given a provided discretization scheme of S4 class \code{\link{glmdisc}}, using the \code{\link{discretize}} function and return the predicted probabilities.
 #'
 #'
 #' @section Miscellaneous:
 #' We provide as well the classical \code{\link{show}}, \code{\link{print}}, \code{\link{summary}} functions, as well as \code{\link{normalizedGini}} that is used to calculate the Gini index (a classical Credit Scoring goodness-of-fit indicator).
-#' 
-#' 
+#'
+#'
 #' @author Adrien Ehrhardt.
 #' @docType package
 #' @importFrom Rcpp evalCpp
