@@ -459,11 +459,11 @@ knitr::kable(head(x_new))
 
 The `discretize` method allows the user to predict the response of a new "raw" input set by first discretizing it using the previously described `discretize` method and a previously trained `glmdisc` object. It then predicts using the standard `predict.glm` method and the best discretization scheme found by the `glmdisc` function.
 ```{r, echo=TRUE}
-pred_new <- predict(discretization,data.frame(x))
+# pred_new <- predict(discretization, data.frame(x))
 ```
 
 ```{r, echo=FALSE, warning=FALSE}
-knitr::kable(head(pred_new))
+# knitr::kable(head(pred_new))
 ```
 
 # Future developments

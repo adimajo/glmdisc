@@ -66,14 +66,10 @@ discretize_link <- function(link, df, m_start) {
       emap[, j] <- unlist(apply(t, 1, function(p) names(which.max(p))))
     }
   } else if (types_data == "numeric") {
-    # m = length(link$coefficients)/2 + 1
-    # lev = c("1",sapply(names(link$coefficients[seq(2,length(link$coefficients),2)]), function(lev_name) substr(lev_name,start=3,stop=nchar(lev_name))))
-    # long_dataset <- data.frame(x = as.vector(sapply(df, function(var) rep(var,m))), names = as.character(as.vector(rep(lev[seq(1:m)],n))))
-    # t = predict(link, newdata = long_dataset, choiceVar = "names", type="probs")
-    t <- predict(link, newdata = data.frame(x = df, stringsAsFactors = TRUE), type = "probs")
+    t <- predict(link[[1]], newdata = data.frame(x = df, stringsAsFactors = TRUE), type = "probs")
     emap[, 1] <- apply(t, 1, function(p) names(which.max(p)))
   } else {
-    t <- prop.table(t(sapply(df, function(row) link[, row])), 1)
+    t <- prop.table(t(apply(df, 1, function(row) link[[1]][, row])), 1)
     emap[, 1] <- apply(t, 1, function(p) names(which.max(p)))
   }
 

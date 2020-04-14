@@ -9,7 +9,7 @@ test_that("predict works with continuous data", {
   log_odd <- rowSums(t(sapply(seq_along(xd[, 1]), function(row_id) sapply(seq_along(xd[row_id, ]), function(element) theta[xd[row_id, element], element]))))
   y <- rbinom(100, 1, 1 / (1 + exp(-log_odd)))
   sem_disc <- glmdisc(x, y, iter = 50, m_start = 4, test = FALSE, validation = FALSE, criterion = "aic")
-  pred_sem <- predict(sem_disc, data.frame(x))
+  pred_sem <- predict(sem_disc, x)
 
   expect_length(pred_sem, 100)
   expect_true(all(pred_sem <= 1), TRUE)

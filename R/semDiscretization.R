@@ -60,12 +60,20 @@ glmdisc <- function(predictors, labels, interact = TRUE, validation = TRUE, test
       # Calculating lengths n and d and data types
       n <- length(labels)
       d <- length(predictors[1, ])
+      
+      if (!(any(class(predictors) %in% c("matrix", "array", "data.frame")))){
+        stop(simpleError(paste0("`predictors` must be an array, a matrix or a dataframe, you provided a "), class(predictors)))
+      }
+      
       types_data <- sapply(predictors[1, ], class)
 
       if (sum(!(types_data %in% c("numeric", "factor"))) > 0) {
         stop(simpleError("Unsupported data types. Columns of predictors must be numeric or factor."))
       }
-
+      if (d < 2 && interact) {
+        stop(simpleError("Cannot perform interaction screening with less than 2 features, set `interact = FALSE`"))
+      }
+      
       # Initializing list of calculated criterion among which to select the best.
       criterion_iter <- list()
 
@@ -93,7 +101,7 @@ glmdisc <- function(predictors, labels, interact = TRUE, validation = TRUE, test
 
       # m encodes the number of levels per feature
       m <- as.vector(apply(e, 2, function(col) nlevels(factor(col))))
-      names(m) <- paste0("X", 1:length(m))
+      names(m) <- paste0("V", 1:length(m))
 
       # lev encodes the list of levels of each feature
       lev <- apply(e, 2, function(col) list(levels(factor(col))))
@@ -116,7 +124,7 @@ glmdisc <- function(predictors, labels, interact = TRUE, validation = TRUE, test
         delta <- matrix(sample(0:1, d^2, replace = TRUE, prob = c(0.5, 0.5)), nrow = d, ncol = d)
         delta[lower.tri(delta)] <- 0
         diag(delta) <- 0
-        xPrincipal <- paste0("X", 1:d)
+        xPrincipal <- paste0("V", 1:d)
 
         p_delta <- matrix(0, nrow = d, ncol = d)
         p_delta[lower.tri(p_delta)] <- 0
@@ -143,8 +151,8 @@ glmdisc <- function(predictors, labels, interact = TRUE, validation = TRUE, test
           break
         }
 
-        data_e <- Filter(function(x) (length(unique(x)) > 1), data.frame(apply(e, 2, factor), stringsAsFactors = TRUE))
-        data_emap <- Filter(function(x) (length(unique(x)) > 1), data.frame(apply(emap, 2, factor), stringsAsFactors = TRUE))
+        data_e <- Filter(function(x) (length(unique(x)) > 1), as.data.frame(apply(e, 2, factor), stringsAsFactors = TRUE))
+        data_emap <- Filter(function(x) (length(unique(x)) > 1), as.data.frame(apply(emap, 2, factor), stringsAsFactors = TRUE))
         data <- data.frame(e, labels = labels, stringsAsFactors = TRUE)
         data_logit <- data.frame(emap, labels = labels, stringsAsFactors = TRUE)
 
@@ -161,7 +169,7 @@ glmdisc <- function(predictors, labels, interact = TRUE, validation = TRUE, test
 
           # if there is at least one interaction xInter and xInter_logit encode these features as feature1:feature2
           if (sum(tab_vrai) > 0) {
-            xInter <- xInter_logit <- sapply(1:nrow(tab_vrai), function(row) paste0("X", tab_vrai[row, "row"], ":X", tab_vrai[row, "col"]))
+            xInter <- xInter_logit <- sapply(1:nrow(tab_vrai), function(row) paste0("V", tab_vrai[row, "row"], ":V", tab_vrai[row, "col"]))
 
             if (length(xPrincipal[ejecter]) > 0) {
               for (l in xPrincipal[ejecter]) {
@@ -260,7 +268,7 @@ glmdisc <- function(predictors, labels, interact = TRUE, validation = TRUE, test
           delta_new <- delta
           delta_new[pq] <- 1 - delta_new[pq]
           if (sum(delta_new == 1) > 0) {
-            xInter_new <- sapply(1:nrow(which(delta_new == 1, arr.ind = TRUE)), function(row) paste0("X", which(delta_new == 1, arr.ind = TRUE)[row, "row"], ":X", which(delta_new == 1, arr.ind = TRUE)[row, "col"]))
+            xInter_new <- sapply(1:nrow(which(delta_new == 1, arr.ind = TRUE)), function(row) paste0("V", which(delta_new == 1, arr.ind = TRUE)[row, "row"], ":V", which(delta_new == 1, arr.ind = TRUE)[row, "col"]))
             if (exists("ejecter_logit")) {
               if (length(xPrincipal[ejecter_logit]) > 0) {
                 for (l in xPrincipal[ejecter_logit]) {
@@ -362,8 +370,8 @@ glmdisc <- function(predictors, labels, interact = TRUE, validation = TRUE, test
                 modalites_k[, (2:((m[1])))] <- matrix(0, nrow = n, ncol = (m[j]) - 1)
               }
 
-              if (paste0("X", j, "_", as.numeric(levels_to_sample[k])) %in% colnames(data)) {
-                modalites_k[, paste0("X", j, "_", as.numeric(levels_to_sample[k]))] <- rep(1, n)
+              if (paste0("V", j, "_", as.numeric(levels_to_sample[k])) %in% colnames(data)) {
+                modalites_k[, paste0("V", j, "_", as.numeric(levels_to_sample[k]))] <- rep(1, n)
               }
 
               p <- predictlogisticRegression(modalites_k, logit$coefficients)
@@ -373,7 +381,7 @@ glmdisc <- function(predictors, labels, interact = TRUE, validation = TRUE, test
 
             # p(e^j|reste) calculation
             if ((types_data[j] == "numeric")) {
-              t <- predict(link[[j]], newdata = data.frame(x = predictors[continu_complete_case[, j], ][, j], stringsAsFactors = TRUE), type = "probs")
+              t <- predict(link[[j]], newdata = data.frame(x = predictors[continu_complete_case[, j], , drop = FALSE][, j, drop = FALSE], stringsAsFactors = TRUE), type = "probs")
 
               if (is.vector(t)) {
                 t <- cbind(1 - t, t)
@@ -421,8 +429,8 @@ glmdisc <- function(predictors, labels, interact = TRUE, validation = TRUE, test
               } else {
                 # if (which(!lev[[j]][[1]] %in% levels(as.factor(e[,j])))[1]>1) {
 
-                data[, paste0("X", j, "_", lev[[j]][[1]][which(!lev[[j]][[1]] %in% levels(as.factor(e[, j])))])] <- matrix(0, nrow = n, ncol = sum(!lev[[j]][[1]] %in% levels(as.factor(e[, j]))))
-                data[, paste0("X", j, "_", levels(as.factor(e[, j])))[paste0("X", j, levels(as.factor(e[, j]))) %in% colnames(data)]] <- stats::model.matrix(stats::as.formula("~e[,j]"), data = data.frame(e[, j], stringsAsFactors = TRUE))[, -1]
+                data[, paste0("V", j, "_", lev[[j]][[1]][which(!lev[[j]][[1]] %in% levels(as.factor(e[, j])))])] <- matrix(0, nrow = n, ncol = sum(!lev[[j]][[1]] %in% levels(as.factor(e[, j]))))
+                data[, paste0("V", j, "_", levels(as.factor(e[, j])))[paste0("V", j, levels(as.factor(e[, j]))) %in% colnames(data)]] <- stats::model.matrix(stats::as.formula("~e[,j]"), data = data.frame(e[, j], stringsAsFactors = TRUE))[, -1]
 
                 # } else {
                 #
@@ -463,7 +471,7 @@ glmdisc <- function(predictors, labels, interact = TRUE, validation = TRUE, test
               }
             } else {
               # print("here!")
-              data[, paste0("X", j, "_", lev[[j]][[1]][which(!lev[[j]][[1]] %in% levels(as.factor(e[, j])))])] <- matrix(0, nrow = n, ncol = sum(!lev[[j]][[1]] %in% levels(as.factor(e[, j]))))
+              data[, paste0("V", j, "_", lev[[j]][[1]][which(!lev[[j]][[1]] %in% levels(as.factor(e[, j])))])] <- matrix(0, nrow = n, ncol = sum(!lev[[j]][[1]] %in% levels(as.factor(e[, j]))))
             }
 
 
@@ -579,8 +587,8 @@ glmdisc <- function(predictors, labels, interact = TRUE, validation = TRUE, test
       if (validation) {
         # if (criterion=="gini") {
         if (test) {
-          encoder <- dummyVars(best.disc[[3]], data.frame(discretize_link(best.disc[[2]], predictors[ensemble[[1]], ], m_start), stringsAsFactors = TRUE), fullRank = FALSE, sep = "_")
-          newdata <- data.frame(discretize_link(best.disc[[2]], predictors[ensemble[[3]], ], m_start), stringsAsFactors = TRUE)
+          encoder <- dummyVars(best.disc[[3]], as.data.frame(discretize_link(best.disc[[2]], predictors[ensemble[[1]], , drop=FALSE], m_start), stringsAsFactors = TRUE), fullRank = FALSE, sep = "_")
+          newdata <- as.data.frame(discretize_link(best.disc[[2]], predictors[ensemble[[3]], , drop=FALSE], m_start), stringsAsFactors = TRUE)
           labels_test <- as.numeric(labels[ensemble[[3]]])
 
           for (var in encoder$facVars) {
@@ -596,8 +604,8 @@ glmdisc <- function(predictors, labels, interact = TRUE, validation = TRUE, test
 
           performance <- normalizedGini(labels_test, predictlogisticRegression(data_test, best.disc[[1]]$coefficients))
         } else {
-          encoder <- dummyVars(best.disc[[3]], data.frame(discretize_link(best.disc[[2]], predictors[ensemble[[1]], ], m_start), stringsAsFactors = TRUE), fullRank = FALSE, sep = "_")
-          newdata <- data.frame(discretize_link(best.disc[[2]], predictors[ensemble[[2]], ], m_start), stringsAsFactors = TRUE)
+          encoder <- dummyVars(best.disc[[3]], as.data.frame(discretize_link(best.disc[[2]], predictors[ensemble[[1]], , drop=FALSE], m_start), stringsAsFactors = TRUE), fullRank = FALSE, sep = "_")
+          newdata <- as.data.frame(discretize_link(best.disc[[2]], predictors[ensemble[[2]], , drop=FALSE], m_start), stringsAsFactors = TRUE)
           labels_validation <- as.numeric(labels[ensemble[[2]]])
 
           for (var in encoder$facVars) {
@@ -619,8 +627,8 @@ glmdisc <- function(predictors, labels, interact = TRUE, validation = TRUE, test
       } else {
         # if (criterion=="gini") {
         if (test) {
-          encoder <- dummyVars(best.disc[[3]], data.frame(discretize_link(best.disc[[2]], predictors[ensemble[[1]], ], m_start), stringsAsFactors = TRUE), fullRank = FALSE, sep = "_")
-          newdata <- data.frame(discretize_link(best.disc[[2]], predictors[ensemble[[2]], ], m_start), stringsAsFactors = TRUE)
+          encoder <- dummyVars(best.disc[[3]], as.data.frame(discretize_link(best.disc[[2]], predictors[ensemble[[1]], , drop=FALSE], m_start), stringsAsFactors = TRUE), fullRank = FALSE, sep = "_")
+          newdata <- as.data.frame(discretize_link(best.disc[[2]], predictors[ensemble[[2]], , drop=FALSE], m_start), stringsAsFactors = TRUE)
           labels_test <- as.numeric(labels[ensemble[[2]]])
           for (var in encoder$facVars) {
             suppressed_ind <- newdata[, var] == levels(newdata[, var])[!levels(newdata[, var]) %in% unlist(unname(encoder$lvls[var]))]
@@ -630,13 +638,13 @@ glmdisc <- function(predictors, labels, interact = TRUE, validation = TRUE, test
               print(paste("levels", paste(levels(newdata[, var])[(!levels(newdata) %in% unlist(unname(encoder$lvls[var])))], collapse = ", "), "of feature", var, "were removed from test set."))
             }
           }
-          data_test <- predict(object = encoder, newdata = data.frame(discretize_link(best.disc[[2]], predictors[ensemble[[2]], ], m_start), stringsAsFactors = TRUE))
+          data_test <- predict(object = encoder, newdata = as.data.frame(discretize_link(best.disc[[2]], predictors[ensemble[[2]], , drop=FALSE], m_start), stringsAsFactors = TRUE))
 
 
           performance <- normalizedGini(labels_test, predictlogisticRegression(data_test, best.disc[[1]]$coefficients))
         } else {
-          encoder <- dummyVars(best.disc[[3]], data.frame(discretize_link(best.disc[[2]], predictors[ensemble[[1]], ], m_start), stringsAsFactors = TRUE), fullRank = FALSE, sep = "_")
-          # newdata = data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[1]],],m_start))
+          encoder <- dummyVars(best.disc[[3]], as.data.frame(discretize_link(best.disc[[2]], predictors[ensemble[[1]], , drop=FALSE], m_start), stringsAsFactors = TRUE), fullRank = FALSE, sep = "_")
+          # newdata = as.data.frame(discretize_link(best.disc[[2]],predictors[ensemble[[1]],],m_start))
           performance <- normalizedGini(as.numeric(labels[ensemble[[1]]]), best.disc[[1]]$fitted.values)
         }
         # } else {
@@ -648,36 +656,40 @@ glmdisc <- function(predictors, labels, interact = TRUE, validation = TRUE, test
 
       if (!is.null(noms_colonnes)) {
         for (j in (length(noms_colonnes):1)) {
-          best.disc$formulaOfBestLogisticRegression <- stats::as.formula(sub(paste0("X", j), noms_colonnes[j], best.disc$formulaOfBestLogisticRegression))
+          best.disc$formulaOfBestLogisticRegression <- stats::as.formula(sub(paste0("V", j), noms_colonnes[j], best.disc$formulaOfBestLogisticRegression))
         }
       }
 
       if ((test) & (validation)) {
-        disc.data <- data.frame(cbind(discretize_link(best.disc[[2]], predictors[ensemble[[3]], ], m_start), stringsAsFactors = TRUE), labels = labels[ensemble[[3]]])
-
+        disc.data <- as.data.frame(cbind(discretize_link(best.disc[[2]], predictors[ensemble[[3]], , drop=FALSE], m_start), labels = labels[ensemble[[3]]]), stringsAsFactors = TRUE)
+        
         if (!is.null(colnames(predictors))) {
           colnames(disc.data) <- c(colnames(predictors), "labels")
         }
 
-        return(methods::new(Class = "glmdisc", parameters = list(test = test, validation = validation, criterion = criterion, iter = iter, m_start = m_start, reg_type = reg_type, types_data = types_data, encoder = encoder), best.disc = best.disc, performance = list(performance = performance, criterionEvolution = criterion_iter), disc.data = disc.data, cont.data = data.frame(cbind(predictors[ensemble[[3]], ]), labels = labels[ensemble[[3]]], stringsAsFactors = TRUE)))
+        return(methods::new(Class = "glmdisc", parameters = list(test = test, validation = validation, criterion = criterion, iter = iter, m_start = m_start, reg_type = reg_type, types_data = types_data, encoder = encoder), best.disc = best.disc, performance = list(performance = performance, criterionEvolution = criterion_iter), disc.data = disc.data, 
+                            cont.data = as.data.frame(cbind(predictors[ensemble[[3]], , drop=FALSE], labels = labels[ensemble[[3]]]), stringsAsFactors = TRUE)))
       } else if (validation) {
-        disc.data <- data.frame(cbind(discretize_link(best.disc[[2]], predictors[ensemble[[2]], ], m_start), stringsAsFactors = TRUE), labels = labels[ensemble[[2]]])
+        disc.data <- as.data.frame(cbind(discretize_link(best.disc[[2]], predictors[ensemble[[2]], , drop=FALSE], m_start), labels = labels[ensemble[[2]]]), stringsAsFactors = TRUE)
         if (!is.null(colnames(predictors))) {
           colnames(disc.data) <- c(colnames(predictors), "labels")
         }
-        return(methods::new(Class = "glmdisc", parameters = list(test = test, validation = validation, criterion = criterion, iter = iter, m_start = m_start, reg_type = reg_type, types_data = types_data, encoder = encoder), best.disc = best.disc, performance = list(performance = performance, criterionEvolution = criterion_iter), disc.data = disc.data, cont.data = data.frame(cbind(predictors[ensemble[[2]], ], stringsAsFactors = TRUE), labels = labels[ensemble[[2]]], stringsAsFactors = TRUE)))
+        return(methods::new(Class = "glmdisc", parameters = list(test = test, validation = validation, criterion = criterion, iter = iter, m_start = m_start, reg_type = reg_type, types_data = types_data, encoder = encoder), best.disc = best.disc, performance = list(performance = performance, criterionEvolution = criterion_iter), disc.data = disc.data, 
+                            cont.data = as.data.frame(cbind(predictors[ensemble[[2]], , drop=FALSE], labels = labels[ensemble[[2]]]), stringsAsFactors = TRUE)))
       } else if (test) {
-        disc.data <- data.frame(cbind(discretize_link(best.disc[[2]], predictors[ensemble[[2]], ], m_start), stringsAsFactors = TRUE), labels = labels[ensemble[[2]]])
+        disc.data <- as.data.frame(cbind(discretize_link(best.disc[[2]], predictors[ensemble[[2]], , drop=FALSE], m_start), labels = labels[ensemble[[2]]]), stringsAsFactors = TRUE)
         if (!is.null(colnames(predictors))) {
           colnames(disc.data) <- c(colnames(predictors), "labels")
         }
-        return(methods::new(Class = "glmdisc", parameters = list(test = test, validation = validation, criterion = criterion, iter = iter, m_start = m_start, reg_type = reg_type, types_data = types_data, encoder = encoder), best.disc = best.disc, performance = list(performance = performance, criterionEvolution = criterion_iter), disc.data = disc.data, cont.data = data.frame(cbind(predictors[ensemble[[2]], ], stringsAsFactors = TRUE), labels = labels[ensemble[[2]]], stringsAsFactors = TRUE)))
+        return(methods::new(Class = "glmdisc", parameters = list(test = test, validation = validation, criterion = criterion, iter = iter, m_start = m_start, reg_type = reg_type, types_data = types_data, encoder = encoder), best.disc = best.disc, performance = list(performance = performance, criterionEvolution = criterion_iter), disc.data = disc.data, 
+                            cont.data = as.data.frame(cbind(predictors[ensemble[[2]], , drop=FALSE], labels = labels[ensemble[[2]]]), stringsAsFactors = TRUE)))
       } else {
-        disc.data <- data.frame(cbind(discretize_link(best.disc[[2]], predictors[ensemble[[1]], ], m_start)), labels = labels[ensemble[[1]]], stringsAsFactors = TRUE)
+        disc.data <- as.data.frame(cbind(discretize_link(best.disc[[2]], predictors[ensemble[[1]], , drop=FALSE], m_start), labels = labels[ensemble[[1]]]), stringsAsFactors = TRUE)
         if (!is.null(colnames(predictors))) {
           colnames(disc.data) <- c(colnames(predictors), "labels")
         }
-        return(methods::new(Class = "glmdisc", parameters = list(test = test, validation = validation, criterion = criterion, iter = iter, m_start = m_start, reg_type = reg_type, types_data = types_data, encoder = encoder), best.disc = best.disc, performance = list(performance = performance, criterionEvolution = criterion_iter), disc.data = disc.data, cont.data = data.frame(cbind(predictors[ensemble[[1]], ]), labels = labels[ensemble[[1]]], stringsAsFactors = TRUE)))
+        return(methods::new(Class = "glmdisc", parameters = list(test = test, validation = validation, criterion = criterion, iter = iter, m_start = m_start, reg_type = reg_type, types_data = types_data, encoder = encoder), best.disc = best.disc, performance = list(performance = performance, criterionEvolution = criterion_iter), disc.data = disc.data, 
+                            cont.data = as.data.frame(cbind(predictors[ensemble[[1]], , drop=FALSE], labels = labels[ensemble[[1]]]), stringsAsFactors = TRUE)))
       }
     } else {
       stop(simpleError("labels and predictors must be of same length"))

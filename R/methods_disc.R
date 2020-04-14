@@ -19,6 +19,7 @@ summary.glmdisc <- function(object) {
 
 simple_roc <- function(labels, scores) {
   labels <- labels[order(scores, decreasing = TRUE)]
+  labels <- as.numeric(as.character(labels))
   data.frame(TPR = cumsum(labels) / sum(labels), FPR = cumsum(!labels) / sum(!labels), labels)
 }
 

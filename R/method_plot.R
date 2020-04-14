@@ -42,13 +42,12 @@ if (!isGeneric("plot")) {
 plot.glmdisc <- function(x) {
 
   # Graph 1 : ROC CURVE
-
-  glm_simple_roc <- simple_roc(x@disc.data$labels, predict(x, x@cont.data[, -ncol(x@cont.data)]))
+  glm_simple_roc <- simple_roc(x@disc.data$labels, predict(x, x@cont.data[, -ncol(x@cont.data), drop=FALSE]))
 
   with(glm_simple_roc, graphics::plot(1 - FPR, TPR, col = 1 + labels, xlim = c(1, 0)))
   graphics::title(main = "ROC Curve on total provided data")
   graphics::lines(c(1, 0), c(0, 1))
-  graphics::legend(c(0.4, 0.4), c(paste("Gini:", round(normalizedGini(x@cont.data$labels, predict(x, x@cont.data[, -ncol(x@cont.data)])), 2))))
+  graphics::legend(c(0.4, 0.4), c(paste("Gini:", round(normalizedGini(x@cont.data$labels, predict(x, x@cont.data[, -ncol(x@cont.data), drop = FALSE])), 2))))
 
   # installed_graphical_package(object@best.disc$bestLogisticRegression)
   graphics::par(ask = TRUE)
