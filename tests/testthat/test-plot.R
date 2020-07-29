@@ -9,12 +9,21 @@ test_that("plot works", {
                        function(row_id) sapply(seq_along(xd[row_id, ]), 
                                                function(element) theta[xd[row_id, element], element]))
      y <- rbinom(100, 1, 1 / (1 + exp(-log_odd)))
-     sem_disc <- glmdisc(data.frame(x), 
-                         y, 
-                         iter = 50, 
-                         m_start = 4, 
-                         test = FALSE, 
-                         validation = FALSE, 
+     sem_disc <- glmdisc(data.frame(x),
+                         y,
+                         iter = 50,
+                         m_start = 4,
+                         test = FALSE,
+                         validation = FALSE,
+                         criterion = "aic",
+                         interact = FALSE)
+     plot(sem_disc)
+     sem_disc <- glmdisc(data.frame(x = factor(xd)),
+                         y,
+                         iter = 50,
+                         m_start = 4,
+                         test = FALSE,
+                         validation = FALSE,
                          criterion = "aic",
                          interact = FALSE)
      plot(sem_disc)

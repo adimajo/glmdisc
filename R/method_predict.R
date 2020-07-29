@@ -39,7 +39,11 @@ methods::setGeneric("predict")
 #'                     validation = FALSE, criterion = "aic")
 #' predict(sem_disc, data.frame(x))
 predict.glmdisc <- function(object, predictors) {
-  data_disc <- as.data.frame(discretize_link(object@best.disc[[2]], predictors, object@parameters$m_start), stringsAsFactors = TRUE)
+  data_disc <- tryCatch(
+    as.data.frame(discretize_link(object@best.disc[[2]], predictors, object@parameters$m_start), stringsAsFactors = TRUE),
+    error = function(e) {
+      simpleError("Unseen (during training) levels of some categorical feature.")
+    })
   # colnames(data_disc) = colnames(predictors)
 
   # Features with only one level are out of the model

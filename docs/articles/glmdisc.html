@@ -31,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">glmdisc</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.6</span>
       </span>
     </div>
 
@@ -66,7 +66,7 @@
       <h1>The <code>glmdisc</code> package: discretization at its finest</h1>
                         <h4 class="author">Adrien Ehrhardt</h4>
             
-            <h4 class="date">2019-12-16</h4>
+            <h4 class="date">2020-07-29</h4>
       
       
       <div class="hidden name"><code>glmdisc.Rmd</code></div>
@@ -173,28 +173,28 @@
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td align="right">0.5542458</td>
-<td align="right">0.6331481</td>
+<td align="right">0.6789133</td>
+<td align="right">0.6943116</td>
 </tr>
 <tr class="even">
-<td align="right">0.5608399</td>
-<td align="right">0.6383232</td>
+<td align="right">0.7395207</td>
+<td align="right">0.7128487</td>
 </tr>
 <tr class="odd">
-<td align="right">0.5173380</td>
-<td align="right">0.5867547</td>
+<td align="right">0.5007672</td>
+<td align="right">0.4890834</td>
 </tr>
 <tr class="even">
-<td align="right">0.6484967</td>
-<td align="right">0.6824161</td>
+<td align="right">0.7727091</td>
+<td align="right">0.7219343</td>
 </tr>
 <tr class="odd">
-<td align="right">0.5063011</td>
-<td align="right">0.5526578</td>
+<td align="right">0.5014301</td>
+<td align="right">0.5033890</td>
 </tr>
 <tr class="even">
-<td align="right">0.9062363</td>
-<td align="right">0.7532812</td>
+<td align="right">0.5006744</td>
+<td align="right">0.4863379</td>
 </tr>
 </tbody>
 </table>
@@ -212,34 +212,34 @@
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td align="right">0.5542458</td>
-<td align="right">0.6331481</td>
-<td align="right">0.5678392</td>
+<td align="right">0.6789133</td>
+<td align="right">0.6943116</td>
+<td align="right">0.6516854</td>
 </tr>
 <tr class="even">
-<td align="right">0.5608399</td>
-<td align="right">0.6383232</td>
-<td align="right">0.5678392</td>
+<td align="right">0.7395207</td>
+<td align="right">0.7128487</td>
+<td align="right">0.8181818</td>
 </tr>
 <tr class="odd">
-<td align="right">0.5173380</td>
-<td align="right">0.5867547</td>
-<td align="right">0.5077220</td>
+<td align="right">0.5007672</td>
+<td align="right">0.4890834</td>
+<td align="right">0.4857685</td>
 </tr>
 <tr class="even">
-<td align="right">0.6484967</td>
-<td align="right">0.6824161</td>
-<td align="right">0.6534653</td>
+<td align="right">0.7727091</td>
+<td align="right">0.7219343</td>
+<td align="right">0.8181818</td>
 </tr>
 <tr class="odd">
-<td align="right">0.5063011</td>
-<td align="right">0.5526578</td>
-<td align="right">0.5077220</td>
+<td align="right">0.5014301</td>
+<td align="right">0.5033890</td>
+<td align="right">0.4857685</td>
 </tr>
 <tr class="even">
-<td align="right">0.9062363</td>
-<td align="right">0.7532812</td>
-<td align="right">0.8681319</td>
+<td align="right">0.5006744</td>
+<td align="right">0.4863379</td>
+<td align="right">0.4857685</td>
 </tr>
 </tbody>
 </table>
@@ -456,7 +456,7 @@
 <a class="sourceLine" id="cb8-24" title="24"><span class="co">#&gt; Dummy Variable Object</span></a>
 <a class="sourceLine" id="cb8-25" title="25"><span class="co">#&gt; </span></a>
 <a class="sourceLine" id="cb8-26" title="26"><span class="co">#&gt; Formula: ~X1 + X2 + X3</span></a>
-<a class="sourceLine" id="cb8-27" title="27"><span class="co">#&gt; &lt;environment: 0x000000001e55a5a0&gt;</span></a>
+<a class="sourceLine" id="cb8-27" title="27"><span class="co">#&gt; &lt;environment: 0x000000001ea9ecc8&gt;</span></a>
 <a class="sourceLine" id="cb8-28" title="28"><span class="co">#&gt; 3 variables, 3 factors</span></a>
 <a class="sourceLine" id="cb8-29" title="29"><span class="co">#&gt; Variables and levels will be separated by '_'</span></a>
 <a class="sourceLine" id="cb8-30" title="30"><span class="co">#&gt; A less than full rank encoding is used</span></a></code></pre></div>
@@ -1645,32 +1645,7 @@
 <h2 class="hasAnchor">
 <a href="#the-predict-method" class="anchor"></a>The <code>predict</code> method</h2>
 <p>The <code>discretize</code> method allows the user to predict the response of a new “raw” input set by first discretizing it using the previously described <code>discretize</code> method and a previously trained <code>glmdisc</code> object. It then predicts using the standard <code>predict.glm</code> method and the best discretization scheme found by the <code>glmdisc</code> function.</p>
-<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb17-1" title="1">pred_new &lt;-<span class="st"> </span><span class="kw"><a href="../reference/predict.html">predict</a></span>(discretization,<span class="kw"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span>(x))</a></code></pre></div>
-<table class="table">
-<thead><tr class="header">
-<th align="right">x</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td align="right">0.1729661</td>
-</tr>
-<tr class="even">
-<td align="right">0.7746227</td>
-</tr>
-<tr class="odd">
-<td align="right">0.7269985</td>
-</tr>
-<tr class="even">
-<td align="right">0.7269985</td>
-</tr>
-<tr class="odd">
-<td align="right">0.6134946</td>
-</tr>
-<tr class="even">
-<td align="right">0.8374954</td>
-</tr>
-</tbody>
-</table>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb17-1" title="1"><span class="co"># pred_new &lt;- predict(discretization, data.frame(x))</span></a></code></pre></div>
 </div>
 </div>
 <div id="future-developments" class="section level1">

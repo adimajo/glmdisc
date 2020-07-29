@@ -50,7 +50,7 @@
 #'                     validation = FALSE, criterion = "aic")
 #' print(sem_disc)
 glmdisc <- function(predictors, labels, interact = TRUE, validation = TRUE, test = TRUE, criterion = "gini", iter = 1000, m_start = 20, reg_type = "poly", proportions = c(0.2, 0.2)) {
-  
+
   first_argument_checks(criterion, labels, predictors, validation)
   
   # Calculating lengths n and d and data types
@@ -159,7 +159,6 @@ glmdisc <- function(predictors, labels, interact = TRUE, validation = TRUE, test
 
         logit <- RcppNumerical::fastLR(data[ensemble[[1]], ], labels[ensemble[[1]]])
       } else {
-
         # TODO : warmup starting values for logit coefficients
         fmla <- stats::as.formula(paste("~", paste(xPrincipal[!ejecter], collapse = "+")))
         fmla_logit <- stats::as.formula(paste("~", paste(xPrincipal[!ejecter_logit], collapse = "+")))
@@ -189,7 +188,6 @@ glmdisc <- function(predictors, labels, interact = TRUE, validation = TRUE, test
 
       logit <- RcppNumerical::fastLR(data[ensemble[[1]], ], labels[ensemble[[1]]])
     }
-
 
     # Calculate current performance and update (if better than previous best) current best model.
     if ((criterion == "gini") && (validation == FALSE)) {
@@ -260,6 +258,7 @@ glmdisc <- function(predictors, labels, interact = TRUE, validation = TRUE, test
           fmla_logit_new_encoder <- dummyVars(fmla_logit_new, data_emap, fullRank = FALSE, sep = "_")
 
           data_logit_new <- predict(object = fmla_logit_new_encoder, newdata = data_emap)
+
         }
       }
 
@@ -359,17 +358,7 @@ glmdisc <- function(predictors, labels, interact = TRUE, validation = TRUE, test
         t <- prop.table.robust(t * y_p, 1)
 
         # Updating e^j
-        # if ((types_data[j]=="numeric")) {
-        #
-        #      e[continu_complete_case[,j],j] <- apply(t,1,function(p) sample(levels_to_sample,1,prob = p,replace = TRUE))
-        #      e[!continu_complete_case[,j],j] <- ncol(t)+1
-        #
-        # } else {
-        #      e[,j] <- apply(t,1,function(p) sample(levels_to_sample,1,prob = p,replace = TRUE))
-        # }
-
         e[, j] <- apply(t, 1, function(p) sample(levels_to_sample, 1, prob = p, replace = TRUE))
-
 
         if (nlevels(as.factor(e[, j])) > 1) {
           if (nlevels(as.factor(e[, j])) == m[j]) {
@@ -432,7 +421,6 @@ glmdisc <- function(predictors, labels, interact = TRUE, validation = TRUE, test
             ind_diff_train_test <- which(emap[ensemble[[2]], j] == setdiff(factor(emap[ensemble[[2]], j]), factor(emap[ensemble[[1]], j])))
           }
         }
-
 
         # Validation
 

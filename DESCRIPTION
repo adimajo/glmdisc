@@ -28,7 +28,7 @@ Imports:
 LinkingTo: Rcpp, RcppEigen, RcppNumerical
 URL: https://adimajo.github.io
 BugReports: https://github.com/adimajo/glmdisc/issues
-RoxygenNote: 7.0.2
+RoxygenNote: 7.1.1
 Suggests: 
     knitr,
     rmarkdown,
