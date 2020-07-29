@@ -14,8 +14,8 @@ jobs:
         R: [ '3.5.3', '3.6.1', '4.0.2' ]
     name: R ${{ matrix.R }} sample
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v2
       - name: Setup R
-        uses: r-lib/actions/setup-R@v1
+      - uses: r-lib/actions/setup-R@v1
         with:
           r-version: ${{ matrix.R }}
