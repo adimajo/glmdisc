@@ -12,5 +12,5 @@ coverage:
         threshold: 1%
         
   ignore:
-    - "R/generic_cutpoint.R"
+    - "R/generic_cutpoints.R"
     - "R/generic_discretize.R"
