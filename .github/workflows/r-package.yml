@@ -21,16 +21,7 @@ jobs:
         uses: r-lib/actions/setup-R@v1
         with:
           r-version: ${{ matrix.R }}
-    steps:
-    - uses: actions/checkout@v2
-    - name: Set up R and install dependencies
-      run: |
-        apt-get update
-        apt-get -y install libxml2-dev
-        apt-get -y install libssl-dev
-        apt-get -y install libcurl4-openssl-dev
-        apt-get -y install libgit2-dev
-        apt-get -y install libssh2-1-dev
-        apt-get -y install pandoc
-        r -e "install.packages('devtools')"
-        r -e 'devtools::install_deps()'
+      - name: Install dependencies
+        run: |
+          r -e "install.packages('devtools')"
+          r -e 'devtools::install_deps()'
