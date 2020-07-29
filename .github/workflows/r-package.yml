@@ -10,7 +10,17 @@ on:
 
 jobs:
   build:
-    runs-on: r-base:latest
+    runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        R: [ '3.5.3', '3.6.1', '4.0.2' ]
+    name: R ${{ matrix.R }} sample
+    steps:
+      - uses: actions/checkout@master
+      - name: Setup R
+        uses: r-lib/actions/setup-R@v1
+        with:
+          r-version: ${{ matrix.R }}
     steps:
     - uses: actions/checkout@v2
     - name: Set up R and install dependencies
