@@ -15,6 +15,11 @@ jobs:
       - name: Install devtools
         run: install.packages("devtools")
         shell: Rscript {0}
+      - name: Install dependencies for devtools
+        run: |
+          apt-get update -y
+          apt-get install libgit2-dev -y
+          apt-get install libssh2-1-dev -y
       - name: Build
         run: devtools::build(binary = TRUE)
         shell: Rscript {0}
