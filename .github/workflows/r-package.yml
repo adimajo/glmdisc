@@ -21,6 +21,27 @@ jobs:
       - name: Install devtools
         run: install.packages("devtools")
         shell: Rscript {0}
-      - name: Build
-        run: devtools::build(binary = TRUE)
+      - name: Check code style
+        run: inst/lint.R
+        shell: Rscript {0}
+      - name: Install dependencies
+        run: devtools::install_deps()
+        shell: Rscript {0}
+      - name: Check documentation
+        run: inst/documentation.R
+        shell: Rscript {0}
+      - name: Check package (as CRAN)
+        run: devtools::check(document = FALSE, args = "--no-tests", error_on = "all")
+        shell: Rscript {0}
+      - name: Testthat
+        run: devtools::test()
+        shell: Rscript {0}
+      - name: Coverage
+        run: print(devtools::test_coverage())
+        shell: Rscript {0}
+      - name: Check on Mac OS
+        run: inst/rhubcheck.R "macos-highsierra-release-cran"
+        shell: Rscript {0}
+      - name: Check on Windows
+        run: inst/rhubcheck.R "windows-x86_64-devel"
         shell: Rscript {0}
