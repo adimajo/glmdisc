@@ -19,6 +19,18 @@ Or alternatively directly from CRAN:
 install.packages("glmdisc")
 ```
 
-## Example
+## Documentation
 
-For further instructions, go to vignettes > glmdisc.Rmd or go through the vignette directly in RStudio by typing "vignette('glmdisc')" once the package is installed and loaded.
+### Through R(Studio)
+
+#### Getting help
+
+The help pages of this package can be reached by typing `help(glmdisc` (or `?glmdisc`) once the package is installed and loaded.
+
+#### Vignette
+
+For further instructions, go to `vignettes` > `glmdisc.Rmd` or go through the vignette directly in RStudio by typing `vignette('glmdisc')` once the package is installed and loaded.
+
+### Online
+
+Both the help pages and the vignette are available online as [a Github page built with `pkgdown`(adimajo.github.io/glmdisc).
