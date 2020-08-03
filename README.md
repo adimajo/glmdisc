@@ -33,4 +33,4 @@ For further instructions, go to `vignettes` > `glmdisc.Rmd` or go through the vi
 
 ### Online
 
-Both the help pages and the vignette are available online as [a Github page built with `pkgdown`(adimajo.github.io/glmdisc).
+Both the help pages and the vignette are available online as [a Github page built with `pkgdown`](adimajo.github.io/glmdisc).
