@@ -130,7 +130,7 @@ test_that("glmdisc works for multi-dimensional continuous data", {
 })
 
 test_that("glmdisc works for one-dimensional categorical data", {
-  x <- matrix(runif(300), nrow = 300, ncol = 1)
+  x <- matrix(runif(600), nrow = 600, ncol = 1)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) {
     as.numeric(cut(col, cuts))
@@ -139,7 +139,7 @@ test_that("glmdisc works for one-dimensional categorical data", {
   log_odd <- t(sapply(seq_along(xd[, 1]), function(row_id) {
     theta[xd[row_id, 1]]
   }))
-  y <- rbinom(300, 1, 1 / (1 + exp(-log_odd)))
+  y <- rbinom(600, 1, 1 / (1 + exp(-log_odd)))
 
   xd <- data.frame(xd = factor(xd))
 

@@ -1,3 +1,7 @@
+if (!require(rhub, quietly = TRUE)) {
+        install.packages("rhub")
+}
+
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) != 1L) {
      stop("Incorrect number of args, needs 1: platform (string)")

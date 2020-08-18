@@ -6,6 +6,10 @@ if (!identical(docOrg, docNew)) {
      stop("Documentation was not updated, try running devtools::document().")
 }
 # Pkgdown
+if (!require(pkgdown, quietly = TRUE)) {
+    install.packages("pkgdown")
+}
+
 list_files = c(dir("docs", recursive=TRUE, full.names = TRUE), "NAMESPACE")
 list_files = list_files[!list_files=="docs/pkgdown.yml"]
 list_files = list_files[!list_files=="docs/reference/index.html"]
