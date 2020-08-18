@@ -7,32 +7,40 @@ test_that("cutpoints works with one-dimensional continuous data", {
   xd <- as.numeric(cut(x, cuts))
   xd <- t(t(xd))
   theta <- matrix(c(0, 2, -2), ncol = 1, nrow = 3)
-  log_odd <- sapply(seq_along(xd[, 1]), 
-                              function(row_id) sapply(seq_along(xd[row_id, ]), 
-                                                      function(element) theta[xd[row_id, element], element]))
+  log_odd <- sapply(
+    seq_along(xd[, 1]),
+    function(row_id) {
+      sapply(
+        seq_along(xd[row_id, ]),
+        function(element) theta[xd[row_id, element], element]
+      )
+    }
+  )
   y <- rbinom(100, 1, 1 / (1 + exp(-log_odd)))
-  sem_disc <- glmdisc(x, 
-                      y, 
-                      iter = 50, 
-                      m_start = 4, 
-                      test = FALSE, 
-                      validation = FALSE, 
-                      criterion = "aic",
-                      interact = FALSE)
+  sem_disc <- glmdisc(x,
+    y,
+    iter = 50,
+    m_start = 4,
+    test = FALSE,
+    validation = FALSE,
+    criterion = "aic",
+    interact = FALSE
+  )
   les_cuts <- cutpoints(sem_disc)
   expect_type(les_cuts, "list")
   expect_length(les_cuts, 1)
   expect_type(les_cuts[[1]], "double")
   expect_equal(names(les_cuts), "V1")
   x <- data.frame(x)
-  sem_disc <- glmdisc(x, 
-                      y, 
-                      iter = 50, 
-                      m_start = 4, 
-                      test = FALSE, 
-                      validation = FALSE, 
-                      criterion = "aic",
-                      interact = FALSE)
+  sem_disc <- glmdisc(x,
+    y,
+    iter = 50,
+    m_start = 4,
+    test = FALSE,
+    validation = FALSE,
+    criterion = "aic",
+    interact = FALSE
+  )
   les_cuts <- cutpoints(sem_disc)
   expect_equal(names(les_cuts), "x")
 })

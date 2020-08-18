@@ -36,13 +36,15 @@ if (!isGeneric("plot")) {
 #' })))
 #' y <- rbinom(100, 1, 1 / (1 + exp(-log_odd)))
 #'
-#' sem_disc <- glmdisc(x, y, iter = 50, m_start = 4, test = FALSE, 
-#'                     validation = FALSE, criterion = "aic")
+#' sem_disc <- glmdisc(x, y,
+#'   iter = 50, m_start = 4, test = FALSE,
+#'   validation = FALSE, criterion = "aic"
+#' )
 #' plot(sem_disc)
 plot.glmdisc <- function(x) {
 
   # Graph 1 : ROC CURVE
-  glm_simple_roc <- simple_roc(x@disc.data$labels, predict(x, x@cont.data[, -ncol(x@cont.data), drop=FALSE]))
+  glm_simple_roc <- simple_roc(x@disc.data$labels, predict(x, x@cont.data[, -ncol(x@cont.data), drop = FALSE]))
 
   with(glm_simple_roc, graphics::plot(1 - FPR, TPR, col = 1 + labels, xlim = c(1, 0)))
   graphics::title(main = "ROC Curve on total provided data")

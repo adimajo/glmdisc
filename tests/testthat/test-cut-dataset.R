@@ -45,10 +45,9 @@ test_that("cut_dataset works with no test and no validation", {
 })
 
 test_that("cut_dataset errors with some proportion values", {
-     expect_error(cut_dataset(20, c(-0.1), test = T, validation = F), "Argument proportions should contain 1 argument strictly between 0 and 1", fixed=TRUE)
-     expect_error(cut_dataset(20, c(1.1), test = T, validation = F), "Argument proportions should contain 1 argument strictly between 0 and 1", fixed=TRUE)
-     
-     expect_error(cut_dataset(20, c(-0.1), test = F, validation = T), "Argument proportions should contain 1 argument strictly between 0 and 1", fixed=TRUE)
-     expect_error(cut_dataset(20, c(1.1), test = F, validation = T), "Argument proportions should contain 1 argument strictly between 0 and 1", fixed=TRUE)
-})
+  expect_error(cut_dataset(20, c(-0.1), test = T, validation = F), "Argument proportions should contain 1 argument strictly between 0 and 1", fixed = TRUE)
+  expect_error(cut_dataset(20, c(1.1), test = T, validation = F), "Argument proportions should contain 1 argument strictly between 0 and 1", fixed = TRUE)
 
+  expect_error(cut_dataset(20, c(-0.1), test = F, validation = T), "Argument proportions should contain 1 argument strictly between 0 and 1", fixed = TRUE)
+  expect_error(cut_dataset(20, c(1.1), test = F, validation = T), "Argument proportions should contain 1 argument strictly between 0 and 1", fixed = TRUE)
+})

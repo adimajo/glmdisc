@@ -21,8 +21,10 @@ NULL
 #' })))
 #' y <- rbinom(100, 1, 1 / (1 + exp(-log_odd)))
 #'
-#' sem_disc <- glmdisc(x, y, iter = 50, m_start = 4, test = FALSE, 
-#'                     validation = FALSE, criterion = "aic")
+#' sem_disc <- glmdisc(x, y,
+#'   iter = 50, m_start = 4, test = FALSE,
+#'   validation = FALSE, criterion = "aic"
+#' )
 #' discretize(sem_disc, data.frame(x))
 methods::setMethod("discretize", methods::signature(object = "glmdisc"), function(object, data) {
   discretize_link(object@best.disc[[2]], data, object@parameters$m_start)

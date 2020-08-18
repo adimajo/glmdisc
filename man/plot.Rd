@@ -33,8 +33,10 @@ log_odd <- rowSums(t(sapply(seq_along(xd[, 1]), function(row_id) {
 })))
 y <- rbinom(100, 1, 1 / (1 + exp(-log_odd)))
 
-sem_disc <- glmdisc(x, y, iter = 50, m_start = 4, test = FALSE, 
-                    validation = FALSE, criterion = "aic")
+sem_disc <- glmdisc(x, y,
+  iter = 50, m_start = 4, test = FALSE,
+  validation = FALSE, criterion = "aic"
+)
 plot(sem_disc)
 }
 \concept{test discretization plot}

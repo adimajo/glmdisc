@@ -10,7 +10,7 @@ test_that("predict works with continuous data", {
   y <- rbinom(100, 1, 1 / (1 + exp(-log_odd)))
   sem_disc <- glmdisc(x, y, iter = 50, m_start = 4, test = FALSE, validation = FALSE, criterion = "aic")
   pred_sem <- predict(sem_disc, x)
-  
+
   expect_length(pred_sem, 100)
   expect_true(all(pred_sem <= 1), TRUE)
   expect_true(all(pred_sem >= 0), TRUE)
@@ -26,7 +26,7 @@ test_that("predict works with categorical data", {
   y <- rbinom(100, 1, 1 / (1 + exp(-log_odd)))
   sem_disc <- glmdisc(data.frame(x.1 = factor(xd[, 1]), x.2 = factor(xd[, 2]), x.3 = factor(xd[, 3])), y, iter = 50, m_start = 4, test = FALSE, validation = FALSE, criterion = "aic")
   pred_sem <- predict(sem_disc, rbind(data.frame(x.1 = factor(xd[, 1]), x.2 = factor(xd[, 2]), x.3 = factor(xd[, 3]))))
-  
+
   expect_length(pred_sem, 100)
   expect_true(all(pred_sem <= 1), TRUE)
   expect_true(all(pred_sem >= 0), TRUE)
@@ -41,6 +41,8 @@ test_that("predict errors with unseen categorical data", {
   log_odd <- rowSums(t(sapply(seq_along(xd[, 1]), function(row_id) sapply(seq_along(xd[row_id, ]), function(element) theta[xd[row_id, element], element]))))
   y <- rbinom(100, 1, 1 / (1 + exp(-log_odd)))
   sem_disc <- glmdisc(data.frame(x.1 = factor(xd[, 1]), x.2 = factor(xd[, 2]), x.3 = factor(xd[, 3])), y, iter = 50, m_start = 4, test = FALSE, validation = FALSE, criterion = "aic")
-  expect_error(predict(sem_disc, rbind(data.frame(x.1 = factor(xd[, 1]), x.2 = factor(xd[, 2]), x.3 = factor(xd[, 3])), 
-                                       data.frame(x.1 = factor(10), x.2 = factor(10), x.3 = factor(10)))))
+  expect_error(predict(sem_disc, rbind(
+    data.frame(x.1 = factor(xd[, 1]), x.2 = factor(xd[, 2]), x.3 = factor(xd[, 3])),
+    data.frame(x.1 = factor(10), x.2 = factor(10), x.3 = factor(10))
+  )))
 })

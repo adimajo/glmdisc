@@ -35,15 +35,18 @@ methods::setGeneric("predict")
 #' })))
 #' y <- rbinom(100, 1, 1 / (1 + exp(-log_odd)))
 #'
-#' sem_disc <- glmdisc(x, y, iter = 50, m_start = 4, test = FALSE, 
-#'                     validation = FALSE, criterion = "aic")
+#' sem_disc <- glmdisc(x, y,
+#'   iter = 50, m_start = 4, test = FALSE,
+#'   validation = FALSE, criterion = "aic"
+#' )
 #' predict(sem_disc, data.frame(x))
 predict.glmdisc <- function(object, predictors) {
   data_disc <- tryCatch(
     as.data.frame(discretize_link(object@best.disc[[2]], predictors, object@parameters$m_start), stringsAsFactors = TRUE),
     error = function(e) {
       simpleError("Unseen (during training) levels of some categorical feature.")
-    })
+    }
+  )
   # colnames(data_disc) = colnames(predictors)
 
   # Features with only one level are out of the model
