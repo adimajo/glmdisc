@@ -74,7 +74,7 @@ glmdisc <- function(predictors, labels, interact = TRUE, validation = TRUE, test
   ensemble[[3]] <- 1:n %in% ensemble[[3]]
 
   # Initializing variable Q (discretization of X) at random.
-  e_emap = initialize_e_emap(n, d, types_data, continu_complete_case, m_start)
+  e_emap = initialize_e_emap(n, d, types_data, continu_complete_case, m_start, predictors)
   e = e_emap[[1]]
   emap = e_emap[[2]]
   

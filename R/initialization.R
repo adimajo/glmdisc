@@ -28,7 +28,7 @@ second_argument_checks <- function(types_data, d, interact) {
 }
 
 
-initialize_e_emap <- function(n, d, types_data, continu_complete_case, m_start) {
+initialize_e_emap <- function(n, d, types_data, continu_complete_case, m_start, predictors) {
      e <- emap <- array(0, c(n, d))
      for (j in which(types_data == "numeric")) {
           e[continu_complete_case[, j], j] <- emap[continu_complete_case[, j], j] <- as.factor(sample(1:m_start, sum(continu_complete_case[, j]), replace = TRUE))
@@ -47,7 +47,6 @@ initialize_e_emap <- function(n, d, types_data, continu_complete_case, m_start) 
 }
 
 
-
 initialize_interaction <- function(d, predictors, continu_complete_case, labels, ensemble) {
      delta <- matrix(sample(0:1, d^2, replace = TRUE, prob = c(0.5, 0.5)), nrow = d, ncol = d)
      delta[lower.tri(delta)] <- 0
@@ -61,8 +60,6 @@ initialize_interaction <- function(d, predictors, continu_complete_case, labels,
      # The proposal distribution of Metropolis-Hastings, p_delta, is calculated as follows
      for (j in 1:(d - 1)) {
           for (k in (j + 1):d) {
-               # print(j)
-               # print(k)
                if (nlevels(factor(predictors[continu_complete_case[, j] & continu_complete_case[, k] & ensemble[[1]], j])) == 1) stop(paste0("Some levels are scarce such that feature ", j, " only has 1 level in train. Try with validation = F"))
                if (nlevels(factor(predictors[continu_complete_case[, j] & continu_complete_case[, k] & ensemble[[1]], k])) == 1) stop(paste0("Some levels are scarce such that feature ", k, " only has 1 level in train. Try with validation = F"))
                sans_inter <- stats::glm(labels ~ X1 + X2, family = stats::binomial(link = "logit"), data = data.frame(labels = labels[continu_complete_case[, j] & continu_complete_case[, k] & ensemble[[1]]], X1 = predictors[continu_complete_case[, j] & continu_complete_case[, k] & ensemble[[1]], j], X2 = predictors[continu_complete_case[, j] & continu_complete_case[, k] & ensemble[[1]], k], stringsAsFactors = TRUE))
