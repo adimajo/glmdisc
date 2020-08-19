@@ -79,3 +79,17 @@ test_that("discretize_link works with multi-dimensional mixed data", {
   }
   expect_equal(nlevels(factor(res[, 3])), 3)
 })
+
+test_that("discretize_link errors", {
+  set.seed(1)
+  x <- matrix(runif(100), nrow = 100, ncol = 3)
+  cuts <- seq(0, 1, length.out = 4)
+  xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))
+  e <- apply(xd[, 1:2], 2, function(col) ifelse(col %in% c(1, 2), 1, 2))
+  link <- list()
+  for (j in 1:2) {
+    link[[j]] <- table(factor(e[, j]), factor(xd[, j]))
+  }
+  link[[3]] <- nnet::multinom(e ~ x, data = data.frame(e = factor(xd[, 3]), x = x[, 3]), maxit = 50)
+  expect_error(discretize_link(link, cbind(data.frame(apply(xd[, 1:2], 2, integer), stringsAsFactors = TRUE), x[, 3]), 2))
+})

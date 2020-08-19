@@ -341,9 +341,6 @@ test_that("glmdisc errors for type of input data", {
   theta <- t(matrix(c(0, 0, 0, 2, 2, 2, -2, -2, -2), ncol = 3, nrow = 3))
   log_odd <- rowSums(t(sapply(seq_along(xd[, 1]), function(row_id) sapply(seq_along(xd[row_id, ]), function(element) theta[xd[row_id, element], element]))))
   y <- rbinom(100, 1, 1 / (1 + exp(-log_odd)))
-  x[, 1] <- as.integer(x[, 1])
-
-  expect_error(glmdisc(x, y, iter = 50, m_start = 4, test = FALSE, validation = FALSE, criterion = "aic"))
 
   expect_error(glmdisc(x[, 2, drop = FALSE], y, iter = 50, m_start = 4, interact = TRUE, test = FALSE, validation = FALSE, criterion = "aic"))
 
@@ -352,6 +349,11 @@ test_that("glmdisc errors for type of input data", {
   expect_error(glmdisc(x, y, iter = 50, m_start = 4, interact = FALSE, test = FALSE, validation = FALSE, criterion = "toto"))
 
   expect_error(glmdisc(x, y, iter = 50, m_start = 4, interact = FALSE, test = FALSE, validation = "toto", criterion = "aic"))
+
+  x <- data.frame(x)
+  x[, 1] <- c(rep(1:3, 100 %/% 3), rep(1, 100 - 3 * (100 %/% 3)))
+  x[, 1] <- as.integer(x[, 1])
+  expect_error(glmdisc(x, y, iter = 50, m_start = 4, test = FALSE, validation = FALSE, criterion = "aic"))
 })
 
 test_that("glmdisc warns for type of input data", {

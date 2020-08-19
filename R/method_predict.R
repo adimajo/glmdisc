@@ -63,7 +63,7 @@ predict.glmdisc <- function(object, predictors) {
   for (var in object@parameters$encoder$facVars) {
     if (length(levels(data_disc[, var])[!(levels(data_disc[, var]) %in% unlist(unname(object@parameters$encoder$lvls[var])))]) > 0) {
       data_disc <- data_disc[-which(data_disc[, var] == levels(data_disc[, var])[!(levels(data_disc[, var]) %in% unlist(unname(object@parameters$encoder$lvls[var])))]), ]
-      warning(paste("levels", paste(levels(data_disc[, var])[(!levels(data_disc[, var]) %in% unlist(unname(object@parameters$encoder$lvls[var])))], collapse = ", "), "of feature", var, "were removed from test set."))
+      warning("Levels", paste(levels(data_disc[, var])[(!levels(data_disc[, var]) %in% unlist(unname(object@parameters$encoder$lvls[var])))], collapse = ", "), "of feature", var, "were removed from test set.")
     }
   }
 

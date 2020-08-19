@@ -2,11 +2,11 @@ first_argument_checks <- function(criterion, labels, predictors, validation) {
   if (!criterion %in% c("gini", "aic", "bic")) {
     stop(simpleError("criterion must be gini, aic or bic"))
   }
-  if (!length(labels) == length(predictors[, 1])) {
-    stop(simpleError("labels and predictors must be of same length"))
-  }
   if (!(any(class(predictors) %in% c("matrix", "array", "data.frame")))) {
     stop(simpleError(paste0("`predictors` must be an array, a matrix or a dataframe, you provided a "), class(predictors)))
+  }
+  if (!length(labels) == length(predictors[, 1])) {
+    stop(simpleError("labels and predictors must be of same length"))
   }
   if ((criterion == "gini") & (validation == FALSE)) {
     warning("Using Gini index on training set might yield an overfitted model.")

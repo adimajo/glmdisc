@@ -202,8 +202,6 @@ glmdisc <- function(predictors, labels, interact = TRUE, validation = TRUE, test
         criterion_iter[[i]] <- 2 * model_reglog$loglikelihood - log(length(ensemble[[1]])) * length(model_reglog$coefficients)
       } else if ((criterion %in% c("aic", "bic")) && (validation == TRUE)) {
         criterion_iter[[i]] <- sum(log(labels[ensemble[[2]]] * predictlogisticRegression(data_logit[ensemble[[2]], ], model_reglog$coefficients) + (1 - labels[ensemble[[2]]]) * (1 - labels[ensemble[[2]]] * predictlogisticRegression(data_logit[ensemble[[2]], ], model_reglog$coefficients))))
-      } else {
-        stop(simpleError("validation must be boolean!"))
       }
 
       if (criterion_iter[[i]] >= criterion_iter[[current_best]]) {
@@ -493,7 +491,7 @@ glmdisc <- function(predictors, labels, interact = TRUE, validation = TRUE, test
         if (length(suppressed_ind) > 0) {
           newdata <- newdata[!suppressed_ind, ]
           labels_test <- labels_test[!suppressed_ind]
-          print(paste("levels", paste(levels(newdata[, var])[(!levels(newdata) %in% unlist(unname(encoder$lvls[var])))], collapse = ", "), "of feature", var, "were removed from test set."))
+          message("Levels", paste(levels(newdata[, var])[(!levels(newdata) %in% unlist(unname(encoder$lvls[var])))], collapse = ", "), "of feature", var, "were removed from test set.")
         }
       }
 
@@ -510,7 +508,7 @@ glmdisc <- function(predictors, labels, interact = TRUE, validation = TRUE, test
         if (length(suppressed_ind) > 0) {
           newdata <- newdata[!suppressed_ind, ]
           labels_validation <- labels_validation[!suppressed_ind]
-          print(paste("levels", paste(levels(newdata[, var])[(!levels(newdata) %in% unlist(unname(encoder$lvls[var])))], collapse = ", "), "of feature", var, "were removed from test set."))
+          message("Levels", paste(levels(newdata[, var])[(!levels(newdata) %in% unlist(unname(encoder$lvls[var])))], collapse = ", "), "of feature", var, "were removed from test set.")
         }
       }
 
@@ -528,7 +526,7 @@ glmdisc <- function(predictors, labels, interact = TRUE, validation = TRUE, test
         if (length(suppressed_ind) > 0) {
           newdata <- newdata[!suppressed_ind, ]
           labels_test <- labels_test[!suppressed_ind]
-          print(paste("levels", paste(levels(newdata[, var])[(!levels(newdata) %in% unlist(unname(encoder$lvls[var])))], collapse = ", "), "of feature", var, "were removed from test set."))
+          message("levels", paste(levels(newdata[, var])[(!levels(newdata) %in% unlist(unname(encoder$lvls[var])))], collapse = ", "), "of feature", var, "were removed from test set.")
         }
       }
       data_test <- predict(object = encoder, newdata = as.data.frame(discretize_link(best.disc[[2]], predictors[ensemble[[2]], , drop = FALSE], m_start), stringsAsFactors = TRUE))
