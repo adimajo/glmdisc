@@ -12,7 +12,8 @@ token <- args[[2L]]
 if (!is.element(platform, rhub::platforms()[[1L]])) {
      stop(paste(platform, "not in rhub::platforms()[[1L]]"))
 }
-rhub::validate_email(token = token)
+rhub::validate_email(email = substr(utils::maintainer(pkg = "glmdisc"), regexec("<", utils::maintainer(pkg = "glmdisc"))[[1]][1] + 1, nchar(utils::maintainer(pkg = "glmdisc")) - 1),
+                     token = token)
 cr <- rhub::check(platform = platform, show_status = TRUE)
 statuses <- cr[[".__enclos_env__"]][["private"]][["status_"]]
 
