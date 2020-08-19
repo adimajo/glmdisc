@@ -11,8 +11,9 @@ if (!require(pkgdown, quietly = TRUE)) {
 }
 
 list_files = c(dir("docs", recursive=TRUE, full.names = TRUE), "NAMESPACE")
-list_files = list_files[!list_files=="docs/pkgdown.yml"]
-list_files = list_files[!list_files=="docs/reference/index.html"]
+list_files = list_files[!list_files=="docs/pkgdown.yml"]  # contains datetime
+list_files = list_files[!list_files=="docs/reference/index.html"]  # contains datetime
+list_files = list_files[!list_files=="docs/articles/glmdisc.html"]  # contains random stuff
 print(list_files)
 docOrg <- lapply(list_files, readLines)
 pkgdown::build_site()
@@ -21,10 +22,7 @@ print(length(docOrg))
 print(length(docNew))
 for (j in 1:length(docOrg)) {
      if (!identical(docOrg[[j]], docNew[[j]])) {
-          print("Original document:")
-          print(docOrg[[j]])
-          print("New document:")
-          print(docNew[[j]])
+          print(paste0("File ", j, " is not OK."))
      } else {
           print(paste0("File ", j, " OK."))
      }
