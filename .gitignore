@@ -7,6 +7,9 @@ src/glmdisc.dll
 
 .DS_Store
 
+CRAN-RELEASE
+cran-comments.md
+
 .Rproj.user
 .Rhistory
 .RData
