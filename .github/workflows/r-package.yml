@@ -32,6 +32,9 @@ jobs:
       - name: Check package (as CRAN)
         run: devtools::check(document = FALSE, args = "--no-tests", error_on = "note")
         shell: Rscript {0}
+      - name: Install package
+        run: devtools::install()
+        shell: Rscript {0}
       - name: Testthat
         run: devtools::test()
         shell: Rscript {0}
