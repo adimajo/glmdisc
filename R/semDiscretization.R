@@ -331,7 +331,11 @@ glmdisc <- function(predictors, labels, interact = TRUE, validation = TRUE, test
 
         # p(e^j|reste) calculation
         if ((types_data[j] == "numeric")) {
-          t <- predict(link[[j]], newdata = data.frame(x = unlist(unname(c(predictors[continu_complete_case[, j], , drop = FALSE][, j, drop = FALSE]))), stringsAsFactors = TRUE), type = "probs")
+          t <- tryCatch(predict(link[[j]], newdata = data.frame(x = unlist(unname(c(predictors[continu_complete_case[, j], , drop = FALSE][, j, drop = FALSE]))), stringsAsFactors = TRUE), type = "probs"),
+            error = function(e) {
+              predict(link[[j]], newdata = data.frame(x = unlist(unname(c(predictors[continu_complete_case[, j], , drop = FALSE][, j, drop = FALSE]))), stringsAsFactors = TRUE), type = "response")
+            }
+          )
 
           if (is.vector(t)) {
             t <- cbind(1 - t, t)
@@ -396,13 +400,21 @@ glmdisc <- function(predictors, labels, interact = TRUE, validation = TRUE, test
             if (reg_type == "poly") {
               if (!requireNamespace("nnet", quietly = TRUE)) {
                 if ((types_data[j] == "numeric")) {
-                  t <- predict(link[[j]], newdata = data.frame(x = predictors[, j], stringsAsFactors = TRUE), type = "probs")
+                  t <- tryCatch(predict(link[[j]], newdata = data.frame(x = predictors[, j], stringsAsFactors = TRUE), type = "probs"),
+                    error = function(e) {
+                      predict(link[[j]], newdata = data.frame(x = predictors[, j], stringsAsFactors = TRUE), type = "response")
+                    }
+                  )
                 } else {
                   t <- prop.table.robust(t(sapply(predictors[, j], function(row) link[[j]][, row])), 1)
                 }
               } else {
                 if ((types_data[j] == "numeric")) {
-                  t <- predict(link[[j]], newdata = data.frame(x = predictors[, j], stringsAsFactors = TRUE), type = "probs")
+                  t <- tryCatch(predict(link[[j]], newdata = data.frame(x = predictors[, j], stringsAsFactors = TRUE), type = "probs"),
+                    error = function(e) {
+                      predict(link[[j]], newdata = data.frame(x = predictors[, j], stringsAsFactors = TRUE), type = "response")
+                    }
+                  )
                 } else {
                   t <- prop.table.robust(t(sapply(predictors[, j], function(row) link[[j]][, row])), 1)
                 }
@@ -491,7 +503,7 @@ glmdisc <- function(predictors, labels, interact = TRUE, validation = TRUE, test
         if (length(suppressed_ind) > 0) {
           newdata <- newdata[!suppressed_ind, ]
           labels_test <- labels_test[!suppressed_ind]
-          message("Levels", paste(levels(newdata[, var])[(!levels(newdata) %in% unlist(unname(encoder$lvls[var])))], collapse = ", "), "of feature", var, "were removed from test set.")
+          warning("Level(s) ", paste(levels(newdata[, var])[(!levels(newdata) %in% unlist(unname(encoder$lvls[var])))], collapse = ", "), " of feature ", var, " were removed from test set.")
         }
       }
 
@@ -508,7 +520,7 @@ glmdisc <- function(predictors, labels, interact = TRUE, validation = TRUE, test
         if (length(suppressed_ind) > 0) {
           newdata <- newdata[!suppressed_ind, ]
           labels_validation <- labels_validation[!suppressed_ind]
-          message("Levels", paste(levels(newdata[, var])[(!levels(newdata) %in% unlist(unname(encoder$lvls[var])))], collapse = ", "), "of feature", var, "were removed from test set.")
+          warning("Level(s) ", paste(levels(newdata[, var])[(!levels(newdata) %in% unlist(unname(encoder$lvls[var])))], collapse = ", "), " of feature ", var, " were removed from test set.")
         }
       }
 
@@ -526,7 +538,7 @@ glmdisc <- function(predictors, labels, interact = TRUE, validation = TRUE, test
         if (length(suppressed_ind) > 0) {
           newdata <- newdata[!suppressed_ind, ]
           labels_test <- labels_test[!suppressed_ind]
-          message("levels", paste(levels(newdata[, var])[(!levels(newdata) %in% unlist(unname(encoder$lvls[var])))], collapse = ", "), "of feature", var, "were removed from test set.")
+          warning("Level(s) ", paste(levels(newdata[, var])[(!levels(newdata) %in% unlist(unname(encoder$lvls[var])))], collapse = ", "), " of feature ", var, " were removed from test set.")
         }
       }
       data_test <- predict(object = encoder, newdata = as.data.frame(discretize_link(best.disc[[2]], predictors[ensemble[[2]], , drop = FALSE], m_start), stringsAsFactors = TRUE))

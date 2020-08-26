@@ -17,6 +17,7 @@ methods::setGeneric("predict")
 #' Prediction on a raw test set of the best logistic regression model on discretized data.
 #'
 #' @rdname predict
+#' @importFrom magrittr "%>%"
 #' @aliases predict,glmdisc,ANY,ANY-method
 #' @param object The S4 discretization object.
 #' @param predictors The test dataframe to discretize and for which we wish to have predictions.
@@ -41,29 +42,29 @@ methods::setGeneric("predict")
 #' )
 #' predict(sem_disc, data.frame(x))
 predict.glmdisc <- function(object, predictors) {
+  if (ncol(predictors) != length(object@parameters$types_data)) {
+    stop(simpleError("Not the same number of columns."))
+  }
+
+  types_data <- sapply(predictors[1, ], class)
+
+  if (!all(types_data == object@parameters$types_data)) {
+    stop(simpleError("Not the same data types."))
+  }
+
   data_disc <- tryCatch(
     as.data.frame(discretize_link(object@best.disc[[2]], predictors, object@parameters$m_start), stringsAsFactors = TRUE),
     error = function(e) {
-      simpleError("Unseen (during training) levels of some categorical feature.")
+      stop(simpleError("Unseen (during training) levels of some categorical feature."))
     }
   )
-  # colnames(data_disc) = colnames(predictors)
-
-  # Features with only one level are out of the model
-  # data_e = Filter(function(x)(length(unique(x))>1),data_disc)
-  # data_e <- data_disc
-
-  # # With the exception of features that had more than one level on the training set and only one in the test set and were discarded at the preceding step
-  # new_df = matrix(1,ncol=length(object@parameters$encoder$facVars[!object@parameters$encoder$facVars %in% colnames(data_e)]), nrow = nrow(data_e))
-  # new_df = as.data.frame(lapply(as.data.frame(new_df), factor))
-  # colnames(new_df) = object@parameters$encoder$facVars[!object@parameters$encoder$facVars %in% colnames(data_e)]
-  # data_e <- cbind(data_e,new_df)
 
   # Levels not in the training set but in the test set are removed
   for (var in object@parameters$encoder$facVars) {
     if (length(levels(data_disc[, var])[!(levels(data_disc[, var]) %in% unlist(unname(object@parameters$encoder$lvls[var])))]) > 0) {
       data_disc <- data_disc[-which(data_disc[, var] == levels(data_disc[, var])[!(levels(data_disc[, var]) %in% unlist(unname(object@parameters$encoder$lvls[var])))]), ]
-      warning("Levels", paste(levels(data_disc[, var])[(!levels(data_disc[, var]) %in% unlist(unname(object@parameters$encoder$lvls[var])))], collapse = ", "), "of feature", var, "were removed from test set.")
+      warning("Level(s) ", paste(levels(data_disc[, var])[(!levels(data_disc[, var]) %in% unlist(unname(object@parameters$encoder$lvls[var])))], collapse = ", "), " of feature ", var, " were removed from test set.")
+      data_disc <- data_disc %>% dplyr::mutate_at(dplyr::vars(object@parameters$encoder$facVars), dplyr::funs(factor))
     }
   }
 
@@ -80,4 +81,16 @@ predict.glmdisc <- function(object, predictors) {
 #' @name predict,glmdisc-method
 #' @aliases predict,glmdisc-method
 #' @description This defines the method "predict" which will predict the discretization of a new input dataset given a discretization scheme of S4 class \code{\link{glmdisc}}
+#' @importFrom magrittr "%>%"
 methods::setMethod("predict", "glmdisc", predict.glmdisc)
+
+# Levels not in the training set but in the test set are removed
+# if (class(data_disc) == "character") {
+#   for (var in 1:length(object@parameters$encoder$facVars)) {
+#     if (length(levels(predictors[, names(which(types_data == "factor"))[var]])[!(levels(predictors[, names(which(types_data == "factor"))[var]]) %in% unlist(unname(object@parameters$encoder$lvls[var])))]) > 0) {
+#       predictors <- predictors[-which(predictors[, names(which(types_data == "factor"))[var]] == levels(predictors[, names(which(types_data == "factor"))[var]])[!(levels(predictors[, names(which(types_data == "factor"))[var]]) %in% unlist(unname(object@parameters$encoder$lvls[var])))]), ]
+#       warning("Level(s) ", paste(levels(predictors[, names(which(types_data == "factor"))[var]])[!(levels(predictors[, names(which(types_data == "factor"))[var]]) %in% unlist(unname(object@parameters$encoder$lvls[var])))], collapse = ", "), " of feature ", var, " were removed from test set.")
+#       predictors <- predictors %>% dplyr::mutate_at(dplyr::vars(names(which(types_data == "factor"))), dplyr::funs(factor))
+#     }
+#   }
+# }

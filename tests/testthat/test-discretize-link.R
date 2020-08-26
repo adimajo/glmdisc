@@ -91,5 +91,7 @@ test_that("discretize_link errors", {
     link[[j]] <- table(factor(e[, j]), factor(xd[, j]))
   }
   link[[3]] <- nnet::multinom(e ~ x, data = data.frame(e = factor(xd[, 3]), x = x[, 3]), maxit = 50)
-  expect_error(discretize_link(link, cbind(data.frame(apply(xd[, 1:2], 2, integer), stringsAsFactors = TRUE), x[, 3]), 2))
+  test <- data.frame(xd[, 1:2]) %>% dplyr::mutate_at(dplyr::vars("X1", "X2"), dplyr::funs(as.integer))
+  test <- cbind(test, x[, 3])
+  expect_error(discretize_link(link, test, 2))
 })

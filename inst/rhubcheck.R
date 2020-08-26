@@ -12,6 +12,8 @@ token <- args[[2L]]
 if (!is.element(platform, rhub::platforms()[[1L]])) {
      stop(paste(platform, "not in rhub::platforms()[[1L]]"))
 }
+print(substr(utils::maintainer(pkg = "glmdisc"), regexec("<", utils::maintainer(pkg = "glmdisc"))[[1]][1] + 1, nchar(utils::maintainer(pkg = "glmdisc")) - 1))
+print(substr(token, 1, 5))
 rhub::validate_email(email = substr(utils::maintainer(pkg = "glmdisc"), regexec("<", utils::maintainer(pkg = "glmdisc"))[[1]][1] + 1, nchar(utils::maintainer(pkg = "glmdisc")) - 1),
                      token = token)
 cr <- rhub::check(platform = platform, show_status = TRUE)

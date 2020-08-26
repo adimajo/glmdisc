@@ -18,6 +18,8 @@ Encoding: UTF-8
 LazyData: true
 Imports:
     caret (>= 6.0-82),
+    dplyr,
+    magrittr,
     gam,
     nnet,
     RcppNumerical,

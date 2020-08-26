@@ -13,7 +13,7 @@ using namespace Numer;
 //' @export
 // [[Rcpp::export]]
 Eigen::VectorXd predictlogisticRegression(const Eigen::MatrixXd test,
-                                              const Eigen::VectorXd parameters) {
+                                          const Eigen::VectorXd parameters) {
      
      const int n = test.rows();
      Eigen::VectorXd prob(n);
