@@ -21,7 +21,7 @@ knitr::opts_chunk$set(
 
 # Context
 
-This research has been financed by Crédit Agricole Consumer Finance (CA CF), subsidiary of the Crédit Agricole Group which provides all kinds of banking and insurance services. CA CF specializes in consumer loans. It is a joint work at [Inria Nord-Europe](https://www.inria.fr/en/centre/lille) between Adrien Ehrhardt (CA CF, Inria), Christophe Biernacki (Inria, Lille University), Vincent Vandewalle (Inria, Lille University) and Philippe Heinrich (Lille University).
+This research has been financed by Crédit Agricole Consumer Finance (CA CF), subsidiary of the Crédit Agricole Group which provides all kinds of banking and insurance services. CA CF specializes in consumer loans. It is a joint work at [Inria Nord-Europe](https://www.inria.fr/en/centre-inria-lille-nord-europe) between Adrien Ehrhardt (CA CF, Inria), Christophe Biernacki (Inria, Lille University), Vincent Vandewalle (Inria, Lille University) and Philippe Heinrich (Lille University).
 
 In order to accept / reject loan applications more efficiently (both quicker and to select better applicants), most financial institutions resort to Credit Scoring: given the applicant's characteristics he/she is given a Credit Score, which has been statistically designed using previously accepted applicants, and which partly decides whether the financial institution will grant the loan or not.
 

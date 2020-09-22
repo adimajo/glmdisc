@@ -73,7 +73,7 @@
       <h1 data-toc-skip>The <code>glmdisc</code> package: discretization at its finest</h1>
                         <h4 class="author">Adrien Ehrhardt</h4>
             
-            <h4 class="date">2020-08-26</h4>
+            <h4 class="date">2020-09-22</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/adimajo/glmdisc/blob/master/vignettes/glmdisc.Rmd"><code>vignettes/glmdisc.Rmd</code></a></small>
       <div class="hidden name"><code>glmdisc.Rmd</code></div>
@@ -85,7 +85,7 @@
 <div id="context" class="section level1">
 <h1 class="hasAnchor">
 <a href="#context" class="anchor"></a>Context</h1>
-<p>This research has been financed by Crédit Agricole Consumer Finance (CA CF), subsidiary of the Crédit Agricole Group which provides all kinds of banking and insurance services. CA CF specializes in consumer loans. It is a joint work at <a href="https://www.inria.fr/en/centre/lille">Inria Nord-Europe</a> between Adrien Ehrhardt (CA CF, Inria), Christophe Biernacki (Inria, Lille University), Vincent Vandewalle (Inria, Lille University) and Philippe Heinrich (Lille University).</p>
+<p>This research has been financed by Crédit Agricole Consumer Finance (CA CF), subsidiary of the Crédit Agricole Group which provides all kinds of banking and insurance services. CA CF specializes in consumer loans. It is a joint work at <a href="https://www.inria.fr/en/centre-inria-lille-nord-europe">Inria Nord-Europe</a> between Adrien Ehrhardt (CA CF, Inria), Christophe Biernacki (Inria, Lille University), Vincent Vandewalle (Inria, Lille University) and Philippe Heinrich (Lille University).</p>
 <p>In order to accept / reject loan applications more efficiently (both quicker and to select better applicants), most financial institutions resort to Credit Scoring: given the applicant’s characteristics he/she is given a Credit Score, which has been statistically designed using previously accepted applicants, and which partly decides whether the financial institution will grant the loan or not.</p>
 <p>The current methodology for building a Credit Score in most financial institutions is based on logistic regression for several (mostly practical) reasons: it generally gives satisfactory discriminant results, it is reasonably well explainable (contrary to a random forest for example), it is robust to missing data (in particular not financed clients) that follow a MAR missingness mechanism.</p>
 <div id="example" class="section level2">
@@ -180,28 +180,28 @@
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td align="right">0.5007289</td>
-<td align="right">0.4865701</td>
+<td align="right">0.7940065</td>
+<td align="right">0.7790968</td>
 </tr>
 <tr class="even">
-<td align="right">0.5001627</td>
-<td align="right">0.4541247</td>
+<td align="right">0.5000144</td>
+<td align="right">0.3781499</td>
 </tr>
 <tr class="odd">
-<td align="right">0.8171524</td>
-<td align="right">0.7676885</td>
+<td align="right">0.8933469</td>
+<td align="right">0.8105306</td>
 </tr>
 <tr class="even">
-<td align="right">0.5587921</td>
-<td align="right">0.6580008</td>
+<td align="right">0.6341844</td>
+<td align="right">0.7165007</td>
 </tr>
 <tr class="odd">
-<td align="right">0.5926925</td>
-<td align="right">0.6838867</td>
+<td align="right">0.5545457</td>
+<td align="right">0.6551773</td>
 </tr>
 <tr class="even">
-<td align="right">0.9215439</td>
-<td align="right">0.7987942</td>
+<td align="right">0.5814640</td>
+<td align="right">0.6816187</td>
 </tr>
 </tbody>
 </table>
@@ -219,34 +219,34 @@
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td align="right">0.5007289</td>
-<td align="right">0.4865701</td>
-<td align="right">0.4861111</td>
+<td align="right">0.7940065</td>
+<td align="right">0.7790968</td>
+<td align="right">0.7714286</td>
 </tr>
 <tr class="even">
-<td align="right">0.5001627</td>
-<td align="right">0.4541247</td>
-<td align="right">0.4861111</td>
+<td align="right">0.5000144</td>
+<td align="right">0.3781499</td>
+<td align="right">0.4640777</td>
 </tr>
 <tr class="odd">
-<td align="right">0.8171524</td>
-<td align="right">0.7676885</td>
-<td align="right">0.7956989</td>
+<td align="right">0.8933469</td>
+<td align="right">0.8105306</td>
+<td align="right">0.9279279</td>
 </tr>
 <tr class="even">
-<td align="right">0.5587921</td>
-<td align="right">0.6580008</td>
-<td align="right">0.5754717</td>
+<td align="right">0.6341844</td>
+<td align="right">0.7165007</td>
+<td align="right">0.7500000</td>
 </tr>
 <tr class="odd">
-<td align="right">0.5926925</td>
-<td align="right">0.6838867</td>
-<td align="right">0.5754717</td>
+<td align="right">0.5545457</td>
+<td align="right">0.6551773</td>
+<td align="right">0.5580110</td>
 </tr>
 <tr class="even">
-<td align="right">0.9215439</td>
-<td align="right">0.7987942</td>
-<td align="right">0.9306931</td>
+<td align="right">0.5814640</td>
+<td align="right">0.6816187</td>
+<td align="right">0.5580110</td>
 </tr>
 </tbody>
 </table>
@@ -463,7 +463,7 @@
 <span class="co">#&gt; Dummy Variable Object</span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt; Formula: ~V1 + V2 + V3</span>
-<span class="co">#&gt; &lt;environment: 0x7faf4d16f8f0&gt;</span>
+<span class="co">#&gt; &lt;environment: 0x7fadf2b63520&gt;</span>
 <span class="co">#&gt; 3 variables, 3 factors</span>
 <span class="co">#&gt; Variables and levels will be separated by '_'</span>
 <span class="co">#&gt; A less than full rank encoding is used</span>
