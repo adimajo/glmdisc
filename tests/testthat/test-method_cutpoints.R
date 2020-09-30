@@ -1,8 +1,7 @@
 context("test-method_cutpoints")
 
 test_that("cutpoints works with one-dimensional continuous data", {
-  set.seed(1)
-  x <- matrix(runif(100), nrow = 100, ncol = 1)
+  x <- matrix(runif(40), nrow = 40, ncol = 1)
   cuts <- seq(0, 1, length.out = 4)
   xd <- as.numeric(cut(x, cuts))
   xd <- t(t(xd))
@@ -16,10 +15,10 @@ test_that("cutpoints works with one-dimensional continuous data", {
       )
     }
   )
-  y <- rbinom(100, 1, 1 / (1 + exp(-log_odd)))
+  y <- rbinom(40, 1, 1 / (1 + exp(-log_odd)))
   sem_disc <- glmdisc(x,
     y,
-    iter = 50,
+    iter = 15,
     m_start = 4,
     test = FALSE,
     validation = FALSE,
@@ -34,7 +33,7 @@ test_that("cutpoints works with one-dimensional continuous data", {
   x <- data.frame(x)
   sem_disc <- glmdisc(x,
     y,
-    iter = 50,
+    iter = 15,
     m_start = 4,
     test = FALSE,
     validation = FALSE,
@@ -46,13 +45,13 @@ test_that("cutpoints works with one-dimensional continuous data", {
 })
 
 test_that("cutpoints works with multi-dimensional continuous data", {
-  x <- matrix(runif(300), nrow = 100, ncol = 3)
+  x <- matrix(runif(120), nrow = 40, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))
   theta <- t(matrix(c(0, 0, 0, 2, 2, 2, -2, -2, -2), ncol = 3, nrow = 3))
   log_odd <- rowSums(t(sapply(seq_along(xd[, 1]), function(row_id) sapply(seq_along(xd[row_id, ]), function(element) theta[xd[row_id, element], element]))))
-  y <- rbinom(100, 1, 1 / (1 + exp(-log_odd)))
-  sem_disc <- glmdisc(x, y, iter = 50, m_start = 4, test = FALSE, validation = FALSE, criterion = "aic")
+  y <- rbinom(40, 1, 1 / (1 + exp(-log_odd)))
+  sem_disc <- glmdisc(x, y, iter = 15, m_start = 4, test = FALSE, validation = FALSE, criterion = "aic")
   les_cuts <- cutpoints(sem_disc)
   expect_type(les_cuts, "list")
   expect_length(les_cuts, 3)
@@ -61,13 +60,13 @@ test_that("cutpoints works with multi-dimensional continuous data", {
 })
 
 test_that("cutpoints works with multi-dimensional categorical data", {
-  x <- matrix(runif(300), nrow = 100, ncol = 3)
+  x <- matrix(runif(120), nrow = 40, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))
   theta <- t(matrix(c(0, 0, 0, 2, 2, 2, -2, -2, -2), ncol = 3, nrow = 3))
   log_odd <- rowSums(t(sapply(seq_along(xd[, 1]), function(row_id) sapply(seq_along(xd[row_id, ]), function(element) theta[xd[row_id, element], element]))))
-  y <- rbinom(100, 1, 1 / (1 + exp(-log_odd)))
-  sem_disc <- glmdisc(data.frame(apply(xd, 2, factor), stringsAsFactors = TRUE), y, iter = 50, m_start = 4, test = FALSE, validation = FALSE, criterion = "aic")
+  y <- rbinom(40, 1, 1 / (1 + exp(-log_odd)))
+  sem_disc <- glmdisc(data.frame(apply(xd, 2, factor), stringsAsFactors = TRUE), y, iter = 15, m_start = 4, test = FALSE, validation = FALSE, criterion = "aic")
   les_cuts <- cutpoints(sem_disc)
   expect_type(les_cuts, "list")
   expect_length(les_cuts, 3)

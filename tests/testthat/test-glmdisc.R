@@ -1,7 +1,7 @@
 context("test-glmdisc")
 
 test_that("glmdisc works for one-dimensional continuous data", {
-  x <- matrix(runif(500), nrow = 500, ncol = 1)
+  x <- matrix(runif(200), nrow = 200, ncol = 1)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) {
     as.numeric(cut(col, cuts))
@@ -10,7 +10,7 @@ test_that("glmdisc works for one-dimensional continuous data", {
   log_odd <- t(sapply(seq_along(xd[, 1]), function(row_id) {
     theta[xd[row_id, 1]]
   }))
-  y <- rbinom(500, 1, 1 / (1 + exp(-log_odd)))
+  y <- rbinom(200, 1, 1 / (1 + exp(-log_odd)))
 
   for (criterion in c("aic", "bic", "gini")) {
     for (test in c(TRUE, FALSE)) {
@@ -66,7 +66,7 @@ test_that("glmdisc works for one-dimensional continuous data", {
 })
 
 test_that("glmdisc works for multi-dimensional continuous data", {
-  x <- matrix(runif(300), nrow = 100, ncol = 3)
+  x <- matrix(runif(120), nrow = 40, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) {
     as.numeric(cut(col, cuts))
@@ -83,7 +83,7 @@ test_that("glmdisc works for multi-dimensional continuous data", {
         theta[xd[row_id, element], element]
       })
     })))
-  y <- rbinom(100, 1, 1 / (1 + exp(-log_odd)))
+  y <- rbinom(40, 1, 1 / (1 + exp(-log_odd)))
 
   for (criterion in c("aic", "bic", "gini")) {
     for (test in c(TRUE, FALSE)) {
@@ -93,7 +93,7 @@ test_that("glmdisc works for multi-dimensional continuous data", {
             glmdisc(
               x,
               y,
-              iter = 20,
+              iter = 15,
               m_start = 4,
               test = test,
               validation = validation,
@@ -104,7 +104,7 @@ test_that("glmdisc works for multi-dimensional continuous data", {
               glmdisc(
                 x,
                 y,
-                iter = 20,
+                iter = 15,
                 m_start = 4,
                 test = test,
                 validation = validation,
@@ -114,7 +114,7 @@ test_that("glmdisc works for multi-dimensional continuous data", {
             }
           )
           expect_s4_class(sem_disc, "glmdisc")
-          expect_equal(sem_disc@parameters$iter, 20)
+          expect_equal(sem_disc@parameters$iter, 15)
           expect_equal(sem_disc@parameters$m_start, 4)
           expect_equal(sem_disc@parameters$test, test)
           expect_equal(sem_disc@parameters$validation, validation)
@@ -150,7 +150,7 @@ test_that("glmdisc works for one-dimensional categorical data", {
           glmdisc(
             xd,
             y,
-            iter = 20,
+            iter = 40,
             m_start = 4,
             test = test,
             validation = validation,
@@ -161,7 +161,7 @@ test_that("glmdisc works for one-dimensional categorical data", {
             glmdisc(
               xd,
               y,
-              iter = 20,
+              iter = 40,
               m_start = 4,
               test = test,
               validation = validation,
@@ -171,7 +171,7 @@ test_that("glmdisc works for one-dimensional categorical data", {
           }
         )
         expect_s4_class(sem_disc, "glmdisc")
-        expect_equal(sem_disc@parameters$iter, 20)
+        expect_equal(sem_disc@parameters$iter, 40)
         expect_equal(sem_disc@parameters$m_start, 4)
         expect_equal(sem_disc@parameters$test, test)
         expect_equal(sem_disc@parameters$validation, validation)
@@ -186,7 +186,7 @@ test_that("glmdisc works for one-dimensional categorical data", {
 })
 
 test_that("glmdisc works for multi-dimensional categorical data", {
-  x <- matrix(runif(300), nrow = 100, ncol = 3)
+  x <- matrix(runif(120), nrow = 40, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   cuts2 <- seq(0, 1, length.out = 8)
   xd <- apply(x, 2, function(col) {
@@ -211,7 +211,7 @@ test_that("glmdisc works for multi-dimensional categorical data", {
       )
     }
   )
-  y <- rbinom(100, 1, 1 / (1 + exp(-log_odd)))
+  y <- rbinom(40, 1, 1 / (1 + exp(-log_odd)))
 
   xd2 <- data.frame(apply(xd2, 2, factor), stringsAsFactors = TRUE)
 
@@ -223,7 +223,7 @@ test_that("glmdisc works for multi-dimensional categorical data", {
             glmdisc(
               xd2,
               y,
-              iter = 20,
+              iter = 15,
               m_start = 4,
               test = test,
               validation = validation,
@@ -234,7 +234,7 @@ test_that("glmdisc works for multi-dimensional categorical data", {
               glmdisc(
                 xd2,
                 y,
-                iter = 20,
+                iter = 15,
                 m_start = 4,
                 test = test,
                 validation = validation,
@@ -244,7 +244,7 @@ test_that("glmdisc works for multi-dimensional categorical data", {
             }
           )
           expect_s4_class(sem_disc, "glmdisc")
-          expect_equal(sem_disc@parameters$iter, 20)
+          expect_equal(sem_disc@parameters$iter, 15)
           expect_equal(sem_disc@parameters$m_start, 4)
           expect_equal(sem_disc@parameters$test, test)
           expect_equal(sem_disc@parameters$validation, validation)
@@ -332,110 +332,99 @@ test_that("glmdisc works for multi-dimensional mixed data", {
 })
 
 test_that("glmdisc errors for type of input data", {
-  expect_error(glmdisc("toto", "tztz", iter = 50, m_start = 4, test = FALSE, validation = FALSE, criterion = "aic"))
+  expect_error(glmdisc("toto", "tztz", iter = 20, m_start = 4, test = FALSE, validation = FALSE, criterion = "aic"))
 
   set.seed(1)
-  x <- matrix(runif(300), nrow = 100, ncol = 3)
+  x <- matrix(runif(120), nrow = 40, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))
   theta <- t(matrix(c(0, 0, 0, 2, 2, 2, -2, -2, -2), ncol = 3, nrow = 3))
   log_odd <- rowSums(t(sapply(seq_along(xd[, 1]), function(row_id) sapply(seq_along(xd[row_id, ]), function(element) theta[xd[row_id, element], element]))))
-  y <- rbinom(100, 1, 1 / (1 + exp(-log_odd)))
+  y <- rbinom(40, 1, 1 / (1 + exp(-log_odd)))
 
-  expect_error(glmdisc(x[, 2, drop = FALSE], y, iter = 50, m_start = 4, interact = TRUE, test = FALSE, validation = FALSE, criterion = "aic"))
+  expect_error(glmdisc(x[, 2, drop = FALSE], y, iter = 15, m_start = 4, interact = TRUE, test = FALSE, validation = FALSE, criterion = "aic"))
 
-  expect_error(glmdisc(x[1:50, ], y, iter = 50, m_start = 4, interact = FALSE, test = FALSE, validation = FALSE, criterion = "aic"))
+  expect_error(glmdisc(x[1:30, ], y, iter = 15, m_start = 4, interact = FALSE, test = FALSE, validation = FALSE, criterion = "aic"))
 
-  expect_error(glmdisc(x, y, iter = 50, m_start = 4, interact = FALSE, test = FALSE, validation = FALSE, criterion = "toto"))
+  expect_error(glmdisc(x, y, iter = 15, m_start = 4, interact = FALSE, test = FALSE, validation = FALSE, criterion = "toto"))
 
-  expect_error(glmdisc(x, y, iter = 50, m_start = 4, interact = FALSE, test = FALSE, validation = "toto", criterion = "aic"))
+  expect_error(glmdisc(x, y, iter = 15, m_start = 4, interact = FALSE, test = FALSE, validation = "toto", criterion = "aic"))
 
   x <- data.frame(x)
-  x[, 1] <- c(rep(1:3, 100 %/% 3), rep(1, 100 - 3 * (100 %/% 3)))
+  x[, 1] <- c(rep(1:3, 40 %/% 3), rep(1, 40 - 3 * (40 %/% 3)))
   x[, 1] <- as.integer(x[, 1])
-  expect_error(glmdisc(x, y, iter = 50, m_start = 4, test = FALSE, validation = FALSE, criterion = "aic"))
+  expect_error(glmdisc(x, y, iter = 15, m_start = 4, test = FALSE, validation = FALSE, criterion = "aic"))
 })
 
 test_that("glmdisc warns for type of input data", {
-  x <- matrix(runif(300), nrow = 100, ncol = 3)
+  x <- matrix(runif(120), nrow = 40, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))
   theta <- t(matrix(c(0, 0, 0, 2, 2, 2, -2, -2, -2), ncol = 3, nrow = 3))
   log_odd <- rowSums(t(sapply(seq_along(xd[, 1]), function(row_id) sapply(seq_along(xd[row_id, ]), function(element) theta[xd[row_id, element], element]))))
-  y <- rbinom(100, 1, 1 / (1 + exp(-log_odd)))
+  y <- rbinom(40, 1, 1 / (1 + exp(-log_odd)))
 
-  expect_warning(glmdisc(x, y, iter = 50, m_start = 4, interact = FALSE, test = FALSE, validation = FALSE, criterion = "gini"),
+  expect_warning(glmdisc(x, y, iter = 15, m_start = 4, interact = FALSE, test = FALSE, validation = FALSE, criterion = "gini"),
     "Using Gini index on training set might yield an overfitted model.",
     fixed = TRUE
   )
 
-  expect_warning(glmdisc(x, y, iter = 50, m_start = 4, interact = FALSE, test = FALSE, validation = TRUE, criterion = "aic"),
+  expect_warning(glmdisc(x, y, iter = 15, m_start = 4, interact = FALSE, test = FALSE, validation = TRUE, criterion = "aic"),
     "No need to penalize the log-likelihood when a validation set is used. Using log-likelihood instead of AIC/BIC.",
     fixed = TRUE
   )
-  expect_warning(glmdisc(x, y, iter = 50, m_start = 4, interact = FALSE, test = FALSE, validation = TRUE, criterion = "bic"),
+  expect_warning(glmdisc(x, y, iter = 15, m_start = 4, interact = FALSE, test = FALSE, validation = TRUE, criterion = "bic"),
     "No need to penalize the log-likelihood when a validation set is used. Using log-likelihood instead of AIC/BIC.",
     fixed = TRUE
   )
 
-  glmdisc(x, y, iter = 50, m_start = 4, interact = FALSE, test = FALSE, validation = FALSE, criterion = "bic")
+  glmdisc(x, y, iter = 15, m_start = 4, interact = FALSE, test = FALSE, validation = FALSE, criterion = "bic")
 
   x[1, 1] <- NA
 
-  glmdisc(x, y, iter = 50, m_start = 4, interact = FALSE, test = FALSE, validation = TRUE, criterion = "gini")
+  glmdisc(x, y, iter = 15, m_start = 4, interact = FALSE, test = FALSE, validation = TRUE, criterion = "gini")
 })
 
 
 test_that("glmdisc m_start > nlevels categorical data", {
-  x <- matrix(runif(300), nrow = 100, ncol = 3)
+  x <- matrix(runif(120), nrow = 40, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))
   theta <- t(matrix(c(0, 0, 0, 2, 2, 2, -2, -2, -2), ncol = 3, nrow = 3))
   log_odd <- rowSums(t(sapply(seq_along(xd[, 1]), function(row_id) sapply(seq_along(xd[row_id, ]), function(element) theta[xd[row_id, element], element]))))
-  y <- rbinom(100, 1, 1 / (1 + exp(-log_odd)))
+  y <- rbinom(40, 1, 1 / (1 + exp(-log_odd)))
   xdata <- data.frame(x.1 = factor(xd[, 1]), x.2 = factor(xd[, 2]), x.3 = factor(xd[, 3]))
-  glmdisc(xdata, y, iter = 50, m_start = 6, interact = FALSE, test = FALSE, validation = FALSE, criterion = "aic")
+  glmdisc(xdata, y, iter = 15, m_start = 6, interact = FALSE, test = FALSE, validation = FALSE, criterion = "aic")
 })
 
 test_that("glmdisc stops early", {
-  x <- matrix(runif(300), nrow = 100, ncol = 3)
+  x <- matrix(runif(120), nrow = 40, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))
   theta <- t(matrix(c(0, 0, 0, 2, 2, 2, -2, -2, -2), ncol = 3, nrow = 3))
   log_odd <- rowSums(t(sapply(seq_along(xd[, 1]), function(row_id) sapply(seq_along(xd[row_id, ]), function(element) theta[xd[row_id, element], element]))))
-  y <- rbinom(100, 1, 1 / (1 + exp(-log_odd)))
-  glmdisc(x, y, iter = 2000, m_start = 3, interact = FALSE, test = FALSE, validation = FALSE, criterion = "aic")
-})
-
-test_that("glmdisc stops early", {
-  x <- matrix(runif(300), nrow = 100, ncol = 3)
-  cuts <- seq(0, 1, length.out = 4)
-  xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))
-  theta <- t(matrix(c(0, 0, 0, 2, 2, 2, -2, -2, -2), ncol = 3, nrow = 3))
-  log_odd <- rowSums(t(sapply(seq_along(xd[, 1]), function(row_id) sapply(seq_along(xd[row_id, ]), function(element) theta[xd[row_id, element], element]))))
-  y <- rbinom(100, 1, 1 / (1 + exp(-log_odd)))
+  y <- rbinom(40, 1, 1 / (1 + exp(-log_odd)))
   expect_message(glmdisc(x, y, iter = 2000, m_start = 3, interact = FALSE, test = FALSE, validation = FALSE, criterion = "aic"))
 })
 
 test_that("glmdisc interaction stopping rules", {
   set.seed(1)
-  x <- matrix(runif(300), nrow = 100, ncol = 3)
+  x <- matrix(runif(120), nrow = 40, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))
   theta <- t(matrix(c(0, 0, 0, 2, 2, 2, -2, -2, -2), ncol = 3, nrow = 3))
   log_odd <- rowSums(t(sapply(seq_along(xd[, 1]), function(row_id) sapply(seq_along(xd[row_id, ]), function(element) theta[xd[row_id, element], element]))))
-  y <- rbinom(100, 1, 1 / (1 + exp(-log_odd)))
+  y <- rbinom(50, 1, 1 / (1 + exp(-log_odd)))
   expect_error(sem_disc <- glmdisc(data.frame(x.1 = factor(1), x.2 = factor(xd[, 2]), x.3 = factor(xd[, 3])), y, iter = 50, m_start = 4, test = FALSE, validation = FALSE, criterion = "aic"))
   expect_error(sem_disc <- glmdisc(data.frame(x.1 = factor(xd[, 1]), x.2 = factor(1), x.3 = factor(xd[, 3])), y, iter = 50, m_start = 4, test = FALSE, validation = FALSE, criterion = "aic"))
 })
 
 test_that("glmdisc w. polr", {
-  set.seed(1)
-  x <- matrix(runif(300), nrow = 100, ncol = 3)
+  x <- matrix(runif(150), nrow = 50, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))
   theta <- t(matrix(c(0, 0, 0, 2, 2, 2, -2, -2, -2), ncol = 3, nrow = 3))
   log_odd <- rowSums(t(sapply(seq_along(xd[, 1]), function(row_id) sapply(seq_along(xd[row_id, ]), function(element) theta[xd[row_id, element], element]))))
-  y <- rbinom(100, 1, 1 / (1 + exp(-log_odd)))
-  sem_disc <- glmdisc(x, y, iter = 50, m_start = 4, test = FALSE, validation = FALSE, criterion = "aic", reg_type = "polr")
+  y <- rbinom(50, 1, 1 / (1 + exp(-log_odd)))
+  sem_disc <- glmdisc(x, y, iter = 15, m_start = 4, test = FALSE, validation = FALSE, criterion = "aic", reg_type = "polr")
 })

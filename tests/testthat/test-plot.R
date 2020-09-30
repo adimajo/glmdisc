@@ -1,6 +1,5 @@
 test_that("plot works", {
-  set.seed(1)
-  x <- matrix(runif(100), nrow = 100, ncol = 1)
+  x <- matrix(runif(40), nrow = 40, ncol = 1)
   cuts <- seq(0, 1, length.out = 4)
   xd <- as.numeric(cut(x, cuts))
   xd <- t(t(xd))
@@ -14,10 +13,10 @@ test_that("plot works", {
       )
     }
   )
-  y <- rbinom(100, 1, 1 / (1 + exp(-log_odd)))
+  y <- rbinom(40, 1, 1 / (1 + exp(-log_odd)))
   sem_disc <- glmdisc(data.frame(x),
     y,
-    iter = 50,
+    iter = 15,
     m_start = 4,
     test = FALSE,
     validation = FALSE,
@@ -27,7 +26,7 @@ test_that("plot works", {
   plot(sem_disc)
   sem_disc <- glmdisc(data.frame(x = factor(xd)),
     y,
-    iter = 50,
+    iter = 15,
     m_start = 4,
     test = FALSE,
     validation = FALSE,

@@ -186,8 +186,8 @@ x_new <- discretize(discretization,x)
 knitr::kable(head(x_new))
 
 ## ---- echo=TRUE---------------------------------------------------------------
-pred_new <- predict(discretization,data.frame(x))
+# pred_new <- predict(discretization, data.frame(x))
 
 ## ---- echo=FALSE, warning=FALSE-----------------------------------------------
-knitr::kable(head(pred_new))
+# knitr::kable(head(pred_new))
 
