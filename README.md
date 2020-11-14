@@ -17,6 +17,8 @@ Table of Contents
 
 The goal of glmdisc is to discretize continuous features, merge factor levels, and sparsely introduce interactions in logistic regression models.
 
+This is the implementation of glmdisc-SEM as described in *Formalization and study of statistical problems in Credit Scoring*, Ehrhardt A. (see [manuscript](https://github.com/adimajo/manuscrit_these) or [web article](https://adimajo.github.io/discretization.html))
+
 ## Installation
 
 You can install the development version of `glmdisc` from Github with:
