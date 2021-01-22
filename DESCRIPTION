@@ -17,6 +17,8 @@ License: GPL (>= 2)
 Encoding: UTF-8
 LazyData: true
 Imports:
+    NPflow,
+    Rfast,
     caret (>= 6.0-82),
     dplyr,
     magrittr,

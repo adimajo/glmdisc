@@ -14,7 +14,8 @@ glmdisc(
   iter = 1000,
   m_start = 20,
   reg_type = "poly",
-  proportions = c(0.2, 0.2)
+  proportions = c(0.2, 0.2),
+  verbose = FALSE
 )
 }
 \arguments{
@@ -37,6 +38,8 @@ glmdisc(
 \item{reg_type}{The model to use between discretized and continuous features (currently, only multinomial logistic regression ('poly') and ordered logistic regression ('polr') are supported ; default: 'poly'). WARNING: 'poly' requires the \code{mnlogit} package, 'polr' requires the \code{MASS} package.}
 
 \item{proportions}{The list of the proportions wanted for test and validation set. Not used when both test and validation are false. Only the first is used when there is only one of either test or validation that is set to TRUE. Produces an error when the sum is greater to one. Default: list(0.2,0.2) so that the training set has 0.6 of the input observations.}
+
+\item{verbose}{Print information while fitting (default: FALSE).}
 }
 \description{
 This function discretizes a training set using an SEM-Gibbs based method (see References section).
@@ -51,7 +54,6 @@ Subsequently, its outputs are: the optimal discretization scheme and the logisti
 }
 \examples{
 # Simulation of a discretized logit model
-set.seed(1)
 x <- matrix(runif(300), nrow = 100, ncol = 3)
 cuts <- seq(0, 1, length.out = 4)
 xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))

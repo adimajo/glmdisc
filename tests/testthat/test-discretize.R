@@ -1,5 +1,4 @@
 test_that("discretize works", {
-  set.seed(1)
   x <- matrix(runif(80), nrow = 80, ncol = 1)
   cuts <- seq(0, 1, length.out = 4)
   xd <- as.numeric(cut(x, cuts))

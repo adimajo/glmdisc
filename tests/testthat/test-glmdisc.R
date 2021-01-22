@@ -131,7 +131,6 @@ test_that("glmdisc works for one-dimensional continuous data", {
 # })
 
 test_that("glmdisc works for one-dimensional categorical data", {
-  set.seed(1)
   x <- matrix(runif(600), nrow = 600, ncol = 1)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) {
