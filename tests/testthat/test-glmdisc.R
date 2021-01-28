@@ -12,10 +12,22 @@ test_that("glmdisc works for one-dimensional continuous data", {
   }))
   y <- rbinom(200, 1, 1 / (1 + exp(-log_odd)))
 
-  for (criterion in c("aic", "bic", "gini")) {
-    for (test in c(TRUE, FALSE)) {
-      for (validation in c(TRUE, FALSE)) {
-        sem_disc <- tryCatch(
+  # for (criterion in c("aic", "bic", "gini")) {
+  criterion <- "aic"
+  for (test in c(TRUE, FALSE)) {
+    for (validation in c(TRUE, FALSE)) {
+      sem_disc <- tryCatch(
+        glmdisc(
+          x,
+          y,
+          iter = 20,
+          m_start = 4,
+          test = test,
+          validation = validation,
+          criterion = criterion,
+          interact = FALSE
+        ),
+        error = function(e) {
           glmdisc(
             x,
             y,
@@ -25,110 +37,99 @@ test_that("glmdisc works for one-dimensional continuous data", {
             validation = validation,
             criterion = criterion,
             interact = FALSE
-          ),
-          error = function(e) {
+          )
+        }
+      )
+      expect_s4_class(sem_disc, "glmdisc")
+      expect_equal(sem_disc@parameters$iter, 20)
+      expect_equal(sem_disc@parameters$m_start, 4)
+      expect_equal(sem_disc@parameters$test, test)
+      expect_equal(
+        sem_disc@parameters$validation,
+        validation
+      )
+      expect_equal(
+        sem_disc@parameters$criterion,
+        criterion
+      )
+      expect_equal(sem_disc@parameters$reg_type, "poly")
+      expect_equal(
+        sem_disc@parameters$types_data,
+        "numeric"
+      )
+      expect_s3_class(
+        sem_disc@parameters$encoder,
+        "dummyVars"
+      )
+    }
+  }
+  # }
+})
+
+test_that("glmdisc works for multi-dimensional continuous data", {
+  x <- matrix(runif(120), nrow = 40, ncol = 3)
+  cuts <- seq(0, 1, length.out = 4)
+  xd <- apply(x, 2, function(col) {
+    as.numeric(cut(col, cuts))
+  })
+  theta <-
+    t(matrix(
+      c(0, 0, 0, 2, 2, 2, -2, -2, -2),
+      ncol = 3,
+      nrow = 3
+    ))
+  log_odd <-
+    rowSums(t(sapply(seq_along(xd[, 1]), function(row_id) {
+      sapply(seq_along(xd[row_id, ]), function(element) {
+        theta[xd[row_id, element], element]
+      })
+    })))
+  y <- rbinom(40, 1, 1 / (1 + exp(-log_odd)))
+
+  for (criterion in c("aic", "bic", "gini")) {
+    # criterion = "aic"
+    for (test in c(TRUE, FALSE)) {
+      for (validation in c(TRUE, FALSE)) {
+        for (interact in c(TRUE, FALSE)) {
+          sem_disc <- tryCatch(
             glmdisc(
               x,
               y,
-              iter = 20,
+              iter = 15,
               m_start = 4,
               test = test,
               validation = validation,
               criterion = criterion,
-              interact = FALSE
-            )
-          }
-        )
-        expect_s4_class(sem_disc, "glmdisc")
-        expect_equal(sem_disc@parameters$iter, 20)
-        expect_equal(sem_disc@parameters$m_start, 4)
-        expect_equal(sem_disc@parameters$test, test)
-        expect_equal(
-          sem_disc@parameters$validation,
-          validation
-        )
-        expect_equal(
-          sem_disc@parameters$criterion,
-          criterion
-        )
-        expect_equal(sem_disc@parameters$reg_type, "poly")
-        expect_equal(
-          sem_disc@parameters$types_data,
-          "numeric"
-        )
-        expect_s3_class(
-          sem_disc@parameters$encoder,
-          "dummyVars"
-        )
+              interact = interact
+            ),
+            error = function(e) {
+              glmdisc(
+                x,
+                y,
+                iter = 15,
+                m_start = 4,
+                test = test,
+                validation = validation,
+                criterion = criterion,
+                interact = interact
+              )
+            }
+          )
+          expect_s4_class(sem_disc, "glmdisc")
+          expect_equal(sem_disc@parameters$iter, 15)
+          expect_equal(sem_disc@parameters$m_start, 4)
+          expect_equal(sem_disc@parameters$test, test)
+          expect_equal(sem_disc@parameters$validation, validation)
+          expect_equal(sem_disc@parameters$criterion, criterion)
+          expect_equal(sem_disc@parameters$interact, interact)
+          expect_equal(sem_disc@parameters$reg_type, "poly")
+          expect_equal(sem_disc@parameters$types_data, c("numeric", "numeric", "numeric"))
+          expect_s3_class(sem_disc@parameters$encoder, "dummyVars")
+        }
       }
     }
   }
 })
-
-# test_that("glmdisc works for multi-dimensional continuous data", {
-#   set.seed(1)
-#   x <- matrix(runif(120), nrow = 40, ncol = 3)
-#   cuts <- seq(0, 1, length.out = 4)
-#   xd <- apply(x, 2, function(col) {
-#     as.numeric(cut(col, cuts))
-#   })
-#   theta <-
-#     t(matrix(
-#       c(0, 0, 0, 2, 2, 2, -2, -2, -2),
-#       ncol = 3,
-#       nrow = 3
-#     ))
-#   log_odd <-
-#     rowSums(t(sapply(seq_along(xd[, 1]), function(row_id) {
-#       sapply(seq_along(xd[row_id, ]), function(element) {
-#         theta[xd[row_id, element], element]
-#       })
-#     })))
-#   y <- rbinom(40, 1, 1 / (1 + exp(-log_odd)))
-# 
-#   for (criterion in c("aic", "bic", "gini")) {
-#     for (test in c(TRUE, FALSE)) {
-#       for (validation in c(TRUE, FALSE)) {
-#         for (interact in c(TRUE, FALSE)) {
-#           sem_disc <- tryCatch(
-#             glmdisc(
-#               x,
-#               y,
-#               iter = 15,
-#               m_start = 4,
-#               test = test,
-#               validation = validation,
-#               criterion = criterion,
-#               interact = interact
-#             ),
-#             error = function(e) {
-#               glmdisc(
-#                 x,
-#                 y,
-#                 iter = 15,
-#                 m_start = 4,
-#                 test = test,
-#                 validation = validation,
-#                 criterion = criterion,
-#                 interact = interact
-#               )
-#             }
-#           )
-#           expect_s4_class(sem_disc, "glmdisc")
-#           expect_equal(sem_disc@parameters$iter, 15)
-#           expect_equal(sem_disc@parameters$m_start, 4)
-#           expect_equal(sem_disc@parameters$test, test)
-#           expect_equal(sem_disc@parameters$validation, validation)
-#           expect_equal(sem_disc@parameters$criterion, criterion)
-#           expect_equal(sem_disc@parameters$interact, interact)
-#           expect_equal(sem_disc@parameters$reg_type, "poly")
-#           expect_equal(sem_disc@parameters$types_data, c("numeric", "numeric", "numeric"))
-#           expect_s3_class(sem_disc@parameters$encoder, "dummyVars")
-#         }
-#       }
-#     }
-#   }
-# })
 
 test_that("glmdisc works for one-dimensional categorical data", {
   x <- matrix(runif(600), nrow = 600, ncol = 1)
@@ -145,13 +146,14 @@ test_that("glmdisc works for one-dimensional categorical data", {
   xd <- data.frame(xd = factor(xd))
 
   for (criterion in c("aic", "bic", "gini")) {
+    # criterion = "aic"
     for (test in c(TRUE, FALSE)) {
       for (validation in c(TRUE, FALSE)) {
         sem_disc <- tryCatch(
           glmdisc(
             xd,
             y,
-            iter = 40,
+            iter = 60,
             m_start = 4,
             test = test,
             validation = validation,
@@ -162,7 +164,7 @@ test_that("glmdisc works for one-dimensional categorical data", {
             glmdisc(
               xd,
               y,
-              iter = 40,
+              iter = 60,
               m_start = 4,
               test = test,
               validation = validation,
@@ -172,7 +174,7 @@ test_that("glmdisc works for one-dimensional categorical data", {
           }
         )
         expect_s4_class(sem_disc, "glmdisc")
-        expect_equal(sem_disc@parameters$iter, 40)
+        expect_equal(sem_disc@parameters$iter, 60)
         expect_equal(sem_disc@parameters$m_start, 4)
         expect_equal(sem_disc@parameters$test, test)
         expect_equal(sem_disc@parameters$validation, validation)
@@ -217,6 +219,7 @@ test_that("glmdisc works for multi-dimensional categorical data", {
   xd2 <- data.frame(apply(xd2, 2, factor), stringsAsFactors = TRUE)
 
   for (criterion in c("aic", "bic", "gini")) {
+    # criterion = "aic"
     for (test in c(TRUE, FALSE)) {
       for (validation in c(TRUE, FALSE)) {
         for (interact in c(TRUE, FALSE)) {
@@ -289,6 +292,7 @@ test_that("glmdisc works for multi-dimensional mixed data", {
   x2 <- data.frame(xd, X4 = x[, 1], X5 = x[, 2], X6 = x[, 3])
 
   for (criterion in c("aic", "bic", "gini")) {
+    # criterion = "aic"
     for (test in c(TRUE, FALSE)) {
       for (validation in c(TRUE, FALSE)) {
         for (interact in c(TRUE, FALSE)) {
@@ -396,6 +400,7 @@ test_that("glmdisc m_start > nlevels categorical data", {
   y <- rbinom(40, 1, 1 / (1 + exp(-log_odd)))
   xdata <- data.frame(x.1 = factor(xd[, 1]), x.2 = factor(xd[, 2]), x.3 = factor(xd[, 3]))
   glmdisc(xdata, y, iter = 15, m_start = 6, interact = FALSE, test = FALSE, validation = FALSE, criterion = "aic")
+  succeed()
 })
 
 test_that("glmdisc stops early", {
@@ -405,7 +410,7 @@ test_that("glmdisc stops early", {
   theta <- t(matrix(c(0, 0, 0, 2, 2, 2, -2, -2, -2), ncol = 3, nrow = 3))
   log_odd <- rowSums(t(sapply(seq_along(xd[, 1]), function(row_id) sapply(seq_along(xd[row_id, ]), function(element) theta[xd[row_id, element], element]))))
   y <- rbinom(40, 1, 1 / (1 + exp(-log_odd)))
-  expect_message(glmdisc(x, y, iter = 2000, m_start = 3, interact = FALSE, test = FALSE, validation = FALSE, criterion = "aic"))
+  expect_message(glmdisc(x, y, iter = 2000, m_start = 3, interact = FALSE, test = FALSE, validation = FALSE, criterion = "aic", verbose = TRUE))
 })
 
 test_that("glmdisc interaction stopping rules", {
@@ -428,4 +433,5 @@ test_that("glmdisc w. polr", {
   log_odd <- rowSums(t(sapply(seq_along(xd[, 1]), function(row_id) sapply(seq_along(xd[row_id, ]), function(element) theta[xd[row_id, element], element]))))
   y <- rbinom(50, 1, 1 / (1 + exp(-log_odd)))
   sem_disc <- glmdisc(x, y, iter = 15, m_start = 4, test = FALSE, validation = FALSE, criterion = "aic", reg_type = "polr")
+  succeed()
 })

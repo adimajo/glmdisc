@@ -14,6 +14,7 @@
 #' @param interact Boolean : True (default) if interaction detection is wanted (Warning: may be very memory/time-consuming).
 #' @param proportions The list of the proportions wanted for test and validation set. Not used when both test and validation are false. Only the first is used when there is only one of either test or validation that is set to TRUE. Produces an error when the sum is greater to one. Default: list(0.2,0.2) so that the training set has 0.6 of the input observations.
 #' @param verbose Print information while fitting (default: FALSE).
+#' @param fast Use packages Rfast and NPflow (C++ implementations of sampling functions - somewhat unstable but speeds up by a factor 2 to 3 - default: FALSE).
 #' @concept SEM Gibbs discretization
 #' @author Adrien Ehrhardt.
 #' @seealso \code{\link{glm}}, \code{\link{multinom}}, \code{\link{polr}}
@@ -51,23 +52,25 @@
 #'   validation = FALSE, criterion = "aic"
 #' )
 #' print(sem_disc)
-glmdisc <- function(predictors, 
-                    labels, 
+glmdisc <- function(predictors,
+                    labels,
                     interact = TRUE,
-                    validation = TRUE, 
-                    test = TRUE, 
-                    criterion = "gini", 
-                    iter = 1000, 
-                    m_start = 20, 
-                    reg_type = "poly", 
+                    validation = TRUE,
+                    test = TRUE,
+                    criterion = "gini",
+                    iter = 1000,
+                    m_start = 20,
+                    reg_type = "poly",
                     proportions = c(0.2, 0.2),
-                    verbose = FALSE) {
+                    verbose = FALSE,
+                    fast = FALSE) {
   first_argument_checks(criterion, labels, predictors, validation)
 
   # Calculating lengths n and d and data types
   n <- length(labels)
   d <- length(predictors[1, ])
   types_data <- sapply(predictors[1, ], class)
+  fast_packages_installed <- are_fast_packages_installed(verbose = verbose)
 
   second_argument_checks(types_data, d, interact)
 
@@ -187,14 +190,16 @@ glmdisc <- function(predictors,
       fmla <- stats::as.formula(paste("~", paste(colnames(data[, -ncol(data), drop = FALSE]), collapse = "+")))
       fmla_logit <- stats::as.formula(paste("~", paste(colnames(data_logit[, -ncol(data_logit), drop = FALSE]), collapse = "+")))
 
-      fmla_encoder <- dummyVars(fmla, 
-                                data[, -ncol(data), drop = FALSE], 
-                                fullRank = FALSE, 
-                                sep = "_")
-      fmla_logit_encoder <- dummyVars(fmla_logit, 
-                                      data_logit[, -ncol(data_logit), drop = FALSE], 
-                                      fullRank = FALSE, 
-                                      sep = "_")
+      fmla_encoder <- dummyVars(fmla,
+        data[, -ncol(data), drop = FALSE],
+        fullRank = FALSE,
+        sep = "_"
+      )
+      fmla_logit_encoder <- dummyVars(fmla_logit,
+        data_logit[, -ncol(data_logit), drop = FALSE],
+        fullRank = FALSE,
+        sep = "_"
+      )
 
       data <- predict(object = fmla_encoder, newdata = data[, -ncol(data), drop = FALSE])
 
@@ -307,14 +312,17 @@ glmdisc <- function(predictors,
 
         # Polytomic or ordered logistic regression
         if ((reg_type == "poly") & (types_data[j] == "numeric")) {
-          link[[j]] <- nnet::multinom(e ~ x, 
-                                      data = data.frame(e = e[continu_complete_case[, j] & ensemble[[1]], j], 
-                                                        x = predictors[continu_complete_case[, j] & ensemble[[1]], j], 
-                                                        stringsAsFactors = TRUE), 
-                                      start = link[[j]]$coefficients, 
-                                      trace = FALSE, 
-                                      Hess = FALSE, 
-                                      maxit = 50)
+          link[[j]] <- nnet::multinom(e ~ x,
+            data = data.frame(
+              e = e[continu_complete_case[, j] & ensemble[[1]], j],
+              x = predictors[continu_complete_case[, j] & ensemble[[1]], j],
+              stringsAsFactors = TRUE
+            ),
+            start = link[[j]]$coefficients,
+            trace = FALSE,
+            Hess = FALSE,
+            maxit = 50
+          )
         } else if (types_data[j] == "numeric") {
           if (exists("link[[j]]$weights")) {
             link[[j]] <- MASS::polr(e ~ x, data = data.frame(e = factor(as.numeric(ordered(e[continu_complete_case[, j] & ensemble[[1]], j], levels = names(sort(unlist(by(predictors[continu_complete_case[, j] & ensemble[[1]], j], e[continu_complete_case[, j] & ensemble[[1]], j], mean)))))), ordered = T), x = predictors[continu_complete_case[, j] & ensemble[[1]], j], stringsAsFactors = TRUE), Hess = FALSE, model = FALSE, weights = link[[j]]$weights)
@@ -378,12 +386,20 @@ glmdisc <- function(predictors,
         }
 
         # Updating emap^j
-        emap[, j] <- factor(levels_to_sample[Rfast::rowMaxs(t)])
+        if (fast & fast_packages_installed) {
+          emap[, j] <- factor(levels_to_sample[Rfast::rowMaxs(t)])
+        } else {
+          emap[, j] <- apply(t, 1, function(p) names(which.max(p)))
+        }
 
         t <- prop.table.robust(t * y_p[which(levels_to_sample %in% levels(factor(e[continu_complete_case[, j] & ensemble[[1]], j])))], 1)
 
         # Updating e^j
-        e[, j] <- factor(levels_to_sample[NPflow::sampleClassC(t(t))])
+        if (fast & fast_packages_installed) {
+          e[, j] <- factor(levels_to_sample[NPflow::sampleClassC(t(t))])
+        } else {
+          e[, j] <- apply(t, 1, function(p) sample(levels_to_sample, 1, prob = p, replace = TRUE))
+        }
 
         if (nlevels(as.factor(e[, j])) > 1) {
           if (nlevels(as.factor(e[, j])) == m[j]) {
@@ -566,12 +582,16 @@ glmdisc <- function(predictors,
 
       performance <- normalizedGini(labels_test, predictlogisticRegression(data_test, best.disc[[1]]$coefficients))
     } else {
-      encoder <- dummyVars(best.disc[[3]], as.data.frame(discretize_link(best.disc[[2]], 
-                                                                         predictors[ensemble[[1]],, drop = FALSE], 
-                                                                         m_start), 
-                                                         stringsAsFactors = TRUE), 
-                           fullRank = FALSE, 
-                           sep = "_")
+      encoder <- dummyVars(best.disc[[3]], as.data.frame(discretize_link(
+        best.disc[[2]],
+        predictors[ensemble[[1]], , drop = FALSE],
+        m_start
+      ),
+      stringsAsFactors = TRUE
+      ),
+      fullRank = FALSE,
+      sep = "_"
+      )
       performance <- normalizedGini(as.numeric(labels[ensemble[[1]]]), best.disc[[1]]$fitted.values)
     }
   }

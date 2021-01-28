@@ -20,7 +20,6 @@ This defines the \code{\link{plot}} method which will plot some useful graphs fo
 }
 \examples{
 # Simulation of a discretized logit model
-set.seed(1)
 x <- matrix(runif(300), nrow = 100, ncol = 3)
 cuts <- seq(0, 1, length.out = 4)
 xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))

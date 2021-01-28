@@ -76,6 +76,7 @@ test_that("discretize_link works with multi-dimensional mixed data", {
 })
 
 test_that("discretize_link errors", {
+  skip_if_not_installed("tibble")
   x <- matrix(runif(120), nrow = 40, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))
@@ -85,7 +86,7 @@ test_that("discretize_link errors", {
     link[[j]] <- table(factor(e[, j]), factor(xd[, j]))
   }
   link[[3]] <- nnet::multinom(e ~ x, data = data.frame(e = factor(xd[, 3]), x = x[, 3]), maxit = 50)
-  test <- data.frame(xd[, 1:2]) %>% dplyr::mutate_at(dplyr::vars("X1", "X2"), dplyr::funs(as.integer))
+  test <- data.frame(xd[, 1:2]) %>% dplyr::mutate_at(dplyr::vars("X1", "X2"), tibble::lst(as.integer))
   test <- cbind(test, x[, 3])
   expect_error(discretize_link(link, test, 2))
 })

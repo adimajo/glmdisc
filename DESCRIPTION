@@ -17,8 +17,6 @@ License: GPL (>= 2)
 Encoding: UTF-8
 LazyData: true
 Imports:
-    NPflow,
-    Rfast,
     caret (>= 6.0-82),
     dplyr,
     magrittr,
@@ -34,9 +32,12 @@ URL: https://adimajo.github.io
 BugReports: https://github.com/adimajo/glmdisc/issues
 RoxygenNote: 7.1.1
 Suggests: 
+    NPflow,
+    Rfast,
     knitr,
     rmarkdown,
     testthat (>= 2.1.0),
+    tibble,
     covr
 VignetteBuilder: knitr
 Collate: 

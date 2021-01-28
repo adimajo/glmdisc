@@ -15,7 +15,8 @@ glmdisc(
   m_start = 20,
   reg_type = "poly",
   proportions = c(0.2, 0.2),
-  verbose = FALSE
+  verbose = FALSE,
+  fast = FALSE
 )
 }
 \arguments{
@@ -40,6 +41,8 @@ glmdisc(
 \item{proportions}{The list of the proportions wanted for test and validation set. Not used when both test and validation are false. Only the first is used when there is only one of either test or validation that is set to TRUE. Produces an error when the sum is greater to one. Default: list(0.2,0.2) so that the training set has 0.6 of the input observations.}
 
 \item{verbose}{Print information while fitting (default: FALSE).}
+
+\item{fast}{Use packages Rfast and NPflow (C++ implementations of sampling functions - somewhat unstable but speeds up by a factor 2 to 3 - default: FALSE).}
 }
 \description{
 This function discretizes a training set using an SEM-Gibbs based method (see References section).
