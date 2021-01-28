@@ -336,10 +336,79 @@ test_that("glmdisc works for multi-dimensional mixed data", {
   }
 })
 
+test_that("glmdisc works for multi-dimensional mixed data and fast method", {
+  x <- matrix(runif(300), nrow = 100, ncol = 3)
+  cuts <- seq(0, 1, length.out = 4)
+  xd <- apply(x, 2, function(col) {
+    as.numeric(cut(col, cuts))
+  })
+  theta <- matrix(c(
+    0, 0, 0,
+    2, 2, 2,
+    -2, -2, -2
+  ), ncol = 3, nrow = 3)
+  log_odd <- sapply(
+    seq_along(xd[, 1]),
+    function(row_id) {
+      sapply(
+        seq_along(xd[row_id, ]),
+        function(element) {
+          theta[xd[row_id, element], element]
+        }
+      )
+    }
+  )
+  y <- rbinom(100, 1, 1 / (1 + exp(-log_odd)))
+
+  xd <- data.frame(apply(xd, 2, factor), stringsAsFactors = TRUE)
+
+  x2 <- data.frame(xd, X4 = x[, 1], X5 = x[, 2], X6 = x[, 3])
+
+  criterion <- "aic"
+  test <- TRUE
+  validation <- TRUE
+  interact <- TRUE
+  sem_disc <- tryCatch(
+    glmdisc(
+      x2,
+      y,
+      iter = 20,
+      m_start = 4,
+      test = test,
+      validation = validation,
+      criterion = criterion,
+      interact = interact,
+      fast = TRUE
+    ),
+    error = function(e) {
+      glmdisc(
+        x2,
+        y,
+        iter = 20,
+        m_start = 4,
+        test = test,
+        validation = validation,
+        criterion = criterion,
+        interact = interact,
+        fast = TRUE
+      )
+    }
+  )
+  expect_s4_class(sem_disc, "glmdisc")
+  expect_equal(sem_disc@parameters$iter, 20)
+  expect_equal(sem_disc@parameters$m_start, 4)
+  expect_equal(sem_disc@parameters$test, test)
+  expect_equal(sem_disc@parameters$validation, validation)
+  expect_equal(sem_disc@parameters$criterion, criterion)
+  expect_equal(sem_disc@parameters$interact, interact)
+  expect_equal(sem_disc@parameters$reg_type, "poly")
+  expect_true(all(sem_disc@parameters$types_data == c("factor", "factor", "factor", "numeric", "numeric", "numeric")))
+  expect_s3_class(sem_disc@parameters$encoder, "dummyVars")
+})
+
 test_that("glmdisc errors for type of input data", {
   expect_error(glmdisc("toto", "tztz", iter = 20, m_start = 4, test = FALSE, validation = FALSE, criterion = "aic"))
 
-  set.seed(1)
   x <- matrix(runif(120), nrow = 40, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))
@@ -369,16 +438,16 @@ test_that("glmdisc warns for type of input data", {
   log_odd <- rowSums(t(sapply(seq_along(xd[, 1]), function(row_id) sapply(seq_along(xd[row_id, ]), function(element) theta[xd[row_id, element], element]))))
   y <- rbinom(40, 1, 1 / (1 + exp(-log_odd)))
 
-  expect_warning(glmdisc(x, y, iter = 15, m_start = 4, interact = FALSE, test = FALSE, validation = FALSE, criterion = "gini"),
+  expect_warning(glmdisc(x, y, iter = 15, m_start = 4, interact = FALSE, test = FALSE, validation = FALSE, criterion = "gini", verbose = TRUE),
     "Using Gini index on training set might yield an overfitted model.",
     fixed = TRUE
   )
 
-  expect_warning(glmdisc(x, y, iter = 15, m_start = 4, interact = FALSE, test = FALSE, validation = TRUE, criterion = "aic"),
+  expect_warning(glmdisc(x, y, iter = 15, m_start = 4, interact = FALSE, test = FALSE, validation = TRUE, criterion = "aic", verbose = TRUE),
     "No need to penalize the log-likelihood when a validation set is used. Using log-likelihood instead of AIC/BIC.",
     fixed = TRUE
   )
-  expect_warning(glmdisc(x, y, iter = 15, m_start = 4, interact = FALSE, test = FALSE, validation = TRUE, criterion = "bic"),
+  expect_warning(glmdisc(x, y, iter = 15, m_start = 4, interact = FALSE, test = FALSE, validation = TRUE, criterion = "bic", verbose = TRUE),
     "No need to penalize the log-likelihood when a validation set is used. Using log-likelihood instead of AIC/BIC.",
     fixed = TRUE
   )

@@ -36,7 +36,7 @@ jobs:
         run: devtools::install()
         shell: Rscript {0}
       - name: Testthat
-        run: devtools::test()
+        run: devtools::test(quiet = FALSE, clean = FALSE)
         shell: Rscript {0}
       - name: Coverage
         run: print(devtools::test_coverage())

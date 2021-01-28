@@ -1,4 +1,4 @@
-first_argument_checks <- function(criterion, labels, predictors, validation) {
+first_argument_checks <- function(criterion, labels, predictors, validation, verbose) {
   if (!criterion %in% c("gini", "aic", "bic")) {
     stop(simpleError("criterion must be gini, aic or bic"))
   }
@@ -9,11 +9,11 @@ first_argument_checks <- function(criterion, labels, predictors, validation) {
     stop(simpleError("labels and predictors must be of same length"))
   }
   if ((criterion == "gini") & (validation == FALSE)) {
-    warning("Using Gini index on training set might yield an overfitted model.")
+    if (verbose) warning("Using Gini index on training set might yield an overfitted model.")
   }
 
   if ((criterion %in% c("aic", "bic")) & (validation == TRUE)) {
-    warning("No need to penalize the log-likelihood when a validation set is used. Using log-likelihood instead of AIC/BIC.")
+    if (verbose) warning("No need to penalize the log-likelihood when a validation set is used. Using log-likelihood instead of AIC/BIC.")
   }
 }
 

@@ -64,7 +64,7 @@ glmdisc <- function(predictors,
                     proportions = c(0.2, 0.2),
                     verbose = FALSE,
                     fast = FALSE) {
-  first_argument_checks(criterion, labels, predictors, validation)
+  first_argument_checks(criterion, labels, predictors, validation, verbose)
 
   # Calculating lengths n and d and data types
   n <- length(labels)
