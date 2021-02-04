@@ -79,7 +79,7 @@ glmdisc <- function(predictors,
   continu_complete_case <- !is.na(predictors)
 
   # Initializing list of calculated criterion among which to select the best.
-  criterion_iter <- list(-Inf)
+  criterion_iter <- list(-Inf, -Inf)
 
   # Obtain training, test and validation datasets.
   ensemble <- cut_dataset(n, proportions, test = test, validation = validation)
@@ -100,6 +100,7 @@ glmdisc <- function(predictors,
   current_best <- 1
   best_reglog <- 0
   best_link <- 0
+  link <- 0
   best_formula <- stats::as.formula(paste(
     "~",
     paste(colnames(data.frame(as.data.frame(emap, stringsAsFactors = TRUE))),
@@ -123,6 +124,7 @@ glmdisc <- function(predictors,
     lev <- lapply(e, levels)
 
     if (sum(sapply(e, nlevels) == 1) == d) {
+      if (i == 2) stop("All variables discretized in one value after one pass: try changing the seed")
       if (verbose) message("Early stopping rule: all variables discretized in one value")
       break
     }
@@ -131,6 +133,7 @@ glmdisc <- function(predictors,
     data_logit <- data.frame(Filter(function(x) (length(unique(x)) > 1), emap), labels = labels, stringsAsFactors = TRUE)
 
     if (ncol(data_logit) <= 1) {
+      if (i == 2) stop("All variables discretized in one value after one pass: try changing the seed")
       if (verbose) message("Early stopping rule: all variables discretized in one value")
       break
     }
@@ -218,25 +221,23 @@ glmdisc <- function(predictors,
     }
 
     # Calculate current performance and update (if better than previous best) current best model.
-    if (i >= 2) {
-      if ((criterion == "gini") && (validation == FALSE)) {
-        criterion_iter[[i]] <- normalizedGini(labels[ensemble[[1]]], predictlogisticRegression(data_logit[ensemble[[1]], ], model_reglog$coefficients))
-      } else if ((criterion == "gini") && (validation == TRUE)) {
-        criterion_iter[[i]] <- normalizedGini(labels[ensemble[[2]]], predictlogisticRegression(data_logit[ensemble[[2]], ], model_reglog$coefficients))
-      } else if ((criterion == "aic") && (validation == FALSE)) {
-        criterion_iter[[i]] <- 2 * model_reglog$loglikelihood - 2 * length(model_reglog$coefficients)
-      } else if ((criterion == "bic") && (validation == FALSE)) {
-        criterion_iter[[i]] <- 2 * model_reglog$loglikelihood - log(length(ensemble[[1]])) * length(model_reglog$coefficients)
-      } else if ((criterion %in% c("aic", "bic")) && (validation == TRUE)) {
-        criterion_iter[[i]] <- sum(log(labels[ensemble[[2]]] * predictlogisticRegression(data_logit[ensemble[[2]], ], model_reglog$coefficients) + (1 - labels[ensemble[[2]]]) * (1 - labels[ensemble[[2]]] * predictlogisticRegression(data_logit[ensemble[[2]], ], model_reglog$coefficients))))
-      }
+    if ((criterion == "gini") && (validation == FALSE)) {
+      criterion_iter[[i]] <- normalizedGini(labels[ensemble[[1]]], predictlogisticRegression(data_logit[ensemble[[1]], ], model_reglog$coefficients))
+    } else if ((criterion == "gini") && (validation == TRUE)) {
+      criterion_iter[[i]] <- normalizedGini(labels[ensemble[[2]]], predictlogisticRegression(data_logit[ensemble[[2]], ], model_reglog$coefficients))
+    } else if ((criterion == "aic") && (validation == FALSE)) {
+      criterion_iter[[i]] <- 2 * model_reglog$loglikelihood - 2 * length(model_reglog$coefficients)
+    } else if ((criterion == "bic") && (validation == FALSE)) {
+      criterion_iter[[i]] <- 2 * model_reglog$loglikelihood - log(length(ensemble[[1]])) * length(model_reglog$coefficients)
+    } else if ((criterion %in% c("aic", "bic")) && (validation == TRUE)) {
+      criterion_iter[[i]] <- sum(log(labels[ensemble[[2]]] * predictlogisticRegression(data_logit[ensemble[[2]], ], model_reglog$coefficients) + (1 - labels[ensemble[[2]]]) * (1 - labels[ensemble[[2]]] * predictlogisticRegression(data_logit[ensemble[[2]], ], model_reglog$coefficients))))
+    }
 
-      if (criterion_iter[[i]] >= criterion_iter[[current_best]]) {
-        best_reglog <- model_reglog
-        best_link <- link
-        current_best <- i
-        best_formula <- fmla_logit
-      }
+    if (i == 2 || criterion_iter[[i]] >= criterion_iter[[current_best]]) {
+      best_reglog <- model_reglog
+      best_link <- link
+      current_best <- i
+      best_formula <- fmla_logit
     }
 
     if (interact == TRUE) {
@@ -319,7 +320,7 @@ glmdisc <- function(predictors,
 
         # Polytomic or ordered logistic regression
         if ((reg_type == "poly") & (types_data[j] == "numeric")) {
-          link[[j]] <- nnet::multinom(e ~ x,
+          link[[j]] <- suppressWarnings(nnet::multinom(e ~ x,
             data = data.frame(
               e = e[continu_complete_case[, j] & ensemble[[1]], j],
               x = predictors[continu_complete_case[, j] & ensemble[[1]], j],
@@ -329,14 +330,14 @@ glmdisc <- function(predictors,
             trace = FALSE,
             Hess = FALSE,
             maxit = 50
-          )
+          ))
         } else if (types_data[j] == "numeric") {
           if (exists("link[[j]]$weights")) {
             link[[j]] <- MASS::polr(e ~ x, data = data.frame(e = factor(as.numeric(ordered(e[continu_complete_case[, j] & ensemble[[1]], j], levels = names(sort(unlist(by(predictors[continu_complete_case[, j] & ensemble[[1]], j], e[continu_complete_case[, j] & ensemble[[1]], j], mean)))))), ordered = T), x = predictors[continu_complete_case[, j] & ensemble[[1]], j], stringsAsFactors = TRUE), Hess = FALSE, model = FALSE, weights = link[[j]]$weights)
           } else if (nlevels(as.factor(e[continu_complete_case[ensemble[[1]], j], ][ensemble[[1]], j])) > 2) {
             link[[j]] <- MASS::polr(e ~ x, data = data.frame(e = factor(as.numeric(ordered(e[continu_complete_case[, j] & ensemble[[1]], j], levels = names(sort(unlist(by(predictors[continu_complete_case[, j] & ensemble[[1]], j], e[continu_complete_case[, j] & ensemble[[1]], j], mean)))))), ordered = T), x = predictors[continu_complete_case[, j] & ensemble[[1]], j], stringsAsFactors = TRUE), Hess = FALSE, model = FALSE)
           } else {
-            link[[j]] <- stats::glm(e ~ x, data = data.frame(e = factor(e[continu_complete_case[, j] & ensemble[[1]], j]), x = predictors[continu_complete_case[, j] & ensemble[[1]], j], stringsAsFactors = TRUE), family = stats::binomial(link = "logit"), model = FALSE)
+            link[[j]] <- suppressWarnings(stats::glm(e ~ x, data = data.frame(e = factor(e[continu_complete_case[, j] & ensemble[[1]], j]), x = predictors[continu_complete_case[, j] & ensemble[[1]], j], stringsAsFactors = TRUE), family = stats::binomial(link = "logit"), model = FALSE))
           }
         }
       } else {
