@@ -100,6 +100,13 @@ glmdisc <- function(predictors,
   current_best <- 1
   best_reglog <- 0
   best_link <- 0
+  best_formula <- stats::as.formula(paste(
+    "~",
+    paste(colnames(data.frame(as.data.frame(emap, stringsAsFactors = TRUE))),
+      collapse = "+"
+    )
+  ))
+
 
   # The interaction matrix delta is initialized at random with prob .5
   if (interact) {

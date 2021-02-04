@@ -14,3 +14,4 @@ coverage:
   ignore:
     - "R/generic_cutpoints.R"
     - "R/generic_discretize.R"
+    - "renv/*"
