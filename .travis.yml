@@ -10,4 +10,4 @@ language: R
 sudo: false
 cache: packages
 after_success:
-  - Rscript -e 'covr::codecov(line_exclusions = list("method_plot.R" = c(54, 79), "glmdisc.R" = 4:5))'
+  - Rscript -e 'covr::codecov(path = "R/", line_exclusions = list("R/method_plot.R" = c(54, 79), "R/glmdisc.R" = 4:5))'
