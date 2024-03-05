@@ -37,7 +37,8 @@ Suggests:
     rmarkdown,
     testthat (>= 2.1.0),
     tibble,
-    covr
+    covr,
+    DT
 VignetteBuilder: knitr
 Collate: 
     'RcppExports.R'
