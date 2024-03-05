@@ -32,8 +32,7 @@ are_fast_packages_installed <- function(verbose = FALSE) {
 #'
 #'
 #' @author Adrien Ehrhardt.
-#' @docType package
 #' @importFrom Rcpp evalCpp
 #' @useDynLib glmdisc
 #' @name glmdisc-package
-NULL
+"_PACKAGE"

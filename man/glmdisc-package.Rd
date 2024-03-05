@@ -33,6 +33,14 @@ The \code{\link{predict}} function will discretize a raw test set, given a provi
 We provide as well the classical \code{\link{show}}, \code{\link{print}}, \code{\link{summary}} functions, as well as \code{\link{normalizedGini}} that is used to calculate the Gini index (a classical Credit Scoring goodness-of-fit indicator).
 }
 
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://adimajo.github.io}
+  \item Report bugs at \url{https://github.com/adimajo/glmdisc/issues}
+}
+
+}
 \author{
 Adrien Ehrhardt.
 }
