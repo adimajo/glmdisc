@@ -311,7 +311,6 @@ glmdisc <- function(predictors,
 
     # Update E^j with j chosen at random
     for (j in sample(1:d)) {
-
       # p(e^j | x^j) training
       if (length(unique(e[continu_complete_case[, j] & ensemble[[1]], j])) > 1) {
         if (sum(lapply(lapply(1:d, function(j) !lev_1[[j]][[1]] %in% lev[[j]]), sum) > 0) > 0) {
@@ -428,7 +427,6 @@ glmdisc <- function(predictors,
         # Test
 
         if (test | validation) {
-
           # E
 
           ind_diff_train_test <- which(e[ensemble[[2]], j] == setdiff(factor(e[ensemble[[2]], j]), factor(e[ensemble[[1]], j])))
@@ -482,7 +480,6 @@ glmdisc <- function(predictors,
         # Validation
 
         if (test & validation) {
-
           # E
 
           ind_diff_train_test <- which(e[ensemble[[3]], j] == setdiff(factor(e[ensemble[[3]], j]), factor(e[ensemble[[1]], j])))
@@ -590,12 +587,13 @@ glmdisc <- function(predictors,
 
       performance <- normalizedGini(labels_test, predictlogisticRegression(data_test, best.disc[[1]]$coefficients))
     } else {
-      encoder <- dummyVars(best.disc[[3]], as.data.frame(discretize_link(
-        best.disc[[2]],
-        predictors[ensemble[[1]], , drop = FALSE],
-        m_start
-      ),
-      stringsAsFactors = TRUE
+      encoder <- dummyVars(best.disc[[3]], as.data.frame(
+        discretize_link(
+          best.disc[[2]],
+          predictors[ensemble[[1]], , drop = FALSE],
+          m_start
+        ),
+        stringsAsFactors = TRUE
       ),
       fullRank = FALSE,
       sep = "_"
