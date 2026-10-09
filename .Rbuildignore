@@ -3,6 +3,7 @@
 ^codecov\.yml$
 ^\.github$
 ^docs$
+^README\.md$
 ^inst/benchmarks$
 ^pkgdown$
 ^_pkgdown\.yml$
