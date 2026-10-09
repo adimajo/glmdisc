@@ -5,6 +5,7 @@
 #   half      exp(-delta BIC / 2) * t / (1 - t)               (BIC posterior, no proposal correction)
 #   hastings  exp(-delta BIC) with the proposal correction    (scale 1)
 #   posterior exp(-delta BIC / 2) with the proposal correction (BIC posterior, correct sampler)
+#   posterior_clamped  the same with p_delta kept within [0.01, 0.99] (see glmdisc.mh_clamp)
 # where t = |delta - p_delta| (see ?glmdisc:::mh_log_acceptance). Only datasets with at most
 # 12 features are used (the search is quadratic in the number of features).
 #
@@ -18,11 +19,12 @@ dir.create(outdir, showWarnings = FALSE, recursive = TRUE)
 
 source(file.path(dirname(sub("--file=", "", grep("--file=", commandArgs(FALSE), value = TRUE)[1L])), "common.R"))
 
-with_rule <- function(scale, hastings) {
+with_rule <- function(scale, hastings, clamp = 0) {
   force(scale)
   force(hastings)
+  force(clamp)
   function(...) {
-    old <- options(glmdisc.mh_scale = scale, glmdisc.mh_hastings = hastings)
+    old <- options(glmdisc.mh_scale = scale, glmdisc.mh_hastings = hastings, glmdisc.mh_clamp = clamp)
     on.exit(options(old))
     method_glmdisc(..., interact = TRUE)
   }
@@ -34,7 +36,8 @@ methods <- list(
   interact_thesis = with_rule(1, FALSE),
   interact_half = with_rule(0.5, FALSE),
   interact_hastings = with_rule(1, TRUE),
-  interact_posterior = with_rule(0.5, TRUE)
+  interact_posterior = with_rule(0.5, TRUE),
+  interact_posterior_clamped = with_rule(0.5, TRUE, 0.01)
 )
 
 datasets <- load_datasets(extra = TRUE)
