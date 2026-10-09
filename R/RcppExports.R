@@ -10,6 +10,6 @@
 #' @param parameters A vector containing the logistic regression parameters
 #' @export
 predictlogisticRegression <- function(test, parameters) {
-    .Call('_glmdisc_predictlogisticRegression', PACKAGE = 'glmdisc', test, parameters)
+    .Call(`_glmdisc_predictlogisticRegression`, test, parameters)
 }
 

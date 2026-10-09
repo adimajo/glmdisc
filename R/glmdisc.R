@@ -25,6 +25,6 @@
 #'
 #' @author Adrien Ehrhardt.
 #' @importFrom Rcpp evalCpp
-#' @useDynLib glmdisc
+#' @useDynLib glmdisc, .registration = TRUE
 #' @name glmdisc-package
 "_PACKAGE"
