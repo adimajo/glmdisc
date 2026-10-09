@@ -63,17 +63,36 @@ test_that("without the Hastings correction the chain is biased (documents the th
   expect_gt(max(abs(chain$empirical - chain$target)), 0.02)
 })
 
-test_that("the prior of the interactions can be kept away from 0 and 1", {
+test_that("by default the chain samples the posterior (half the score, Hastings correction)", {
+  set.seed(1)
+  p_pairs <- c(0.7, 0.2, 0.5)
+  score_values <- c(0.5, -1, 1.5, -0.5, 0, 1, -2, 2)
+  index_of <- function(delta) 1L + delta[1, 2] + 2L * delta[1, 3] + 4L * delta[2, 3]
+  p_delta <- matrix(0, 3, 3)
+  p_delta[1, 2] <- p_pairs[1]
+  p_delta[1, 3] <- p_pairs[2]
+  p_delta[2, 3] <- p_pairs[3]
+  delta <- matrix(0, 3, 3)
+  counts <- numeric(8)
+  for (i in 1:40000) {
+    delta <- metropolis_hastings_step(delta, p_delta, function(candidate) score_values[index_of(candidate)], score_values[index_of(delta)])
+    counts[index_of(delta)] <- counts[index_of(delta)] + 1
+  }
+  expect_lt(max(abs(counts / 40000 - toy_target(p_pairs, score_values, 0.5))), 0.02)
+})
+
+test_that("the prior of the interactions is kept away from 0 and 1 by default", {
   set.seed(1)
   n <- 600
   x <- data.frame(a = runif(n), b = runif(n), c = runif(n))
   y <- rbinom(n, 1, plogis(8 * ((x$a > 0.5) != (x$b > 0.5)) - 4)) # the (a, b) interaction is saturated
   train <- rep(TRUE, n)
+
+  old <- options(glmdisc.mh_clamp = 0)
   raw <- glmdisc:::initialize_interaction(3, x, y, train)
+  options(old)
   expect_equal(raw$p_delta[1, 2], 1)
 
-  old <- options(glmdisc.mh_clamp = 0.01)
-  on.exit(options(old))
   clamped <- glmdisc:::initialize_interaction(3, x, y, train)
   upper <- upper.tri(clamped$p_delta)
   expect_true(all(clamped$p_delta[upper] >= 0.01 & clamped$p_delta[upper] <= 0.99))

@@ -167,12 +167,14 @@ sem_engine <- function(X, types, y, split, criterion, iter, m_start, reg_type, i
 # * `z`, `z_new`: sums of the transition weights |delta - p_delta| before / after the flip.
 #
 # The target is prior(delta) * exp(scale * score) with a Bernoulli(p_delta) prior on each
-# interaction: the prior ratio of a flip is t / (1 - t). With `scale = 1` (what the thesis
-# uses) the score is not halved, i.e. the BIC posterior is raised to the power 2; `scale = 0.5`
-# is the BIC approximation of the posterior. Pairs are proposed with probability proportional
-# to t, which is not symmetric: `hastings = TRUE` adds the correction q(reverse) / q(forward),
-# with q(forward) = t / z and q(reverse) = (1 - t) / z_new.
-mh_log_acceptance <- function(score_diff, t, z, z_new, scale = 1, hastings = FALSE) {
+# interaction: the prior ratio of a flip is t / (1 - t). `scale = 0.5` makes the score
+# the BIC approximation of the log marginal likelihood, so that the target is the
+# posterior of the interactions; the thesis used `scale = 1`, i.e. the square of that
+# posterior. Pairs are proposed with probability proportional to t, which is not
+# symmetric: `hastings = TRUE` adds the correction q(reverse) / q(forward), with
+# q(forward) = t / z and q(reverse) = (1 - t) / z_new, without which the chain does not
+# sample the target (the thesis rule omitted it).
+mh_log_acceptance <- function(score_diff, t, z, z_new, scale = 0.5, hastings = TRUE) {
   if (t >= 1) {
     return(if (hastings) -Inf else Inf)
   }
@@ -189,8 +191,8 @@ mh_log_acceptance <- function(score_diff, t, z, z_new, scale = 1, hastings = FAL
 # with the interactions in `delta`; `score_current` is the score of `delta`.
 # Returns the new delta.
 metropolis_hastings_step <- function(delta, p_delta, score, score_current, verbose = FALSE, feature_names = NULL,
-                                     scale = getOption("glmdisc.mh_scale", 1),
-                                     hastings = getOption("glmdisc.mh_hastings", FALSE)) {
+                                     scale = getOption("glmdisc.mh_scale", 0.5),
+                                     hastings = getOption("glmdisc.mh_hastings", TRUE)) {
   d <- nrow(delta)
   transition <- abs(delta - p_delta)
   z <- sum(transition)
@@ -246,7 +248,7 @@ initialize_interaction <- function(d, X, y, train) {
   }
   # A prior probability of exactly 0 or 1 makes the chain unable to flip the pair back (or
   # in): keep it away from the boundaries.
-  clamp <- getOption("glmdisc.mh_clamp", 0)
+  clamp <- getOption("glmdisc.mh_clamp", 0.01)
   if (clamp > 0) {
     pairs <- upper.tri(p_delta)
     p_delta[pairs] <- pmin(pmax(p_delta[pairs], clamp), 1 - clamp)
