@@ -3,35 +3,29 @@
 \docType{methods}
 \name{predict}
 \alias{predict}
-\alias{predict.glmdisc}
-\alias{predict,glmdisc,ANY,ANY-method}
 \alias{predict,glmdisc-method}
-\title{Prediction on a raw test set of the best logistic regression model on discretized data.}
+\title{Prediction on a raw test set of the best logistic regression model on discretized data}
 \usage{
 predict(object, ...)
 
-predict.glmdisc(object, predictors)
-
-\S4method{predict}{glmdisc}(object, predictors)
+\S4method{predict}{glmdisc}(object, predictors, ...)
 }
 \arguments{
 \item{object}{The S4 discretization object.}
 
-\item{...}{Essai}
+\item{...}{Not used.}
 
 \item{predictors}{The test dataframe to discretize and for which we wish to have predictions.}
 }
+\value{
+A numeric vector with the predicted probability of class 1 for each row of \code{predictors}.
+}
 \description{
-This defines the method "discretize" which will discretize a new input dataset given a discretization scheme of S4 class \code{\link{glmdisc}}
-
-This defines the method "predict" which will predict the discretization of a new input dataset given a discretization scheme of S4 class \code{\link{glmdisc}}
+This defines the method "predict" which discretizes a new input dataset given a discretization scheme of S4 class \code{\link{glmdisc}} and returns the predicted probabilities of class 1.
 }
 \details{
 This function discretizes a user-provided test dataset given a discretization scheme provided by an S4 "glmdisc" object.
-It then applies the learnt logistic regression model and outputs its prediction (see \code{\link{predict.glm}}).
-
-This function discretizes a user-provided test dataset given a discretization scheme provided by an S4 "glmdisc" object.
-It then applies the learnt logistic regression model and outputs its prediction (see \code{\link{predict.glm}}).
+It then applies the learnt logistic regression model and outputs its prediction (see \code{\link[stats]{predict.glm}}).
 }
 \examples{
 # Simulation of a discretized logit model

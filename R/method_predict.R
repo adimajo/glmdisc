@@ -1,25 +1,24 @@
 #' @include allClasses.R
 NULL
 
-#' Prediction on a raw test set of the best logistic regression model on discretized data.
+#' Prediction on a raw test set of the best logistic regression model on discretized data
 #'
 #' This function discretizes a user-provided test dataset given a discretization scheme provided by an S4 "glmdisc" object.
-#' It then applies the learnt logistic regression model and outputs its prediction (see \code{\link{predict.glm}}).
+#' It then applies the learnt logistic regression model and outputs its prediction (see \code{\link[stats]{predict.glm}}).
 #' @exportMethod predict
 #' @concept test discretization predict prediction
 #' @docType methods
 #' @name predict
 #' @aliases predict
-#' @description This defines the method "discretize" which will discretize a new input dataset given a discretization scheme of S4 class \code{\link{glmdisc}}
-#' @param ... Essai
+#' @description This defines the method "predict" which discretizes a new input dataset given a discretization scheme of S4 class \code{\link{glmdisc}} and returns the predicted probabilities of class 1.
+#' @param ... Not used.
 methods::setGeneric("predict")
 
-#' Prediction on a raw test set of the best logistic regression model on discretized data.
-#'
 #' @rdname predict
-#' @aliases predict,glmdisc,ANY,ANY-method
+#' @aliases predict,glmdisc-method
 #' @param object The S4 discretization object.
 #' @param predictors The test dataframe to discretize and for which we wish to have predictions.
+#' @return A numeric vector with the predicted probability of class 1 for each row of \code{predictors}.
 #' @examples
 #' # Simulation of a discretized logit model
 #' set.seed(1)
@@ -40,18 +39,8 @@ methods::setGeneric("predict")
 #'   validation = FALSE, criterion = "aic"
 #' )
 #' predict(sem_disc, data.frame(x))
-predict.glmdisc <- function(object, predictors) {
+methods::setMethod("predict", "glmdisc", function(object, predictors, ...) {
   X <- prepare_new_features(object, predictors)
   quantized <- quantized_frame(object@best.disc[[2]], X, object@parameters$model_names)
   as.numeric(suppressWarnings(stats::predict(object@best.disc[[1]], newdata = quantized, type = "response")))
-}
-
-#' Prediction on a raw test set of the best logistic regression model on discretized data.
-#'
-#' This function discretizes a user-provided test dataset given a discretization scheme provided by an S4 "glmdisc" object.
-#' It then applies the learnt logistic regression model and outputs its prediction (see \code{\link{predict.glm}}).
-#' @rdname predict
-#' @name predict,glmdisc-method
-#' @aliases predict,glmdisc-method
-#' @description This defines the method "predict" which will predict the discretization of a new input dataset given a discretization scheme of S4 class \code{\link{glmdisc}}
-methods::setMethod("predict", "glmdisc", predict.glmdisc)
+})

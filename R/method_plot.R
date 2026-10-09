@@ -1,7 +1,7 @@
 #' @include allClasses.R
 NULL
 
-#' Plots for the discretized / grouped data.
+#' Plots for the discretized / grouped data
 #'
 #'
 #' @exportMethod plot
@@ -15,32 +15,7 @@ if (!isGeneric("plot")) {
   methods::setGeneric("plot", function(x, y, ...) standardGeneric("plot"))
 }
 
-#' Plots for the discretized data.
-#'
-#'
-#' @rdname plot
-#' @aliases plot,glmdisc,ANY-method
-#' @param x The S4 \code{\link{glmdisc}} object to plot.
-#' @examples
-#' # Simulation of a discretized logit model
-#' x <- matrix(runif(300), nrow = 100, ncol = 3)
-#' cuts <- seq(0, 1, length.out = 4)
-#' xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))
-#' theta <- t(matrix(c(0, 0, 0, 2, 2, 2, -2, -2, -2), ncol = 3, nrow = 3))
-#' log_odd <- rowSums(t(sapply(seq_along(xd[, 1]), function(row_id) {
-#'   sapply(
-#'     seq_along(xd[row_id, ]),
-#'     function(element) theta[xd[row_id, element], element]
-#'   )
-#' })))
-#' y <- rbinom(100, 1, 1 / (1 + exp(-log_odd)))
-#'
-#' sem_disc <- glmdisc(x, y,
-#'   iter = 50, m_start = 4, test = FALSE,
-#'   validation = FALSE, criterion = "aic"
-#' )
-#' plot(sem_disc)
-plot.glmdisc <- function(x, y, ...) {
+plot_glmdisc <- function(x) {
   # Graph 1 : ROC CURVE
   glm_simple_roc <- simple_roc(x@disc.data$labels, predict(x, x@cont.data[, -ncol(x@cont.data), drop = FALSE]))
 
@@ -88,8 +63,29 @@ plot.glmdisc <- function(x, y, ...) {
 }
 
 #' @rdname plot
-#' @name plot,glmdisc,missing-method
 #' @aliases plot,glmdisc,missing-method
-#' @description This defines the \code{\link{plot}} method which will plot some useful graphs for the discretization scheme of S4 class \code{\link{glmdisc}}
-# #' @param glmdisc The S4 glmdisc object to plot.
-methods::setMethod(f = "plot", signature = c(x = "glmdisc", y = "missing"), definition = plot.glmdisc)
+#' @description This defines the \code{\link[graphics]{plot}} method which will plot some useful graphs for the discretization scheme of S4 class \code{\link{glmdisc}}
+#' @param x The S4 \code{\link{glmdisc}} object to plot.
+#' @param y Not used.
+#' @param ... Not used.
+#' @examples
+#' # Simulation of a discretized logit model
+#' set.seed(1)
+#' x <- matrix(runif(300), nrow = 100, ncol = 3)
+#' cuts <- seq(0, 1, length.out = 4)
+#' xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))
+#' theta <- t(matrix(c(0, 0, 0, 2, 2, 2, -2, -2, -2), ncol = 3, nrow = 3))
+#' log_odd <- rowSums(t(sapply(seq_along(xd[, 1]), function(row_id) {
+#'   sapply(
+#'     seq_along(xd[row_id, ]),
+#'     function(element) theta[xd[row_id, element], element]
+#'   )
+#' })))
+#' y <- rbinom(100, 1, 1 / (1 + exp(-log_odd)))
+#'
+#' sem_disc <- glmdisc(x, y,
+#'   iter = 50, m_start = 4, test = FALSE,
+#'   validation = FALSE, criterion = "aic"
+#' )
+#' plot(sem_disc)
+methods::setMethod(f = "plot", signature = c(x = "glmdisc", y = "missing"), definition = function(x, y, ...) plot_glmdisc(x))
