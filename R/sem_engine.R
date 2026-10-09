@@ -133,7 +133,14 @@ sem_engine <- function(X, types, y, split, criterion, iter, m_start, reg_type, i
     }
 
     if (interact) {
-      delta <- metropolis_hastings_step(delta, p_delta, ec, Ke, y, train, model_m, verbose, colnames(X))
+      penalty <- log(sum(train))
+      score <- function(candidate) {
+        model <- fit_logit_codes(ec, Ke, y, train, active_pairs(candidate, Ke))
+        2 * model$loglik - penalty * model$npar
+      }
+      delta <- metropolis_hastings_step(
+        delta, p_delta, score, 2 * model_m$loglik - penalty * model_m$npar, verbose, colnames(X)
+      )
     }
 
     if (verbose) {
@@ -153,34 +160,61 @@ sem_engine <- function(X, types, y, split, criterion, iter, m_start, reg_type, i
   list(best = best, history = history)
 }
 
-# One Metropolis-Hastings move on the interaction matrix `delta`: flip one pair, fit the
-# logistic regression with the proposed set of interactions and accept with a probability
-# based on the BIC difference and on the proposal (see the thesis). Returns the new delta.
-metropolis_hastings_step <- function(delta, p_delta, ec, Ke, y, train, model_current, verbose, feature_names) {
+# Log of the acceptance ratio of the Metropolis-Hastings move that flips one pair.
+#
+# * `score_diff`: difference of the "-BIC" scores, (2 loglik - k log n)_proposed - (...)_current;
+# * `t`: |delta_pq - p_delta_pq| in the current state, the weight with which the pair was proposed;
+# * `z`, `z_new`: sums of the transition weights |delta - p_delta| before / after the flip.
+#
+# The target is prior(delta) * exp(scale * score) with a Bernoulli(p_delta) prior on each
+# interaction: the prior ratio of a flip is t / (1 - t). With `scale = 1` (what the thesis
+# uses) the score is not halved, i.e. the BIC posterior is raised to the power 2; `scale = 0.5`
+# is the BIC approximation of the posterior. Pairs are proposed with probability proportional
+# to t, which is not symmetric: `hastings = TRUE` adds the correction q(reverse) / q(forward),
+# with q(forward) = t / z and q(reverse) = (1 - t) / z_new.
+mh_log_acceptance <- function(score_diff, t, z, z_new, scale = 1, hastings = FALSE) {
+  if (t >= 1) {
+    return(if (hastings) -Inf else Inf)
+  }
+  log_acceptance <- scale * score_diff + log(t) - log1p(-t)
+  if (hastings) {
+    log_acceptance <- log_acceptance + log1p(-t) - log(z_new) - log(t) + log(z)
+  }
+  log_acceptance
+}
+
+# One Metropolis-Hastings move on the interaction matrix `delta`: flip one pair chosen
+# with probability proportional to |delta - p_delta| and accept with mh_log_acceptance().
+# `score(delta)` returns the "-BIC" score (2 loglik - k log n) of the logistic regression
+# with the interactions in `delta`; `score_current` is the score of `delta`.
+# Returns the new delta.
+metropolis_hastings_step <- function(delta, p_delta, score, score_current, verbose = FALSE, feature_names = NULL,
+                                     scale = getOption("glmdisc.mh_scale", 1),
+                                     hastings = getOption("glmdisc.mh_hastings", FALSE)) {
   d <- nrow(delta)
   transition <- abs(delta - p_delta)
-  if (sum(transition) <= 0) {
+  z <- sum(transition)
+  if (z <= 0) {
     return(delta)
   }
   pq <- sample.int(d^2, 1L, prob = as.vector(transition))
   delta_new <- delta
   delta_new[pq] <- 1 - delta_new[pq]
 
-  model_new <- fit_logit_codes(ec, Ke, y, train, active_pairs(delta_new, Ke))
-  penalty <- log(sum(train))
-  bic_new <- 2 * model_new$loglik - penalty * model_new$npar
-  bic_current <- 2 * model_current$loglik - penalty * model_current$npar
-  alpha <- exp(bic_new - bic_current) * transition[pq] / (1 - transition[pq])
-  if (is.na(alpha)) alpha <- 0
+  log_acceptance <- mh_log_acceptance(
+    score(delta_new) - score_current, transition[pq], z, sum(abs(delta_new - p_delta)), scale, hastings
+  )
+  if (is.na(log_acceptance)) log_acceptance <- -Inf
+  acceptance <- exp(min(log_acceptance, 0))
 
   if (verbose) {
     involved <- arrayInd(pq, c(d, d))
     message(
       "Current interaction being tested is between variables ", feature_names[involved[1L, 1L]],
-      " and ", feature_names[involved[1L, 2L]], " with a probability of acceptance of ", min(alpha, 1)
+      " and ", feature_names[involved[1L, 2L]], " with a probability of acceptance of ", acceptance
     )
   }
-  if (stats::runif(1L) < min(alpha, 1)) delta_new else delta
+  if (stats::runif(1L) < acceptance) delta_new else delta
 }
 
 # Starting point of the interaction search: delta is drawn at random and p_delta, the
