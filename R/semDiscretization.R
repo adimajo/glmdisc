@@ -14,6 +14,7 @@
 #' @param interact Boolean : True (default) if interaction detection is wanted (Warning: may be very memory/time-consuming).
 #' @param proportions The proportions wanted for the test and validation sets, in this order. Not used when both test and validation are false. Only the first is used when there is only one of either test or validation that is set to TRUE. Produces an error when the sum is greater to one. Default: list(0.2,0.2) so that the training set has 0.6 of the input observations.
 #' @param verbose Print information while fitting (default: FALSE).
+#' @param patience Optional early stopping: stop when the criterion has not improved for this many consecutive iterations (default: NULL, run all \code{iter} iterations). The SEM chain typically reaches a plateau long before the default \code{iter}; see the vignette.
 #' @param fast Deprecated and ignored (sampling is now always vectorized).
 #' @concept SEM Gibbs discretization
 #' @author Adrien Ehrhardt.
@@ -62,8 +63,9 @@ glmdisc <- function(predictors,
                     reg_type = "poly",
                     proportions = c(0.2, 0.2),
                     verbose = FALSE,
-                    fast = FALSE) {
-  first_argument_checks(criterion, labels, predictors, validation, verbose, reg_type, iter, m_start)
+                    fast = FALSE,
+                    patience = NULL) {
+  first_argument_checks(criterion, labels, predictors, validation, verbose, reg_type, iter, m_start, patience)
   if (isTRUE(fast)) warning("`fast` is deprecated and ignored: sampling is now always vectorized.", call. = FALSE)
 
   prepared <- prepare_features(predictors)
@@ -78,7 +80,7 @@ glmdisc <- function(predictors,
   # (performance of the chosen model) sets.
   split <- split_dataset(n, proportions, test, validation)
 
-  fitted <- sem_engine(X, types, labels, split, criterion, as.integer(iter), as.integer(m_start), reg_type, interact, verbose)
+  fitted <- sem_engine(X, types, labels, split, criterion, as.integer(iter), as.integer(m_start), reg_type, interact, verbose, patience)
   best <- fitted$best
   links <- add_level_names(best$links, X, types, split$train)
 

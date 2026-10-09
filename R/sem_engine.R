@@ -22,7 +22,7 @@ active_pairs <- function(delta, K) {
   matrix(as.integer(pairs), ncol = 2L)
 }
 
-sem_engine <- function(X, types, y, split, criterion, iter, m_start, reg_type, interact, verbose) {
+sem_engine <- function(X, types, y, split, criterion, iter, m_start, reg_type, interact, verbose, patience = NULL) {
   n <- nrow(X)
   d <- ncol(X)
   train <- split$train
@@ -147,6 +147,11 @@ sem_engine <- function(X, types, y, split, criterion, iter, m_start, reg_type, i
         "Iteration ", it, " ended with a performance of ", criterion, " = ", value,
         " (levels per feature: ", paste(Ke, collapse = "/"), ")"
       )
+    }
+
+    if (!is.null(patience) && it - best$iteration >= patience) {
+      if (verbose) message("Early stopping rule: no improvement of the criterion for ", patience, " iterations")
+      break
     }
   }
 

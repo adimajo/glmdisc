@@ -16,7 +16,8 @@ glmdisc(
   reg_type = "poly",
   proportions = c(0.2, 0.2),
   verbose = FALSE,
-  fast = FALSE
+  fast = FALSE,
+  patience = NULL
 )
 }
 \arguments{
@@ -43,6 +44,8 @@ glmdisc(
 \item{verbose}{Print information while fitting (default: FALSE).}
 
 \item{fast}{Deprecated and ignored (sampling is now always vectorized).}
+
+\item{patience}{Optional early stopping: stop when the criterion has not improved for this many consecutive iterations (default: NULL, run all \code{iter} iterations). The SEM chain typically reaches a plateau long before the default \code{iter}; see the vignette.}
 }
 \description{
 This function discretizes a training set using an SEM-Gibbs based method (see References section).

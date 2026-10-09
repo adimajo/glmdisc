@@ -1,4 +1,4 @@
-first_argument_checks <- function(criterion, labels, predictors, validation, verbose, reg_type = "poly", iter = 1L, m_start = 2L) {
+first_argument_checks <- function(criterion, labels, predictors, validation, verbose, reg_type = "poly", iter = 1L, m_start = 2L, patience = NULL) {
   if (!criterion %in% c("gini", "aic", "bic")) {
     stop(simpleError("criterion must be gini, aic or bic"))
   }
@@ -19,6 +19,9 @@ first_argument_checks <- function(criterion, labels, predictors, validation, ver
   }
   if (!(is.numeric(m_start) && length(m_start) == 1L && m_start >= 2)) {
     stop(simpleError("`m_start` must be an integer greater than 1"))
+  }
+  if (!is.null(patience) && !(is.numeric(patience) && length(patience) == 1L && patience >= 1)) {
+    stop(simpleError("`patience` must be NULL or a positive integer"))
   }
   if ((criterion == "gini") & (validation == FALSE)) {
     if (verbose) warning("Using Gini index on training set might yield an overfitted model.")

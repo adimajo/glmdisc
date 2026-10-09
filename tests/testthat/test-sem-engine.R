@@ -111,3 +111,14 @@ test_that("factor features are supported, including unseen levels at prediction 
   expect_error(predict(fit, data.frame(f = factor("z"), x = 0.5)), "Unseen")
   expect_length(predict(fit, data.frame(f = factor(c("a", "e")), x = c(0.1, 0.2))), 2)
 })
+
+test_that("patience stops the chain once the criterion no longer improves", {
+  set.seed(1)
+  data <- simulate_intervals(500)
+  full <- glmdisc(data$x, data$y, iter = 60, m_start = 5, interact = FALSE)
+  expect_length(full@performance$criterionEvolution, 60)
+  set.seed(1)
+  early <- glmdisc(data$x, data$y, iter = 60, m_start = 5, interact = FALSE, patience = 5)
+  expect_lt(length(early@performance$criterionEvolution), 60)
+  expect_error(glmdisc(data$x, data$y, iter = 5, patience = 0), "patience")
+})
