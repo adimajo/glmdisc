@@ -13,7 +13,7 @@ normalizedGini(actual, predicted)
 }
 \description{
 This function calculates the Gini index of a classification rule outputting probabilities. It is a classical metric in the context of Credit Scoring.
-It is equal to 2 times the AUC (Area Under ROC Curve) minus 1.
+It is equal to 2 times the AUC (Area Under ROC Curve) minus 1; tied predicted probabilities are given half credit, so the result does not depend on the order of the observations.
 }
 \examples{
 normalizedGini(c(1, 1, 1, 0, 0), c(0.7, 0.9, 0.5, 0.6, 0.3))
