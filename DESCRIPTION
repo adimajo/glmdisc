@@ -48,6 +48,7 @@ Collate:
     'glmdisc.R'
     'initialization.R'
     'link_models.R'
+    'logit_codes.R'
     'method_cutpoints.R'
     'method_discretize.R'
     'method_plot.R'
