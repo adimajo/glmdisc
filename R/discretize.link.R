@@ -57,7 +57,7 @@ discretize_link <- function(link, df, m_start) {
         }
       } else {
         if (!is.null(link[[j]])) {
-          t <- prop.table.robust(t(sapply(df[, j], function(row) link[[j]][, row])), 1)
+          t <- normalize_rows(t(link[[j]])[as.integer(df[, j]), , drop = FALSE])
         } else {
           t <- matrix(1, nrow = n, ncol = 1)
           colnames(t) <- "1"

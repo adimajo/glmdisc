@@ -14,15 +14,6 @@
 # #' cut_dataset(n=30,test=TRUE,
 # #' validation=TRUE,proportions=c(0.3,0.3),seed=1)
 
-prop.table.robust <- function(x, margin = NULL) {
-  # tab <- sweep(x, margin, margin.table(x, margin), "/", check.margin = FALSE)
-  # tab <- sweep(x, margin, rowSums(x), "/", check.margin = FALSE)
-  tab <- x / rowSums(x)
-  tab[which(is.na(tab))] <- 1 / ncol(tab)
-  tab
-}
-
-
 cut_dataset <- function(n, proportions, test = TRUE, validation = TRUE) {
   if (test == TRUE) {
     if (validation == TRUE) {

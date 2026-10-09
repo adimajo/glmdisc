@@ -389,24 +389,23 @@ glmdisc <- function(predictors,
           }
         } else {
           link[[j]] <- table(e[ensemble[[1]], j], predictors[ensemble[[1]], j])
-          t <- prop.table.robust(t(sapply(predictors[, j], function(row) link[[j]][, row])), 1)
+          t <- normalize_rows(t(link[[j]])[as.integer(predictors[, j]), , drop = FALSE])
         }
 
-        # Updating emap^j
-        if (fast & fast_packages_installed) {
-          emap[, j] <- factor(levels_to_sample[Rfast::rowMaxs(t)])
-        } else {
-          emap[, j] <- apply(t, 1, function(p) names(which.max(p)))
-        }
+        # Updating emap^j: MAP of p(e^j | x^j)
+        t_link <- t
+        emap_j <- colnames(t_link)[max.col(t_link, ties.method = "first")]
 
-        t <- prop.table.robust(t * y_p[which(levels_to_sample %in% levels(factor(e[continu_complete_case[, j] & ensemble[[1]], j])))], 1)
+        # Updating e^j: draw from p(e^j | x^j) * p(y | e^j, e^-j)
+        t <- normalize_rows(t_link * y_p[, match(colnames(t_link), levels_to_sample), drop = FALSE])
+        e_j <- colnames(t)[sample_rows(t)]
 
-        # Updating e^j
-        if (fast & fast_packages_installed) {
-          e[, j] <- factor(levels_to_sample[NPflow::sampleClassC(t(t))])
-        } else {
-          e[, j] <- apply(t, 1, function(p) sample(levels_to_sample, 1, prob = p, replace = TRUE))
-        }
+        # Held-out observations (test / validation) must not take values unseen in the training set.
+        held_out <- ensemble[[2]] | ensemble[[3]]
+        e_j <- resample_unseen_levels(factor(e_j, levels = levels_to_sample), t, ensemble[[1]], held_out, "sample")
+        emap_j <- resample_unseen_levels(factor(emap_j, levels = levels_to_sample), t_link, ensemble[[1]], held_out, "map")
+        e[, j] <- as.character(e_j)
+        emap[, j] <- as.character(emap_j)
 
         if (nlevels(as.factor(e[, j])) > 1) {
           if (nlevels(as.factor(e[, j])) == m[j]) {
@@ -421,105 +420,6 @@ glmdisc <- function(predictors,
           }
         } else {
           data[, paste0("V", j, "_", lev[[j]][which(!lev[[j]] %in% levels(as.factor(e[, j])))])] <- matrix(0, nrow = n, ncol = sum(!lev[[j]] %in% levels(as.factor(e[, j]))))
-        }
-
-        # We control in test and validation datasets (if applicable) that there is the same values for E than in training set (not more).
-        # Test
-
-        if (test | validation) {
-          # E
-
-          ind_diff_train_test <- which(e[ensemble[[2]], j] == setdiff(factor(e[ensemble[[2]], j]), factor(e[ensemble[[1]], j])))
-          while (!length(ind_diff_train_test) == 0) {
-            t[ind_diff_train_test, e[ensemble[[2]], j][ind_diff_train_test]] <- 0
-            t <- prop.table.robust(t, 1)
-            e[ensemble[[2]], j][ind_diff_train_test] <- apply(t[ind_diff_train_test, , drop = FALSE], 1, function(p) sample(unlist(lev[[j]]), 1, prob = p))
-            ind_diff_train_test <- which(e[ensemble[[2]], j] == setdiff(factor(e[ensemble[[2]], j]), factor(e[ensemble[[1]], j])))
-          }
-
-          # E_MAP
-
-          ind_diff_train_test <- which(emap[ensemble[[2]], j] == setdiff(factor(emap[ensemble[[2]], j]), factor(emap[ensemble[[1]], j])))
-          while (!length(ind_diff_train_test) == 0) {
-            if (reg_type == "poly") {
-              if (!requireNamespace("nnet", quietly = TRUE)) {
-                if ((types_data[j] == "numeric")) {
-                  t <- tryCatch(predict(link[[j]], newdata = data.frame(x = predictors[, j], stringsAsFactors = TRUE), type = "probs"),
-                    error = function(e) {
-                      predict(link[[j]], newdata = data.frame(x = predictors[, j], stringsAsFactors = TRUE), type = "response")
-                    }
-                  )
-                } else {
-                  t <- prop.table.robust(t(sapply(predictors[, j], function(row) link[[j]][, row])), 1)
-                }
-              } else {
-                if ((types_data[j] == "numeric")) {
-                  t <- tryCatch(predict(link[[j]], newdata = data.frame(x = predictors[, j], stringsAsFactors = TRUE), type = "probs"),
-                    error = function(e) {
-                      predict(link[[j]], newdata = data.frame(x = predictors[, j], stringsAsFactors = TRUE), type = "response")
-                    }
-                  )
-                } else {
-                  t <- prop.table.robust(t(sapply(predictors[, j], function(row) link[[j]][, row])), 1)
-                }
-              }
-            } else {
-              if ((types_data[j] == "numeric")) {
-                t <- tryCatch(predict(link[[j]], newdata = data.frame(x = predictors[, j], stringsAsFactors = TRUE), type = "probs"), error = function(cond) matrix(c(1 - predict(link[[j]], newdata = data.frame(x = predictors[, j], stringsAsFactors = TRUE), type = "response"), predict(link[[j]], newdata = data.frame(x = predictors[, j], stringsAsFactors = TRUE), type = "response")), ncol = 2, dimnames = list(seq(1:n), c(min(levels(factor(e[ensemble[[1]], j]))), max(levels(factor(e[ensemble[[1]], j])))))))
-              } else {
-                t <- prop.table.robust(t(sapply(predictors[, j], function(row) link[[j]][, row])), 1)
-              }
-            }
-            t[ind_diff_train_test, emap[ensemble[[2]], j][ind_diff_train_test]] <- 0
-            t <- prop.table.robust(t, 1)
-            emap[ensemble[[2]], j][ind_diff_train_test] <- apply(t[ind_diff_train_test, , drop = FALSE], 1, function(p) names(which.max(p)))
-            ind_diff_train_test <- which(emap[ensemble[[2]], j] == setdiff(factor(emap[ensemble[[2]], j]), factor(emap[ensemble[[1]], j])))
-          }
-        }
-
-        # Validation
-
-        if (test & validation) {
-          # E
-
-          ind_diff_train_test <- which(e[ensemble[[3]], j] == setdiff(factor(e[ensemble[[3]], j]), factor(e[ensemble[[1]], j])))
-          while (!length(ind_diff_train_test) == 0) {
-            t[ind_diff_train_test, e[ensemble[[3]], j][ind_diff_train_test]] <- 0
-            t <- prop.table.robust(t, 1)
-            e[ensemble[[3]], j][ind_diff_train_test] <- apply(t[ind_diff_train_test, , drop = FALSE], 1, function(p) sample(unlist(lev[[j]]), 1, prob = p))
-            ind_diff_train_test <- which(e[ensemble[[3]], j] == setdiff(factor(e[ensemble[[3]], j]), factor(e[ensemble[[1]], j])))
-          }
-
-          # E_MAP
-
-          ind_diff_train_test <- which(emap[ensemble[[3]], j] == setdiff(factor(emap[ensemble[[3]], j]), factor(emap[ensemble[[1]], j])))
-          while (!length(ind_diff_train_test) == 0) {
-            if (reg_type == "poly") {
-              if (!requireNamespace("nnet", quietly = TRUE)) {
-                if ((types_data[j] == "numeric")) {
-                  t <- predict(link[[j]], newdata = data.frame(x = predictors[, j], stringsAsFactors = TRUE), type = "probs")
-                } else {
-                  t <- prop.table.robust(t(sapply(predictors[, j], function(row) link[[j]][, row])), 1)
-                }
-              } else {
-                if ((types_data[j] == "numeric")) {
-                  t <- predict(link[[j]], newdata = data.frame(x = predictors[, j], stringsAsFactors = TRUE), type = "probs")
-                } else {
-                  t <- prop.table.robust(t(sapply(predictors[, j], function(row) link[[j]][, row])), 1)
-                }
-              }
-            } else {
-              if ((types_data[j] == "numeric")) {
-                t <- tryCatch(predict(link[[j]], newdata = data.frame(x = predictors[, j], stringsAsFactors = TRUE), type = "probs"), error = function(cond) matrix(c(1 - predict(link[[j]], newdata = data.frame(x = predictors[, j], stringsAsFactors = TRUE), type = "response"), predict(link[[j]], newdata = data.frame(x = predictors[, j], stringsAsFactors = TRUE), type = "response")), ncol = 2, dimnames = list(seq(1:n), c(min(levels(factor(e[ensemble[[1]], j]))), max(levels(factor(e[ensemble[[1]], j])))))))
-              } else {
-                t <- prop.table.robust(t(sapply(predictors[, j], function(row) link[[j]][, row])), 1)
-              }
-            }
-            t[ind_diff_train_test, emap[ensemble[[2]], j][ind_diff_train_test]] <- 0
-            t <- prop.table.robust(t, 1)
-            emap[ensemble[[2]], j][ind_diff_train_test] <- apply(t[ind_diff_train_test, , drop = FALSE], 1, function(p) names(which.max(p)))
-            ind_diff_train_test <- which(emap[ensemble[[2]], j] == setdiff(factor(emap[ensemble[[2]], j]), factor(emap[ensemble[[1]], j])))
-          }
         }
       } else {
         # e^j and emap^j for disappearing features

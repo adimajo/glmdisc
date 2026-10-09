@@ -1,8 +1,3 @@
-test_that("prop.table.robust works with 0 values", {
-  set.seed(1)
-  expect_equal(prop.table.robust(matrix(0, ncol = 3, nrow = 1), 1), matrix(1 / 3, ncol = 3, nrow = 1))
-})
-
 test_that("cut_dataset works with only validation", {
   set.seed(1)
   test_de_cut <- cut_dataset(20, c(0.1), test = F, validation = T)

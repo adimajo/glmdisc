@@ -55,4 +55,5 @@ Collate:
     'methods_disc.R'
     'normalizedGini.R'
     'semDiscretization.R'
+    'utils.R'
 Config/roxygen2/version: 8.1.1
