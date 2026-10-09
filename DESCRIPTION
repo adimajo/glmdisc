@@ -16,16 +16,13 @@ Description: A Stochastic-Expectation-Maximization (SEM) algorithm (Celeux et al
 License: GPL (>= 2)
 Encoding: UTF-8
 Imports:
-    caret (>= 6.0-82),
-    dplyr,
-    magrittr,
     gam,
-    nnet,
-    RcppNumerical,
-    methods,
-    MASS,
     graphics,
-    Rcpp (>= 0.12.13)
+    MASS,
+    methods,
+    Rcpp (>= 1.0.7),
+    RcppNumerical,
+    stats
 LinkingTo: Rcpp, RcppEigen, RcppNumerical
 URL: https://adimajo.github.io
 BugReports: https://github.com/adimajo/glmdisc/issues
@@ -34,7 +31,6 @@ Suggests:
     knitr,
     rmarkdown,
     testthat (>= 2.1.0),
-    tibble,
     covr,
     DT
 VignetteBuilder: knitr
