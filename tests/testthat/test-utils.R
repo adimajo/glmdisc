@@ -49,3 +49,12 @@ test_that("bernoulli_loglik counts both classes", {
   # a model that is confidently wrong on negatives must be penalized
   expect_lt(bernoulli_loglik(c(1, 0), c(0.8, 0.99)), bernoulli_loglik(c(1, 0), c(0.8, 0.01)))
 })
+
+test_that("drop_interaction_terms matches whole variable names only", {
+  set.seed(1)
+  terms <- c("V1:V2", "V1:V10", "V10:V12", "V3:V4")
+  expect_equal(drop_interaction_terms(terms, "V1"), c("V10:V12", "V3:V4"))
+  expect_equal(drop_interaction_terms(terms, c("V10", "V3")), "V1:V2")
+  expect_equal(drop_interaction_terms(terms, character(0)), terms)
+  expect_equal(drop_interaction_terms(character(0), "V1"), character(0))
+})

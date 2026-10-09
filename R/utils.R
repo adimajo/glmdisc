@@ -56,3 +56,17 @@ resample_unseen_levels <- function(current, prob, train, target, how = c("sample
 bernoulli_loglik <- function(labels, prob) {
   sum(log(labels * prob + (1 - labels) * (1 - prob)))
 }
+
+# Remove interaction terms ("V1:V2") that involve an excluded main effect
+# ("V1"). Matching is on whole tokens: excluding "V1" must not drop "V10:V12".
+drop_interaction_terms <- function(terms, excluded) {
+  if (length(terms) == 0L || length(excluded) == 0L) {
+    return(terms)
+  }
+  involves_excluded <- vapply(
+    strsplit(terms, ":", fixed = TRUE),
+    function(parts) any(parts %in% excluded),
+    logical(1)
+  )
+  terms[!involves_excluded]
+}

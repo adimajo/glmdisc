@@ -148,17 +148,8 @@ glmdisc <- function(predictors,
       if (sum(tab_vrai) > 0) {
         xInter <- xInter_logit <- sapply(1:nrow(tab_vrai), function(row) paste0("V", tab_vrai[row, "row"], ":V", tab_vrai[row, "col"]))
 
-        if (length(xPrincipal[ejecter]) > 0) {
-          for (l in xPrincipal[ejecter]) {
-            xInter <- xInter[!(xInter %in% (grep(l, xInter, value = TRUE)))]
-          }
-        }
-
-        if (length(xPrincipal[ejecter_logit]) > 0) {
-          for (l in xPrincipal[ejecter_logit]) {
-            xInter_logit <- xInter_logit[!(xInter_logit %in% (grep(l, xInter_logit, value = TRUE)))]
-          }
-        }
+        xInter <- drop_interaction_terms(xInter, xPrincipal[ejecter])
+        xInter_logit <- drop_interaction_terms(xInter_logit, xPrincipal[ejecter_logit])
 
         if (length(xInter) > 0) {
           fmla <- stats::as.formula(paste("~", paste(xPrincipal[!ejecter], collapse = "+"), "+", paste(xInter, collapse = "+")))
@@ -251,11 +242,7 @@ glmdisc <- function(predictors,
       if (sum(delta_new == 1) > 0) {
         xInter_new <- sapply(1:nrow(which(delta_new == 1, arr.ind = TRUE)), function(row) paste0("V", which(delta_new == 1, arr.ind = TRUE)[row, "row"], ":V", which(delta_new == 1, arr.ind = TRUE)[row, "col"]))
         if (exists("ejecter_logit")) {
-          if (length(xPrincipal[ejecter_logit]) > 0) {
-            for (l in xPrincipal[ejecter_logit]) {
-              xInter_new <- xInter_new[!(xInter_new %in% (grep(l, xInter_new, value = TRUE)))]
-            }
-          }
+          xInter_new <- drop_interaction_terms(xInter_new, xPrincipal[ejecter_logit])
           if (length(xInter_new) > 0) {
             fmla_logit_new <- stats::as.formula(paste("~", paste(xPrincipal[!ejecter_logit], collapse = "+"), "+", paste(xInter_new, collapse = "+")))
 
