@@ -10,7 +10,7 @@
 #' @param criterion The criterion ('gini','aic','bic') to use to choose the best discretization scheme among the generated ones (default: 'gini'). Nota Bene: it is best to use 'gini' only when test is set to TRUE and 'aic' or 'bic' when it is not. When using 'aic' or 'bic' with a test set, the likelihood is returned as there is no need to penalize for generalization purposes.
 #' @param iter The number of iterations to do in the SEM protocole (default: 1000).
 #' @param m_start The maximum number of resulting categories for each variable wanted (default: 20).
-#' @param reg_type The model to use between discretized and continuous features (currently, only multinomial logistic regression ('poly') and ordered logistic regression ('polr') are supported ; default: 'poly'). WARNING: 'poly' requires the \code{mnlogit} package, 'polr' requires the \code{MASS} package.
+#' @param reg_type The model linking a continuous feature to its quantized version: multinomial logistic regression ('poly', default; fitted by a dedicated penalized Newton solver) or ordered logistic regression ('polr', \code{\link[MASS]{polr}}; falls back to 'poly' when it cannot be fitted).
 #' @param interact Boolean : True (default) if interaction detection is wanted (Warning: may be very memory/time-consuming).
 #' @param proportions The proportions wanted for the test and validation sets, in this order. Not used when both test and validation are false. Only the first is used when there is only one of either test or validation that is set to TRUE. Produces an error when the sum is greater to one. Default: list(0.2,0.2) so that the training set has 0.6 of the input observations.
 #' @param verbose Print information while fitting (default: FALSE).
@@ -18,7 +18,7 @@
 #' @param fast Deprecated and ignored (sampling is now always vectorized).
 #' @concept SEM Gibbs discretization
 #' @author Adrien Ehrhardt.
-#' @seealso \code{\link{glm}}, \code{\link{multinom}}, \code{\link{polr}}
+#' @seealso \code{\link[stats]{glm}}, \code{\link[MASS]{polr}}
 #' @details
 #' This function finds the most appropriate discretization scheme for logistic regression. When provided with a continuous variable \eqn{X}, it tries to convert it to a categorical variable \eqn{Q} which values uniquely correspond to intervals of the continuous variable \eqn{X}.
 #' When provided with a categorical variable \eqn{X}, it tries to find the best regroupement of its values and subsequently creates categorical variable \eqn{Q}. The goal is to perform supervised learning with logistic regression so that you have to specify a target variable \eqn{Y} denoted by \code{labels}.
@@ -30,11 +30,10 @@
 #' @references
 #' Celeux, G., Chauveau, D., Diebolt, J. (1995), On Stochastic Versions of the EM Algorithm. [Research Report] RR-2514, INRIA. 1995. <inria-00074164>
 #'
-# #' Asad Hasan, Wang Zhiyu and Alireza S. Mahani (2015). mnlogit: Multinomial Logit Model. R package version 1.2.4. \url{https://CRAN.R-project.org/package=mnlogit}
-#'
 #' Agresti, A. (2002) \emph{Categorical Data}. Second edition. Wiley.
 #' @examples
 #' # Simulation of a discretized logit model
+#' set.seed(1)
 #' x <- matrix(runif(300), nrow = 100, ncol = 3)
 #' cuts <- seq(0, 1, length.out = 4)
 #' xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))

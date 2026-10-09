@@ -37,7 +37,7 @@ glmdisc(
 
 \item{m_start}{The maximum number of resulting categories for each variable wanted (default: 20).}
 
-\item{reg_type}{The model to use between discretized and continuous features (currently, only multinomial logistic regression ('poly') and ordered logistic regression ('polr') are supported ; default: 'poly'). WARNING: 'poly' requires the \code{mnlogit} package, 'polr' requires the \code{MASS} package.}
+\item{reg_type}{The model linking a continuous feature to its quantized version: multinomial logistic regression ('poly', default; fitted by a dedicated penalized Newton solver) or ordered logistic regression ('polr', \code{\link[MASS]{polr}}; falls back to 'poly' when it cannot be fitted).}
 
 \item{proportions}{The proportions wanted for the test and validation sets, in this order. Not used when both test and validation are false. Only the first is used when there is only one of either test or validation that is set to TRUE. Produces an error when the sum is greater to one. Default: list(0.2,0.2) so that the training set has 0.6 of the input observations.}
 
@@ -60,6 +60,7 @@ Subsequently, its outputs are: the optimal discretization scheme and the logisti
 }
 \examples{
 # Simulation of a discretized logit model
+set.seed(1)
 x <- matrix(runif(300), nrow = 100, ncol = 3)
 cuts <- seq(0, 1, length.out = 4)
 xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))
@@ -81,11 +82,10 @@ print(sem_disc)
 \references{
 Celeux, G., Chauveau, D., Diebolt, J. (1995), On Stochastic Versions of the EM Algorithm. [Research Report] RR-2514, INRIA. 1995. <inria-00074164>
 
-
 Agresti, A. (2002) \emph{Categorical Data}. Second edition. Wiley.
 }
 \seealso{
-\code{\link{glm}}, \code{\link{multinom}}, \code{\link{polr}}
+\code{\link[stats]{glm}}, \code{\link[MASS]{polr}}
 }
 \author{
 Adrien Ehrhardt.
