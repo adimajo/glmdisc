@@ -1,5 +1,24 @@
 # Internal helpers for glmdisc().
 
+# Remove interaction terms ("V1:V2") that involve an excluded main effect
+# ("V1"). Matching is on whole tokens: excluding "V1" must not drop "V10:V12".
+drop_interaction_terms <- function(terms, excluded) {
+  if (length(terms) == 0L || length(excluded) == 0L) {
+    return(terms)
+  }
+  involves_excluded <- vapply(
+    strsplit(terms, ":", fixed = TRUE),
+    function(parts) any(parts %in% excluded),
+    logical(1)
+  )
+  terms[!involves_excluded]
+}
+
+# Log-likelihood of binary labels given predicted P(y = 1).
+bernoulli_loglik <- function(labels, prob) {
+  sum(log(labels * prob + (1 - labels) * (1 - prob)))
+}
+
 # Row-normalize a probability matrix; rows that are all zero / NaN become
 # uniform (this is what prop.table.robust() did).
 normalize_rows <- function(x) {
@@ -20,53 +39,28 @@ sample_rows <- function(prob) {
   pmin(rowSums(cum < u) + 1L, ncol(prob))
 }
 
-# Make sure that rows of `target` (logical mask over the n observations) only
-# take values that also occur in the training rows `train`.
+# Make sure that held-out rows (those not in `train`) only take values that also occur
+# in the training rows.
 #
-# `current`: factor of length n (current quantization of one feature);
-# `prob`: n x K matrix of probabilities whose colnames are the candidate
-# levels; `how`: sample from (stochastic, e) or take the arg-max (emap).
-# Candidates that never occur in `train` get probability 0 for the offending rows.
-# Returns the updated factor (same levels as `current`).
-resample_unseen_levels <- function(current, prob, train, target, how = c("sample", "map")) {
+# `current`: integer labels of one feature for the n observations; `prob`: n x K matrix
+# of probabilities whose columns correspond to `labels`; `how`: sample from the
+# probabilities (stochastic step) or take the arg-max (MAP). The labels that no training
+# row has get probability 0 for the offending rows; rows left without any mass are
+# treated as uniform over the seen labels. Returns the updated labels.
+resample_unseen_labels <- function(current, prob, labels, train, how = c("sample", "map")) {
   how <- match.arg(how)
-  chr <- as.character(current)
-  seen <- unique(chr[train])
-  bad <- which(target & !(chr %in% seen))
+  seen <- unique(current[train])
+  bad <- which(!train & !(current %in% seen))
   if (length(bad) == 0L) {
     return(current)
   }
+  is_seen <- labels %in% seen
   p <- prob[bad, , drop = FALSE]
-  p[, !(colnames(p) %in% seen)] <- 0
-  p <- normalize_rows(p)
-  # rows with no mass on seen levels (all zero before normalization) are uniform
-  # over all columns by normalize_rows(); restrict them to seen levels
-  empty <- rowSums(p[, colnames(p) %in% seen, drop = FALSE]) == 0
-  if (any(empty)) {
-    p[empty, ] <- 0
-    p[empty, colnames(p) %in% seen] <- 1
-    p <- normalize_rows(p)
-  }
+  p[, !is_seen] <- 0
+  empty <- rowSums(p) == 0 | is.na(rowSums(p))
+  p[empty, ] <- 0
+  p[empty, is_seen] <- 1
   idx <- if (how == "sample") sample_rows(p) else max.col(p, ties.method = "first")
-  chr[bad] <- colnames(p)[idx]
-  factor(chr, levels = levels(current))
-}
-
-# Log-likelihood of binary labels given predicted P(y = 1).
-bernoulli_loglik <- function(labels, prob) {
-  sum(log(labels * prob + (1 - labels) * (1 - prob)))
-}
-
-# Remove interaction terms ("V1:V2") that involve an excluded main effect
-# ("V1"). Matching is on whole tokens: excluding "V1" must not drop "V10:V12".
-drop_interaction_terms <- function(terms, excluded) {
-  if (length(terms) == 0L || length(excluded) == 0L) {
-    return(terms)
-  }
-  involves_excluded <- vapply(
-    strsplit(terms, ":", fixed = TRUE),
-    function(parts) any(parts %in% excluded),
-    logical(1)
-  )
-  terms[!involves_excluded]
+  current[bad] <- labels[idx]
+  current
 }

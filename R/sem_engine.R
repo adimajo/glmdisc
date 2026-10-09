@@ -100,11 +100,9 @@ sem_engine <- function(X, types, y, split, criterion, iter, m_start, reg_type, i
       P <- link_probs(link, x_raw[[j]])
 
       # most probable label, restricted to the labels that training rows get
-      map_j <- resample_unseen_levels(
-        factor(labels_j[max.col(P, ties.method = "first")], levels = labels_j),
-        P, train, !train, "map"
+      map_codes[, j] <- resample_unseen_labels(
+        labels_j[max.col(P, ties.method = "first")], P, labels_j, train, "map"
       )
-      map_codes[, j] <- as.integer(as.character(map_j))
       link$S <- sort(unique(map_codes[train, j]))
 
       # draw e_j from p(e_j | x_j) * p(y | e_j, e_-j)
@@ -112,11 +110,7 @@ sem_engine <- function(X, types, y, split, criterion, iter, m_start, reg_type, i
       current <- contribution[cbind(rows, ci[, j])]
       p1 <- stats::plogis(contribution + (eta - current))
       W <- P * (p1 * y + (1 - p1) * (1 - y))
-      drawn <- resample_unseen_levels(
-        factor(labels_j[sample_rows(W)], levels = labels_j),
-        W, train, !train, "sample"
-      )
-      codes[, j] <- as.integer(as.character(drawn))
+      codes[, j] <- resample_unseen_labels(labels_j[sample_rows(W)], W, labels_j, train, "sample")
       ci[, j] <- match(codes[, j], labels_j)
       eta <- eta - current + contribution[cbind(rows, ci[, j])]
 
