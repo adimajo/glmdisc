@@ -1,7 +1,7 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^codecov\.yml
-^.github/.*$
+^\.github$
 ^docs/.*$
 README.md
 ^CRAN-RELEASE$
