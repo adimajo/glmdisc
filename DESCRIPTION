@@ -30,8 +30,6 @@ LinkingTo: Rcpp, RcppEigen, RcppNumerical
 URL: https://adimajo.github.io
 BugReports: https://github.com/adimajo/glmdisc/issues
 Suggests: 
-    NPflow,
-    Rfast,
     knitr,
     rmarkdown,
     testthat (>= 2.1.0),

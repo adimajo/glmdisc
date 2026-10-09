@@ -42,7 +42,7 @@ glmdisc(
 
 \item{verbose}{Print information while fitting (default: FALSE).}
 
-\item{fast}{Use packages Rfast and NPflow (C++ implementations of sampling functions - somewhat unstable but speeds up by a factor 2 to 3 - default: FALSE).}
+\item{fast}{Deprecated and ignored (sampling is now always vectorized).}
 }
 \description{
 This function discretizes a training set using an SEM-Gibbs based method (see References section).

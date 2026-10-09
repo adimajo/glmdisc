@@ -14,7 +14,7 @@
 #' @param interact Boolean : True (default) if interaction detection is wanted (Warning: may be very memory/time-consuming).
 #' @param proportions The list of the proportions wanted for test and validation set. Not used when both test and validation are false. Only the first is used when there is only one of either test or validation that is set to TRUE. Produces an error when the sum is greater to one. Default: list(0.2,0.2) so that the training set has 0.6 of the input observations.
 #' @param verbose Print information while fitting (default: FALSE).
-#' @param fast Use packages Rfast and NPflow (C++ implementations of sampling functions - somewhat unstable but speeds up by a factor 2 to 3 - default: FALSE).
+#' @param fast Deprecated and ignored (sampling is now always vectorized).
 #' @concept SEM Gibbs discretization
 #' @author Adrien Ehrhardt.
 #' @seealso \code{\link{glm}}, \code{\link{multinom}}, \code{\link{polr}}
@@ -70,7 +70,7 @@ glmdisc <- function(predictors,
   n <- length(labels)
   d <- length(predictors[1, ])
   types_data <- sapply(predictors[1, ], class)
-  fast_packages_installed <- are_fast_packages_installed(verbose = verbose)
+  if (isTRUE(fast)) warning("`fast` is deprecated and ignored: sampling is now always vectorized.", call. = FALSE)
 
   second_argument_checks(types_data, d, interact)
 

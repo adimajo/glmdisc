@@ -339,7 +339,7 @@ test_that("glmdisc works for multi-dimensional mixed data", {
   }
 })
 
-test_that("glmdisc works for multi-dimensional mixed data and fast method", {
+test_that("glmdisc works for multi-dimensional mixed data", {
   set.seed(1)
   x <- matrix(runif(300), nrow = 100, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
@@ -381,8 +381,7 @@ test_that("glmdisc works for multi-dimensional mixed data and fast method", {
       test = test,
       validation = validation,
       criterion = criterion,
-      interact = interact,
-      fast = TRUE
+      interact = interact
     ),
     error = function(e) {
       glmdisc(
@@ -393,8 +392,7 @@ test_that("glmdisc works for multi-dimensional mixed data and fast method", {
         test = test,
         validation = validation,
         criterion = criterion,
-        interact = interact,
-        fast = TRUE
+        interact = interact
       )
     }
   )
@@ -512,4 +510,14 @@ test_that("glmdisc w. polr", {
   y <- rbinom(50, 1, 1 / (1 + exp(-log_odd)))
   sem_disc <- glmdisc(x, y, iter = 15, m_start = 4, test = FALSE, validation = FALSE, criterion = "aic", reg_type = "polr")
   succeed()
+})
+
+test_that("the `fast` argument is deprecated and ignored", {
+  set.seed(1)
+  x <- matrix(runif(200), nrow = 100, ncol = 2)
+  y <- rbinom(100, 1, 0.5)
+  expect_warning(
+    glmdisc(x, y, iter = 5, m_start = 3, test = FALSE, validation = FALSE, criterion = "aic", interact = FALSE, fast = TRUE),
+    "deprecated"
+  )
 })
