@@ -12,13 +12,13 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // predictlogisticRegression
-Eigen::VectorXd predictlogisticRegression(const Eigen::MatrixXd test, const Eigen::VectorXd parameters);
+Eigen::VectorXd predictlogisticRegression(const Eigen::MatrixXd& test, const Eigen::VectorXd& parameters);
 RcppExport SEXP _glmdisc_predictlogisticRegression(SEXP testSEXP, SEXP parametersSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const Eigen::MatrixXd >::type test(testSEXP);
-    Rcpp::traits::input_parameter< const Eigen::VectorXd >::type parameters(parametersSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type test(testSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type parameters(parametersSEXP);
     rcpp_result_gen = Rcpp::wrap(predictlogisticRegression(test, parameters));
     return rcpp_result_gen;
 END_RCPP

@@ -101,3 +101,9 @@ test_that("predict gives NA with a warning for quantized values unseen during tr
   expect_false(anyNA(prediction[!has_dropped_level]))
 })
 
+
+test_that("predictlogisticRegression errors instead of crashing on non-conformable inputs", {
+  set.seed(1)
+  expect_error(predictlogisticRegression(matrix(1, nrow = 3, ncol = 2), c(1, 2, 3)), "Non-conformable")
+  expect_equal(predictlogisticRegression(matrix(0L, nrow = 2, ncol = 1), 1), c(0.5, 0.5))
+})
