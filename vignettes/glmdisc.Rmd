@@ -258,7 +258,7 @@ The `criterion` parameters lets the user choose between standard model selection
 
 The `m_start` parameter controls the maximum number of categories of $Q_j$ for $X_j$ continuous. The SEM algorithm will start with random $Q_j$ taking values in $\{1,m_{\text{start}}\}$. For qualitative features $X_j$, $Q_j$ is initialized with as many values as $X_j$ so that `m_start` has no effect.
 
-The `reg_type` parameter controls the model used to fit $Q_j$ to continuous $X_j$. The default behavior (`reg_type=poly`) uses `multinom` from the `nnet` package which is a polytomous logistic regression (see References section). The other `reg_type` value is `polr` from the `MASS` package which is an ordered logistic regression (simpler to estimate but less flexible as it fits way fewer parameters).
+The `reg_type` parameter controls the model used to fit $Q_j$ to continuous $X_j$. The default behavior (`reg_type="poly"`) is a polytomous (multinomial) logistic regression of $Q_j$ on $X_j$, fit by a dedicated penalized Newton solver that is warm-started at each iteration. The other `reg_type` value is `"polr"`, the ordered logistic regression of `polr` from the `MASS` package (simpler to estimate but less flexible as it fits way fewer parameters; it falls back to the polytomous model when it cannot be fit, e.g. with perfectly separated classes).
 
 Empirical studies show that with a reasonably small training dataset ($\leq 100 000$ rows) and a small `m_start` parameter ($\leq 20$), approximately $500$ to $1500$ iterations are largely sufficient to obtain a satisfactory model $p_\theta(y|q)$.
 
@@ -377,12 +377,12 @@ discretization@parameters
 
 ### The `best.disc` slot
 
-The `best.disc` slot contains all that is needed to reproduce the best discretization scheme obtained by `glmdisc` function: the first element is the best logistic regression model obtained $p_\theta(y|e)$; the second element is its associated "link" function, i.e. either the `multinom` or `polr` functions fit to each continuous features and the contengency tables fit to each quantitative features.
+The `best.disc` slot contains all that is needed to reproduce the best discretization scheme obtained by `glmdisc` function: the first element is the best logistic regression model obtained $p_\theta(y|e)$; the second element is its associated list of "link" functions, one per feature: the polytomous (or ordered) logistic regression of the quantized feature on each continuous feature and the contingency table for each categorical feature; the third element is the formula of the logistic regression.
 ```{r, echo=TRUE}
 discretization@best.disc[[1]]
 
-# The first link function is:
-discretization@best.disc[[2]][[1]]
+# The first link function (the quantized values it can output, and its type) is:
+discretization@best.disc[[2]][[1]][c("type", "S", "relabel")]
 ```
 
 ### The `performance` slot
