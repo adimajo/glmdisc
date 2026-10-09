@@ -321,10 +321,13 @@ for (l in 1:10) {
   y <- rbinom(100, 1, 1 / (1 + exp(-log_odd)))
 
   discretization <- glmdisc(x, y, iter = 50, m_start = 5, test = FALSE, validation = FALSE, criterion = "aic", interact = TRUE)
-  all_formula[[l]] <- discretization@best.disc$formulaOfBbestestLogisticRegression
+  all_formula[[l]] <- discretization@best.disc$formulaOfBestLogisticRegression
 }
+```
 
-# barplot(table(grepl(":",all_formula)),names.arg=c("No interaction","One interaction"),xlim = 2)
+```{r, echo=TRUE}
+# Number of runs (out of 10) in which an interaction was selected
+sum(vapply(all_formula, function(f) grepl(":", paste(deparse(f), collapse = "")), logical(1)))
 ```
 
 Conversely, we can simulate a discrete model with an interaction and report how many times the proposed algorithm detected the right interaction.
@@ -355,10 +358,13 @@ for (l in 1:10) {
   y <- rbinom(1000, 1, 1 / (1 + exp(-log_odd)))
 
   discretization <- glmdisc(x, y, iter = 50, m_start = 5, test = FALSE, validation = FALSE, criterion = "aic", interact = TRUE)
-  all_formula[[l]] <- discretization@best.disc$formulaOfBbestestLogisticRegression
+  all_formula[[l]] <- discretization@best.disc$formulaOfBestLogisticRegression
 }
+```
 
-# barplot(table(grepl(":",all_formula)),names.arg=c("No interaction","One interaction"),xlim = 2)
+```{r, echo=TRUE}
+# Number of runs (out of 10) in which an interaction was selected
+sum(vapply(all_formula, function(f) grepl(":", paste(deparse(f), collapse = "")), logical(1)))
 ```
 
 ### The `parameters` slot
