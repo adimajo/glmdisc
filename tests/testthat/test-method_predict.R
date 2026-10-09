@@ -95,3 +95,11 @@ test_that("predictlogisticRegression errors instead of crashing on non-conformab
   expect_error(predictlogisticRegression(matrix(1, nrow = 3, ncol = 2), c(1, 2, 3)), "Non-conformable")
   expect_equal(predictlogisticRegression(matrix(0L, nrow = 2, ncol = 1), 1), c(0.5, 0.5))
 })
+
+test_that("stats::predict works on a glmdisc object", {
+  set.seed(1)
+  x <- matrix(runif(300), 100, 3)
+  y <- rbinom(100, 1, 0.5)
+  fit <- glmdisc(x, y, iter = 5, m_start = 3, test = FALSE, validation = FALSE, criterion = "aic", interact = FALSE)
+  expect_equal(stats::predict(fit, as.data.frame(x)), predict(fit, as.data.frame(x)))
+})

@@ -16,6 +16,8 @@ methods::setGeneric("predict")
 
 #' @rdname predict
 #' @aliases predict,glmdisc-method
+#' @method predict glmdisc
+#' @export
 #' @param object The S4 discretization object.
 #' @param predictors The test dataframe to discretize and for which we wish to have predictions.
 #' @return A numeric vector with the predicted probability of class 1 for each row of \code{predictors}.
@@ -39,8 +41,10 @@ methods::setGeneric("predict")
 #'   validation = FALSE, criterion = "aic"
 #' )
 #' predict(sem_disc, data.frame(x))
-methods::setMethod("predict", "glmdisc", function(object, predictors, ...) {
+predict.glmdisc <- function(object, predictors, ...) {
   X <- prepare_new_features(object, predictors)
   quantized <- quantized_frame(object@best.disc[[2]], X, object@parameters$model_names)
   as.numeric(suppressWarnings(stats::predict(object@best.disc[[1]], newdata = quantized, type = "response")))
-})
+}
+
+methods::setMethod("predict", "glmdisc", predict.glmdisc)

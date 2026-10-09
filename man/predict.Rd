@@ -3,12 +3,13 @@
 \docType{methods}
 \name{predict}
 \alias{predict}
+\alias{predict.glmdisc}
 \alias{predict,glmdisc-method}
 \title{Prediction on a raw test set of the best logistic regression model on discretized data}
 \usage{
 predict(object, ...)
 
-\S4method{predict}{glmdisc}(object, predictors, ...)
+\method{predict}{glmdisc}(object, predictors, ...)
 }
 \arguments{
 \item{object}{The S4 discretization object.}
