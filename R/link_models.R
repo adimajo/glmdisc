@@ -60,7 +60,7 @@ fit_numeric_link <- function(x, codes, train, labels, na_label, reg_type = "poly
     old <- previous$coef[, match(fit_labels, previous$fit_labels), drop = FALSE]
     start <- old - old[, 1]
   }
-  fit <- fit_multinomial_1d(z, cls - 1L, length(fit_labels), start, ridge = 0.1, maxit = 30L, tol = 1e-6)
+  fit <- fit_multinomial_1d(z, cls - 1L, length(fit_labels), start, ridge = 0.1, maxit = 15L, tol = 1e-3)
   link$coef <- fit$coef
   link
 }
