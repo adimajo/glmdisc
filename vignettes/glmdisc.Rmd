@@ -260,7 +260,7 @@ The `m_start` parameter controls the maximum number of categories of $Q_j$ for $
 
 The `reg_type` parameter controls the model used to fit $Q_j$ to continuous $X_j$. The default behavior (`reg_type="poly"`) is a polytomous (multinomial) logistic regression of $Q_j$ on $X_j$, fit by a dedicated penalized Newton solver that is warm-started at each iteration. The other `reg_type` value is `"polr"`, the ordered logistic regression of `polr` from the `MASS` package (simpler to estimate but less flexible as it fits way fewer parameters; it falls back to the polytomous model when it cannot be fit, e.g. with perfectly separated classes).
 
-Empirical studies show that with a reasonably small training dataset ($\leq 100 000$ rows) and a small `m_start` parameter ($\leq 20$), approximately $500$ to $1500$ iterations are largely sufficient to obtain a satisfactory model $p_\theta(y|q)$.
+The SEM chain is slow to merge levels: on simulated data (3000 observations, 5 features, `m_start = 10`) the test Gini obtained with the BIC criterion keeps improving slowly with the number of iterations (0.720 after 50 iterations, 0.731 after 300, 0.740 after 1000 and 0.743 after 3000), so that about $1000$ iterations are needed to get most of the benefit, while a sweep only takes a few tens of milliseconds (see `inst/benchmarks/convergence.R`). The `patience` argument stops the chain when the criterion has not improved for that many iterations.
 
 ### Internals
 
