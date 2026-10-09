@@ -1,0 +1,101 @@
+glmdisc benchmark: 20 random 70/30 splits per dataset, 300 SEM iterations
+gini = 2*AUC-1 on the held-out 30%; diff_vs_raw = paired difference with the raw logit (mean, standard error)
+
+    dataset           method n_ok gini_mean gini_sd diff_vs_raw diff_se npar
+  sim_steps        logit_raw   20     0.690   0.028       0.000   0.000  6.0
+  sim_steps  logit_quantile5   20     0.679   0.030      -0.011   0.003 21.0
+  sim_steps       logit_mdlp   20     0.731   0.026       0.041   0.004  6.6
+  sim_steps        logit_woe   20     0.729   0.024       0.039   0.004  6.0
+  sim_steps          glmdisc   20     0.712   0.026       0.022   0.005 14.2
+  sim_steps      glmdisc_bic   20     0.718   0.027       0.028   0.005 13.3
+  sim_steps glmdisc_interact   20     0.714   0.032       0.025   0.005 14.1
+ sim_ushape        logit_raw   20     0.083   0.049       0.000   0.000  6.0
+ sim_ushape  logit_quantile5   20     0.723   0.025       0.640   0.013 21.0
+ sim_ushape       logit_mdlp   20     0.758   0.023       0.674   0.013 11.2
+ sim_ushape        logit_woe   20     0.731   0.029       0.648   0.013  6.0
+ sim_ushape          glmdisc   20     0.696   0.034       0.613   0.013 14.4
+ sim_ushape      glmdisc_bic   20     0.691   0.031       0.608   0.013 12.7
+ sim_ushape glmdisc_interact   20     0.701   0.032       0.618   0.015 14.4
+    sim_xor        logit_raw   20    -0.001   0.046       0.000   0.000  6.0
+    sim_xor  logit_quantile5   20    -0.004   0.044      -0.003   0.009 21.0
+    sim_xor       logit_mdlp   20     0.000   0.000       0.001   0.010  1.0
+    sim_xor        logit_woe   20     0.000   0.041       0.001   0.012  6.0
+    sim_xor          glmdisc   20     0.009   0.043       0.009   0.012 12.6
+    sim_xor      glmdisc_bic   20    -0.005   0.047      -0.005   0.007  7.3
+    sim_xor glmdisc_interact   20     0.541   0.033       0.541   0.010 15.9
+     german        logit_raw   20     0.552   0.050       0.000   0.000 49.0
+     german  logit_quantile5   20     0.535   0.052      -0.017   0.005 59.1
+     german       logit_mdlp   20     0.520   0.049      -0.032   0.004 43.5
+     german        logit_woe   20     0.553   0.053       0.000   0.007 20.0
+     german          glmdisc   20     0.529   0.047      -0.024   0.007 38.6
+     german      glmdisc_bic   20     0.522   0.055      -0.031   0.008 32.9
+       pima        logit_raw   20     0.704   0.066       0.000   0.000  8.0
+       pima  logit_quantile5   20     0.647   0.051      -0.058   0.008 29.0
+       pima       logit_mdlp   20     0.633   0.071      -0.071   0.013  8.0
+       pima        logit_woe   20     0.678   0.067      -0.026   0.006  8.0
+       pima          glmdisc   20     0.613   0.088      -0.091   0.010 15.7
+       pima      glmdisc_bic   20     0.635   0.081      -0.069   0.011 12.6
+       pima glmdisc_interact   20     0.584   0.117      -0.120   0.027 22.4
+    default        logit_raw   20     0.896   0.014       0.000   0.000  4.0
+    default  logit_quantile5   20     0.787   0.019      -0.109   0.004 10.0
+    default       logit_mdlp   20     0.869   0.027      -0.027   0.004  5.8
+    default        logit_woe   20     0.864   0.028      -0.032   0.004  4.0
+    default          glmdisc   20     0.857   0.023      -0.039   0.004  8.3
+    default      glmdisc_bic   20     0.861   0.017      -0.035   0.002  7.3
+    default glmdisc_interact   20     0.861   0.025      -0.035   0.004  8.4
+ creditcard        logit_raw   20     0.670   0.042       0.000   0.000 10.0
+ creditcard  logit_quantile5   20     0.687   0.048       0.016   0.009 23.0
+ creditcard       logit_mdlp   20     0.526   0.060      -0.145   0.015  5.6
+ creditcard        logit_woe   20     0.670   0.048       0.000   0.010 10.0
+ creditcard          glmdisc   20     0.667   0.057      -0.004   0.008 16.9
+ creditcard      glmdisc_bic   20     0.689   0.042       0.018   0.005 15.1
+ creditcard glmdisc_interact   20     0.668   0.056      -0.002   0.009 18.4
+ secs
+  0.0
+  0.0
+  6.9
+  6.3
+ 13.1
+ 15.1
+ 15.1
+  0.0
+  0.0
+  9.1
+  8.9
+ 12.3
+ 15.8
+ 18.4
+  0.0
+  0.0
+  4.5
+ 11.0
+ 12.6
+ 16.5
+ 23.0
+  0.1
+  0.1
+  0.4
+  8.1
+ 12.7
+ 15.0
+  0.0
+  0.0
+  0.5
+  6.7
+  3.7
+  4.4
+  5.0
+  0.0
+  0.1
+ 17.7
+  3.0
+ 19.8
+ 23.6
+ 24.4
+  0.0
+  0.0
+  0.5
+  5.9
+  9.6
+ 11.4
+ 12.7
