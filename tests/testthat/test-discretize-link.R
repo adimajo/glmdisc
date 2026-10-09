@@ -1,6 +1,5 @@
-context("test-discretize-link")
-
 test_that("discretize_link works with one-dimensional continuous data", {
+  set.seed(1)
   x <- matrix(runif(40), nrow = 40, ncol = 1)
   cuts <- seq(0, 1, length.out = 4)
   xd <- as.numeric(cut(x, cuts))
@@ -12,6 +11,7 @@ test_that("discretize_link works with one-dimensional continuous data", {
 })
 
 test_that("discretize_link works with multi-dimensional continuous data", {
+  set.seed(1)
   x <- matrix(runif(120), nrow = 40, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))
@@ -28,6 +28,7 @@ test_that("discretize_link works with multi-dimensional continuous data", {
 })
 
 test_that("discretize_link works with one-dimensional categorical data", {
+  set.seed(1)
   x <- matrix(runif(40), nrow = 40, ncol = 1)
   cuts <- seq(0, 1, length.out = 4)
   xd <- as.numeric(cut(x, cuts))
@@ -40,6 +41,7 @@ test_that("discretize_link works with one-dimensional categorical data", {
 })
 
 test_that("discretize_link works with multi-dimensional categorical data", {
+  set.seed(1)
   x <- matrix(runif(120), nrow = 40, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))
@@ -57,6 +59,7 @@ test_that("discretize_link works with multi-dimensional categorical data", {
 })
 
 test_that("discretize_link works with multi-dimensional mixed data", {
+  set.seed(1)
   x <- matrix(runif(120), nrow = 40, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))
@@ -76,6 +79,7 @@ test_that("discretize_link works with multi-dimensional mixed data", {
 })
 
 test_that("discretize_link errors", {
+  set.seed(1)
   skip_if_not_installed("tibble")
   x <- matrix(runif(120), nrow = 40, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)

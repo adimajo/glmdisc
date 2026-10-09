@@ -1,6 +1,5 @@
-context("test-glmdisc")
-
 test_that("glmdisc works for one-dimensional continuous data", {
+  set.seed(1)
   x <- matrix(runif(200), nrow = 200, ncol = 1)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) {
@@ -67,6 +66,7 @@ test_that("glmdisc works for one-dimensional continuous data", {
 })
 
 test_that("glmdisc works for multi-dimensional continuous data", {
+  set.seed(1)
   x <- matrix(runif(120), nrow = 40, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) {
@@ -132,6 +132,7 @@ test_that("glmdisc works for multi-dimensional continuous data", {
 })
 
 test_that("glmdisc works for one-dimensional categorical data", {
+  set.seed(1)
   x <- matrix(runif(600), nrow = 600, ncol = 1)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) {
@@ -189,6 +190,7 @@ test_that("glmdisc works for one-dimensional categorical data", {
 })
 
 test_that("glmdisc works for multi-dimensional categorical data", {
+  set.seed(1)
   x <- matrix(runif(120), nrow = 40, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   cuts2 <- seq(0, 1, length.out = 8)
@@ -264,6 +266,7 @@ test_that("glmdisc works for multi-dimensional categorical data", {
 })
 
 test_that("glmdisc works for multi-dimensional mixed data", {
+  set.seed(1)
   x <- matrix(runif(300), nrow = 100, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) {
@@ -337,6 +340,7 @@ test_that("glmdisc works for multi-dimensional mixed data", {
 })
 
 test_that("glmdisc works for multi-dimensional mixed data and fast method", {
+  set.seed(1)
   x <- matrix(runif(300), nrow = 100, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) {
@@ -407,6 +411,7 @@ test_that("glmdisc works for multi-dimensional mixed data and fast method", {
 })
 
 test_that("glmdisc errors for type of input data", {
+  set.seed(1)
   expect_error(glmdisc("toto", "tztz", iter = 20, m_start = 4, test = FALSE, validation = FALSE, criterion = "aic"))
 
   x <- matrix(runif(120), nrow = 40, ncol = 3)
@@ -431,6 +436,7 @@ test_that("glmdisc errors for type of input data", {
 })
 
 test_that("glmdisc warns for type of input data", {
+  set.seed(1)
   x <- matrix(runif(120), nrow = 40, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))
@@ -461,6 +467,7 @@ test_that("glmdisc warns for type of input data", {
 
 
 test_that("glmdisc m_start > nlevels categorical data", {
+  set.seed(1)
   x <- matrix(runif(120), nrow = 40, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))
@@ -473,6 +480,7 @@ test_that("glmdisc m_start > nlevels categorical data", {
 })
 
 test_that("glmdisc stops early", {
+  set.seed(1)
   x <- matrix(runif(120), nrow = 40, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))
@@ -495,6 +503,7 @@ test_that("glmdisc interaction stopping rules", {
 })
 
 test_that("glmdisc w. polr", {
+  set.seed(1)
   x <- matrix(runif(150), nrow = 50, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))

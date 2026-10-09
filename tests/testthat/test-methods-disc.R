@@ -1,6 +1,5 @@
-context("test-methods-disc")
-
 test_that("show works", {
+  set.seed(1)
   x <- matrix(runif(120), nrow = 40, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))
@@ -12,6 +11,7 @@ test_that("show works", {
 })
 
 test_that("print works", {
+  set.seed(1)
   x <- matrix(runif(120), nrow = 40, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))
@@ -23,6 +23,7 @@ test_that("print works", {
 })
 
 test_that("summary works", {
+  set.seed(1)
   x <- matrix(runif(120), nrow = 40, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))

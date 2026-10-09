@@ -1,4 +1,5 @@
 test_that("plot works", {
+  set.seed(1)
   x <- matrix(runif(100), nrow = 100, ncol = 1)
   cuts <- seq(0, 1, length.out = 4)
   xd <- as.numeric(cut(x, cuts))

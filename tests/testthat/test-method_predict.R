@@ -1,6 +1,5 @@
-context("test-method_predict")
-
 test_that("predict works with continuous data", {
+  set.seed(1)
   x <- matrix(runif(150), nrow = 50, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))
@@ -16,6 +15,7 @@ test_that("predict works with continuous data", {
 })
 
 test_that("predict works with categorical data", {
+  set.seed(1)
   x <- matrix(runif(150), nrow = 50, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))
@@ -31,6 +31,7 @@ test_that("predict works with categorical data", {
 })
 
 test_that("predict errors with other data columns", {
+  set.seed(1)
   x <- matrix(runif(150), nrow = 50, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))
@@ -42,6 +43,7 @@ test_that("predict errors with other data columns", {
 })
 
 test_that("predict errors with other data types", {
+  set.seed(1)
   x <- matrix(runif(150), nrow = 50, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))
@@ -53,6 +55,7 @@ test_that("predict errors with other data types", {
 })
 
 test_that("predict errors with unseen categorical data", {
+  set.seed(1)
   x <- matrix(runif(150), nrow = 50, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))
@@ -67,6 +70,7 @@ test_that("predict errors with unseen categorical data", {
 })
 
 test_that("predict warns when removing levels", {
+  set.seed(1)
   x <- matrix(runif(150), nrow = 50, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))
