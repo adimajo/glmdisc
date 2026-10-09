@@ -2,7 +2,7 @@
 % Please edit documentation in R/methods_disc.R
 \name{print.glmdisc}
 \alias{print.glmdisc}
-\title{Print for the glmdisc class.}
+\title{Print for the glmdisc class}
 \usage{
 \method{print}{glmdisc}(x, ...)
 }
@@ -12,5 +12,5 @@
 \item{...}{Other objects passed to print}
 }
 \description{
-Print for the glmdisc class.
+Print for the glmdisc class
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/semDiscretization.R
 \name{glmdisc}
 \alias{glmdisc}
-\title{Model-based multivariate discretization for logistic regression.}
+\title{Model-based multivariate discretization for logistic regression}
 \usage{
 glmdisc(
   predictors,
@@ -55,7 +55,7 @@ Second-order interactions can be searched through the optional \code{interaction
 \details{
 This function finds the most appropriate discretization scheme for logistic regression. When provided with a continuous variable \eqn{X}, it tries to convert it to a categorical variable \eqn{Q} which values uniquely correspond to intervals of the continuous variable \eqn{X}.
 When provided with a categorical variable \eqn{X}, it tries to find the best regroupement of its values and subsequently creates categorical variable \eqn{Q}. The goal is to perform supervised learning with logistic regression so that you have to specify a target variable \eqn{Y} denoted by \code{labels}.
-The ‘‘discretization'' process, i.e. the transformation of \eqn{X} to \eqn{Q} is done so as to achieve the best logistic regression model \eqn{p(y|e;\theta)}. It can be interpreted as a special case feature engineering algorithm.
+The "discretization" process, i.e. the transformation of \eqn{X} to \eqn{Q} is done so as to achieve the best logistic regression model \eqn{p(y|e;\theta)}. It can be interpreted as a special case feature engineering algorithm.
 Subsequently, its outputs are: the optimal discretization scheme and the logistic regression model associated with it. We also provide the parameters that were provided to the function and the evolution of the criterion with respect to the algorithm's iterations.
 }
 \examples{

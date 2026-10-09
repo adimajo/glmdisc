@@ -23,7 +23,7 @@ multinomial_1d_probs <- function(z, coef) {
     .Call(`_glmdisc_multinomial_1d_probs`, z, coef)
 }
 
-#' Predicting using a logistic regression fitted with RCpp::fast_LR.
+#' Predicting using a logistic regression fitted with RCpp::fast_LR
 #' 
 #' This function returns a numeric vector containing the probability of each observation of being of class 1 given a vector of logistic
 #' regression parameters (usually estimated through RCpp::fast_LR).

@@ -2,7 +2,7 @@
 % Please edit documentation in R/RcppExports.R
 \name{predictlogisticRegression}
 \alias{predictlogisticRegression}
-\title{Predicting using a logistic regression fitted with RCpp::fast_LR.}
+\title{Predicting using a logistic regression fitted with RCpp::fast_LR}
 \usage{
 predictlogisticRegression(test, parameters)
 }

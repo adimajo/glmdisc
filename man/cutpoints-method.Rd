@@ -4,7 +4,7 @@
 \name{cutpoints}
 \alias{cutpoints}
 \alias{cutpoints,glmdisc-method}
-\title{Obtaining the cutpoints and / or regroupments of a discretization.}
+\title{Obtaining the cutpoints and / or regroupments of a discretization}
 \usage{
 cutpoints(object)
 

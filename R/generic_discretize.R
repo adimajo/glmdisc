@@ -1,7 +1,7 @@
 #' @include allClasses.R
 NULL
 
-#' Prediction on a raw test set of the best logistic regression model on discretized / grouped data.
+#' Prediction on a raw test set of the best logistic regression model on discretized / grouped data
 #'
 #' This function discretizes a user-provided test dataset given a discretization scheme provided by an S4 \code{\link{glmdisc}} object.
 #' It then applies the learnt logistic regression model and outputs its prediction (see \code{\link{predict.glm}}).

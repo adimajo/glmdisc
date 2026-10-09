@@ -7,7 +7,7 @@ methods::setMethod(
 )
 
 
-#' Print for the glmdisc class.
+#' Print for the glmdisc class
 #' @rdname print
 #' @method print glmdisc
 #' @export
@@ -18,7 +18,7 @@ print.glmdisc <- function(x, ...) {
 }
 
 
-#' Summary for the glmdisc class.
+#' Summary for the glmdisc class
 #' @rdname summary
 #' @method summary glmdisc
 #' @export
