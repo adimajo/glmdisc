@@ -5,7 +5,7 @@
 #' Second-order interactions can be searched through the optional \code{interaction} parameter using a Metropolis-Hastings algorithm (see References section).
 #' @param predictors The matrix array containing the numerical or factor attributes to discretize.
 #' @param labels The actual labels of the provided predictors (0/1).
-#' @param validation Boolean : True if the algorithm should use predictors to construct a validation set on which to search for the best discretization scheme using the provided criterion (default: TRUE).
+#' @param validation Boolean : True if the algorithm should use predictors to construct a validation set on which to search for the best discretization scheme using the provided criterion (default: TRUE). The coefficients of the final logistic regression are then estimated on the training and validation sets together.
 #' @param test Boolean : True if the algorithm should use predictors to construct a test set on which to calculate the provided criterion using the best discretization scheme (chosen thanks to the provided criterion on either the test set (if true) or the training set (otherwise)) (default: TRUE).
 #' @param criterion The criterion ('gini','aic','bic') to use to choose the best discretization scheme among the generated ones (default: 'gini'). Nota Bene: it is best to use 'gini' only when test is set to TRUE and 'aic' or 'bic' when it is not. When using 'aic' or 'bic' with a test set, the likelihood is returned as there is no need to penalize for generalization purposes.
 #' @param iter The number of iterations to do in the SEM protocole (default: 1000).
@@ -94,7 +94,10 @@ glmdisc <- function(predictors,
   )
   quantized$labels <- labels
   formula_best <- stats::reformulate(terms, response = "labels")
-  best_glm <- suppressWarnings(stats::glm(formula_best, family = stats::binomial(link = "logit"), data = quantized[split$train, , drop = FALSE]))
+  # The quantization was chosen with the training and validation sets; the coefficients of
+  # the final model use both (the test set, if any, is left untouched).
+  fit_rows <- split$train | split$validation
+  best_glm <- suppressWarnings(stats::glm(formula_best, family = stats::binomial(link = "logit"), data = quantized[fit_rows, , drop = FALSE]))
   formula_best <- stats::reformulate(
     c(colnames(X)[varying], paste(colnames(X)[best$pairs[, 1L]], colnames(X)[best$pairs[, 2L]], sep = ":")),
     response = "labels"

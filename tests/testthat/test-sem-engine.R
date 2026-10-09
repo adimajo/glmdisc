@@ -122,3 +122,14 @@ test_that("patience stops the chain once the criterion no longer improves", {
   expect_lt(length(early@performance$criterionEvolution), 60)
   expect_error(glmdisc(data$x, data$y, iter = 5, patience = 0), "patience")
 })
+
+test_that("the final model is fitted on the training and validation sets, not on the test set", {
+  set.seed(1)
+  data <- simulate_intervals(500)
+  with_validation <- glmdisc(data$x, data$y, iter = 5, m_start = 4, test = FALSE, validation = TRUE, proportions = 0.2, interact = FALSE)
+  expect_equal(stats::nobs(with_validation@best.disc[[1]]), 500)
+  with_test <- glmdisc(data$x, data$y, iter = 5, m_start = 4, test = TRUE, validation = TRUE, proportions = c(0.2, 0.2), interact = FALSE)
+  expect_equal(stats::nobs(with_test@best.disc[[1]]), 400)
+  only_test <- glmdisc(data$x, data$y, iter = 5, m_start = 4, test = TRUE, validation = FALSE, proportions = 0.2, criterion = "aic", interact = FALSE)
+  expect_equal(stats::nobs(only_test@best.disc[[1]]), 400)
+})
