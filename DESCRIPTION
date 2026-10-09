@@ -43,6 +43,7 @@ Collate:
     'allClasses.R'
     'cut.dataset.R'
     'discretize.link.R'
+    'features.R'
     'generic_cutpoints.R'
     'generic_discretize.R'
     'glmdisc.R'
