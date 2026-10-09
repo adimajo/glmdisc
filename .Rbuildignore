@@ -2,7 +2,9 @@
 ^\.Rproj\.user$
 ^codecov\.yml$
 ^\.github$
-^docs/.*$
+^docs$
+^pkgdown$
+^_pkgdown\.yml$
 README.md
 ^CRAN-RELEASE$
 cran-comments.md
