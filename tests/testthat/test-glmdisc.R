@@ -1,4 +1,3 @@
-
 test_that("glmdisc works for one-dimensional continuous data", {
   set.seed(1)
   x <- matrix(runif(200), nrow = 200, ncol = 1)

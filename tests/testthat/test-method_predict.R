@@ -1,4 +1,3 @@
-
 test_that("predict works with continuous data", {
   set.seed(1)
   x <- matrix(runif(150), nrow = 50, ncol = 3)

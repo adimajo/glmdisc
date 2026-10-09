@@ -1,4 +1,3 @@
-
 test_that("show works", {
   set.seed(1)
   x <- matrix(runif(120), nrow = 40, ncol = 3)
