@@ -28,15 +28,15 @@ Imports:
 LinkingTo: Rcpp, RcppEigen, RcppNumerical
 URL: https://adimajo.github.io
 BugReports: https://github.com/adimajo/glmdisc/issues
-Suggests: 
-    nnet,
-    knitr,
-    rmarkdown,
-    testthat (>= 3.0.0),
+Suggests:
     covr,
-    DT
+    DT,
+    knitr,
+    nnet,
+    rmarkdown,
+    testthat (>= 3.0.0)
 VignetteBuilder: knitr
-Collate: 
+Collate:
     'RcppExports.R'
     'allClasses.R'
     'cut.dataset.R'
