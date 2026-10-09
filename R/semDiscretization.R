@@ -228,9 +228,12 @@ glmdisc <- function(predictors,
     } else if ((criterion == "aic") && (validation == FALSE)) {
       criterion_iter[[i]] <- 2 * model_reglog$loglikelihood - 2 * length(model_reglog$coefficients)
     } else if ((criterion == "bic") && (validation == FALSE)) {
-      criterion_iter[[i]] <- 2 * model_reglog$loglikelihood - log(length(ensemble[[1]])) * length(model_reglog$coefficients)
+      criterion_iter[[i]] <- 2 * model_reglog$loglikelihood - log(sum(ensemble[[1]])) * length(model_reglog$coefficients)
     } else if ((criterion %in% c("aic", "bic")) && (validation == TRUE)) {
-      criterion_iter[[i]] <- sum(log(labels[ensemble[[2]]] * predictlogisticRegression(data_logit[ensemble[[2]], ], model_reglog$coefficients) + (1 - labels[ensemble[[2]]]) * (1 - labels[ensemble[[2]]] * predictlogisticRegression(data_logit[ensemble[[2]], ], model_reglog$coefficients))))
+      criterion_iter[[i]] <- bernoulli_loglik(
+        labels[ensemble[[2]]],
+        predictlogisticRegression(data_logit[ensemble[[2]], ], model_reglog$coefficients)
+      )
     }
 
     if (i == 2 || criterion_iter[[i]] >= criterion_iter[[current_best]]) {

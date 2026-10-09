@@ -42,3 +42,10 @@ test_that("resample_unseen_levels works when the probabilities put no mass on se
   res <- resample_unseen_levels(current, prob, c(TRUE, FALSE), c(FALSE, TRUE), "map")
   expect_equal(as.character(res), c("1", "1"))
 })
+
+test_that("bernoulli_loglik counts both classes", {
+  set.seed(1)
+  expect_equal(bernoulli_loglik(c(1, 0), c(0.8, 0.3)), log(0.8) + log(0.7))
+  # a model that is confidently wrong on negatives must be penalized
+  expect_lt(bernoulli_loglik(c(1, 0), c(0.8, 0.99)), bernoulli_loglik(c(1, 0), c(0.8, 0.01)))
+})

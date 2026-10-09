@@ -51,3 +51,8 @@ resample_unseen_levels <- function(current, prob, train, target, how = c("sample
   chr[bad] <- colnames(p)[idx]
   factor(chr, levels = levels(current))
 }
+
+# Log-likelihood of binary labels given predicted P(y = 1).
+bernoulli_loglik <- function(labels, prob) {
+  sum(log(labels * prob + (1 - labels) * (1 - prob)))
+}
