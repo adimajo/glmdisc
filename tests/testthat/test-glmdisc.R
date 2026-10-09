@@ -1,3 +1,4 @@
+
 test_that("glmdisc works for one-dimensional continuous data", {
   set.seed(1)
   x <- matrix(runif(200), nrow = 200, ncol = 1)
@@ -56,10 +57,7 @@ test_that("glmdisc works for one-dimensional continuous data", {
         sem_disc@parameters$types_data,
         "numeric"
       )
-      expect_s3_class(
-        sem_disc@parameters$encoder,
-        "dummyVars"
-      )
+      expect_s3_class(sem_disc@best.disc[[1]], "glm")
     }
   }
   # }
@@ -124,7 +122,7 @@ test_that("glmdisc works for multi-dimensional continuous data", {
           expect_equal(sem_disc@parameters$interact, interact)
           expect_equal(sem_disc@parameters$reg_type, "poly")
           expect_equal(sem_disc@parameters$types_data, c("numeric", "numeric", "numeric"))
-          expect_s3_class(sem_disc@parameters$encoder, "dummyVars")
+          expect_s3_class(sem_disc@best.disc[[1]], "glm")
         }
       }
     }
@@ -183,7 +181,7 @@ test_that("glmdisc works for one-dimensional categorical data", {
         expect_false(sem_disc@parameters$interact)
         expect_equal(sem_disc@parameters$reg_type, "poly")
         expect_equal(sem_disc@parameters$types_data, "factor")
-        expect_s3_class(sem_disc@parameters$encoder, "dummyVars")
+        expect_s3_class(sem_disc@best.disc[[1]], "glm")
       }
     }
   }
@@ -258,7 +256,7 @@ test_that("glmdisc works for multi-dimensional categorical data", {
           expect_equal(sem_disc@parameters$interact, interact)
           expect_equal(sem_disc@parameters$reg_type, "poly")
           expect_true(all(sem_disc@parameters$types_data == c("factor", "factor", "factor")))
-          expect_s3_class(sem_disc@parameters$encoder, "dummyVars")
+          expect_s3_class(sem_disc@best.disc[[1]], "glm")
         }
       }
     }
@@ -332,7 +330,7 @@ test_that("glmdisc works for multi-dimensional mixed data", {
           expect_equal(sem_disc@parameters$interact, interact)
           expect_equal(sem_disc@parameters$reg_type, "poly")
           expect_true(all(sem_disc@parameters$types_data == c("factor", "factor", "factor", "numeric", "numeric", "numeric")))
-          expect_s3_class(sem_disc@parameters$encoder, "dummyVars")
+          expect_s3_class(sem_disc@best.disc[[1]], "glm")
         }
       }
     }
@@ -405,7 +403,7 @@ test_that("glmdisc works for multi-dimensional mixed data", {
   expect_equal(sem_disc@parameters$interact, interact)
   expect_equal(sem_disc@parameters$reg_type, "poly")
   expect_true(all(sem_disc@parameters$types_data == c("factor", "factor", "factor", "numeric", "numeric", "numeric")))
-  expect_s3_class(sem_disc@parameters$encoder, "dummyVars")
+  expect_s3_class(sem_disc@best.disc[[1]], "glm")
 })
 
 test_that("glmdisc errors for type of input data", {
@@ -429,8 +427,8 @@ test_that("glmdisc errors for type of input data", {
 
   x <- data.frame(x)
   x[, 1] <- c(rep(1:3, 40 %/% 3), rep(1, 40 - 3 * (40 %/% 3)))
-  x[, 1] <- as.integer(x[, 1])
-  expect_error(glmdisc(x, y, iter = 15, m_start = 4, test = FALSE, validation = FALSE, criterion = "aic"))
+  x[, 1] <- as.Date("2020-01-01") + seq_len(nrow(x))
+  expect_error(glmdisc(x, y, iter = 15, m_start = 4, test = FALSE, validation = FALSE, criterion = "aic"), "Unsupported data types")
 })
 
 test_that("glmdisc warns for type of input data", {

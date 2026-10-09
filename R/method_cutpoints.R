@@ -31,7 +31,13 @@ methods::setMethod("cutpoints", methods::signature(object = "glmdisc"), function
   cutpoints <- list()
 
   for (j in which(object@parameters$types_data == "factor")) {
-    cutpoints[[j]] <- apply(prop.table(object@best.disc$bestLinkFunction[[j]], 2), 2, which.max)
+    link <- object@best.disc$bestLinkFunction[[j]]
+    groups <- if (link$type == "constant") {
+      rep(1L, length(object@parameters$factor_levels[[j]]))
+    } else {
+      as.integer(link$relabel[as.character(link_map(link, seq_along(object@parameters$factor_levels[[j]])))])
+    }
+    cutpoints[[j]] <- stats::setNames(groups, object@parameters$factor_levels[[j]])
   }
 
   for (j in which(object@parameters$types_data == "numeric")) {

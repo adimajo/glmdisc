@@ -40,7 +40,7 @@ if (!isGeneric("plot")) {
 #'   validation = FALSE, criterion = "aic"
 #' )
 #' plot(sem_disc)
-plot.glmdisc <- function(x) {
+plot.glmdisc <- function(x, y, ...) {
   # Graph 1 : ROC CURVE
   glm_simple_roc <- simple_roc(x@disc.data$labels, predict(x, x@cont.data[, -ncol(x@cont.data), drop = FALSE]))
 

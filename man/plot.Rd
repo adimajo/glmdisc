@@ -8,9 +8,9 @@
 \alias{plot,glmdisc,missing-method}
 \title{Plots for the discretized / grouped data.}
 \usage{
-plot.glmdisc(x)
+plot.glmdisc(x, y, ...)
 
-\S4method{plot}{glmdisc,missing}(x)
+\S4method{plot}{glmdisc,missing}(x, y, ...)
 }
 \arguments{
 \item{x}{The S4 \code{\link{glmdisc}} object to plot.}

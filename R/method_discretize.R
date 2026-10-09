@@ -27,5 +27,5 @@ NULL
 #' )
 #' discretize(sem_disc, data.frame(x))
 methods::setMethod("discretize", methods::signature(object = "glmdisc"), function(object, data) {
-  discretize_link(object@best.disc[[2]], data, object@parameters$m_start)
+  discretize_link(object@best.disc[[2]], prepare_new_features(object, data))
 })

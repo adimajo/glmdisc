@@ -1,3 +1,4 @@
+
 test_that("show works", {
   set.seed(1)
   x <- matrix(runif(120), nrow = 40, ncol = 3)
@@ -31,5 +32,5 @@ test_that("summary works", {
   log_odd <- rowSums(t(sapply(seq_along(xd[, 1]), function(row_id) sapply(seq_along(xd[row_id, ]), function(element) theta[xd[row_id, element], element]))))
   y <- rbinom(40, 1, 1 / (1 + exp(-log_odd)))
   sem_disc <- glmdisc(x, y, iter = 15, m_start = 4, test = FALSE, validation = FALSE, criterion = "aic")
-  expect_type(summary(sem_disc), "character")
+  expect_s3_class(summary(sem_disc), "summary.glm")
 })

@@ -12,7 +12,7 @@
 #' @param m_start The maximum number of resulting categories for each variable wanted (default: 20).
 #' @param reg_type The model to use between discretized and continuous features (currently, only multinomial logistic regression ('poly') and ordered logistic regression ('polr') are supported ; default: 'poly'). WARNING: 'poly' requires the \code{mnlogit} package, 'polr' requires the \code{MASS} package.
 #' @param interact Boolean : True (default) if interaction detection is wanted (Warning: may be very memory/time-consuming).
-#' @param proportions The list of the proportions wanted for test and validation set. Not used when both test and validation are false. Only the first is used when there is only one of either test or validation that is set to TRUE. Produces an error when the sum is greater to one. Default: list(0.2,0.2) so that the training set has 0.6 of the input observations.
+#' @param proportions The proportions wanted for the test and validation sets, in this order. Not used when both test and validation are false. Only the first is used when there is only one of either test or validation that is set to TRUE. Produces an error when the sum is greater to one. Default: list(0.2,0.2) so that the training set has 0.6 of the input observations.
 #' @param verbose Print information while fitting (default: FALSE).
 #' @param fast Deprecated and ignored (sampling is now always vectorized).
 #' @concept SEM Gibbs discretization
@@ -24,7 +24,6 @@
 #' The ‘‘discretization'' process, i.e. the transformation of \eqn{X} to \eqn{Q} is done so as to achieve the best logistic regression model \eqn{p(y|e;\theta)}. It can be interpreted as a special case feature engineering algorithm.
 #' Subsequently, its outputs are: the optimal discretization scheme and the logistic regression model associated with it. We also provide the parameters that were provided to the function and the evolution of the criterion with respect to the algorithm's iterations.
 #' @importFrom stats predict
-#' @import caret
 #' @importFrom graphics plot
 #' @export
 #' @references
@@ -64,479 +63,84 @@ glmdisc <- function(predictors,
                     proportions = c(0.2, 0.2),
                     verbose = FALSE,
                     fast = FALSE) {
-  first_argument_checks(criterion, labels, predictors, validation, verbose)
-
-  # Calculating lengths n and d and data types
-  n <- length(labels)
-  d <- length(predictors[1, ])
-  types_data <- sapply(predictors[1, ], class)
+  first_argument_checks(criterion, labels, predictors, validation, verbose, reg_type, iter, m_start)
   if (isTRUE(fast)) warning("`fast` is deprecated and ignored: sampling is now always vectorized.", call. = FALSE)
 
-  second_argument_checks(types_data, d, interact)
-
-  noms_colonnes <- colnames(predictors)
-  # Complete rows
-  continu_complete_case <- !is.na(predictors)
-
-  # Initializing list of calculated criterion among which to select the best.
-  criterion_iter <- list(-Inf, -Inf)
-
-  # Obtain training, test and validation datasets.
-  ensemble <- cut_dataset(n, proportions, test = test, validation = validation)
-  ensemble[[1]] <- 1:n %in% ensemble[[1]]
-  ensemble[[2]] <- 1:n %in% ensemble[[2]]
-  ensemble[[3]] <- 1:n %in% ensemble[[3]]
-
-  # Initializing variable Q (discretization of X) at random.
-  e_emap <- initialize_e_emap(n, d, types_data, continu_complete_case, m_start, predictors)
-  e <- apply(e_emap[[1]], 2, factor)
-  emap <- apply(e_emap[[2]], 2, factor)
-
-  # m encodes the number of levels per feature
-  m <- as.vector(apply(e, 2, function(col) nlevels(factor(col))))
-  names(m) <- paste0("V", 1:length(m))
-
-  # Initializing "current" best logistic regression and link functions.
-  current_best <- 1
-  best_reglog <- 0
-  best_link <- 0
-  link <- 0
-  best_formula <- stats::as.formula(paste(
-    "~",
-    paste(colnames(data.frame(as.data.frame(emap, stringsAsFactors = TRUE))),
-      collapse = "+"
-    )
-  ))
-
-
-  # The interaction matrix delta is initialized at random with prob .5
-  if (interact) {
-    init_inter <- initialize_interaction(d, predictors, continu_complete_case, labels, ensemble)
-    delta <- init_inter[[1]]
-    p_delta <- init_inter[[2]]
-    xPrincipal <- init_inter[[3]]
-  }
-
-  # SEM algorithm
-  for (i in 1:iter) {
-    e <- as.data.frame(e, stringsAsFactors = TRUE)
-    emap <- as.data.frame(emap, stringsAsFactors = TRUE)
-    lev <- lapply(e, levels)
-
-    if (sum(sapply(e, nlevels) == 1) == d) {
-      if (i == 2) stop("All variables discretized in one value after one pass: try changing the seed")
-      if (verbose) message("Early stopping rule: all variables discretized in one value")
-      break
-    }
-
-    data <- data.frame(Filter(function(x) (length(unique(x)) > 1), e), labels = labels, stringsAsFactors = TRUE)
-    data_logit <- data.frame(Filter(function(x) (length(unique(x)) > 1), emap), labels = labels, stringsAsFactors = TRUE)
-
-    if (ncol(data_logit) <= 1) {
-      if (i == 2) stop("All variables discretized in one value after one pass: try changing the seed")
-      if (verbose) message("Early stopping rule: all variables discretized in one value")
-      break
-    }
-
-    # ejecter and ejecter_logit encode feature locations of features that have only one levels and are thus excluded from the model
-    if (interact == TRUE) {
-      tab_vrai <- which(delta == 1, arr.ind = TRUE)
-      ejecter_logit <- sapply(1:(ncol(emap)), function(col) length(unique(emap[ensemble[[1]], col])) == 1)
-      ejecter <- sapply(1:(ncol(e)), function(col) length(unique(e[ensemble[[1]], col])) == 1)
-
-      # if there is at least one interaction xInter and xInter_logit encode these features as feature1:feature2
-      if (sum(tab_vrai) > 0) {
-        xInter <- xInter_logit <- sapply(1:nrow(tab_vrai), function(row) paste0("V", tab_vrai[row, "row"], ":V", tab_vrai[row, "col"]))
-
-        xInter <- drop_interaction_terms(xInter, xPrincipal[ejecter])
-        xInter_logit <- drop_interaction_terms(xInter_logit, xPrincipal[ejecter_logit])
-
-        if (length(xInter) > 0) {
-          fmla <- stats::as.formula(paste("~", paste(xPrincipal[!ejecter], collapse = "+"), "+", paste(xInter, collapse = "+")))
-        } else {
-          fmla <- stats::as.formula(paste("~", paste(xPrincipal[!ejecter], collapse = "+")))
-        }
-
-        if (length(xInter_logit) > 0) {
-          fmla_logit <- stats::as.formula(paste("~", paste(xPrincipal[!ejecter_logit], collapse = "+"), "+", paste(xInter_logit, collapse = "+")))
-        } else {
-          fmla_logit <- stats::as.formula(paste("~", paste(xPrincipal[!ejecter_logit], collapse = "+")))
-        }
-
-        fmla_encoder <- dummyVars(fmla, data[, -ncol(data), drop = FALSE], fullRank = FALSE, sep = "_")
-        fmla_logit_encoder <- dummyVars(fmla_logit, data_logit[, -ncol(data_logit), drop = FALSE], fullRank = FALSE, sep = "_")
-
-        data <- predict(object = fmla_encoder, newdata = data[, -ncol(data), drop = FALSE])
-        data_logit <- predict(object = fmla_logit_encoder, newdata = data_logit[, -ncol(data_logit), drop = FALSE])
-
-        model_reglog <- RcppNumerical::fastLR(data_logit[ensemble[[1]], ], labels[ensemble[[1]]])
-
-        logit <- RcppNumerical::fastLR(data[ensemble[[1]], ], labels[ensemble[[1]]])
-      } else {
-        # TODO : warmup starting values for logit coefficients
-        fmla <- stats::as.formula(paste("~", paste(xPrincipal[!ejecter], collapse = "+")))
-        fmla_logit <- stats::as.formula(paste("~", paste(xPrincipal[!ejecter_logit], collapse = "+")))
-
-        fmla_encoder <- dummyVars(fmla, data[, -ncol(data), drop = FALSE], fullRank = FALSE, sep = "_")
-        fmla_logit_encoder <- dummyVars(fmla_logit, data_logit[, -ncol(data_logit), drop = FALSE], fullRank = FALSE, sep = "_")
-
-        data <- predict(object = fmla_encoder, newdata = data[, -ncol(data), drop = FALSE])
-        data_logit <- predict(object = fmla_logit_encoder, newdata = data_logit[, -ncol(data_logit), drop = FALSE])
-
-        model_reglog <- RcppNumerical::fastLR(data_logit[ensemble[[1]], ], labels[ensemble[[1]]])
-
-        logit <- RcppNumerical::fastLR(data[ensemble[[1]], ], labels[ensemble[[1]]])
-      }
-    } else {
-      fmla <- stats::as.formula(paste("~", paste(colnames(data[, -ncol(data), drop = FALSE]), collapse = "+")))
-      fmla_logit <- stats::as.formula(paste("~", paste(colnames(data_logit[, -ncol(data_logit), drop = FALSE]), collapse = "+")))
-
-      fmla_encoder <- dummyVars(fmla,
-        data[, -ncol(data), drop = FALSE],
-        fullRank = FALSE,
-        sep = "_"
-      )
-      fmla_logit_encoder <- dummyVars(fmla_logit,
-        data_logit[, -ncol(data_logit), drop = FALSE],
-        fullRank = FALSE,
-        sep = "_"
-      )
-
-      data <- predict(object = fmla_encoder, newdata = data[, -ncol(data), drop = FALSE])
-
-      data_logit <- predict(object = fmla_logit_encoder, newdata = data_logit[, -ncol(data_logit), drop = FALSE])
-
-      model_reglog <- RcppNumerical::fastLR(data_logit[ensemble[[1]], ], labels[ensemble[[1]]])
-
-      logit <- RcppNumerical::fastLR(data[ensemble[[1]], ], labels[ensemble[[1]]])
-    }
-
-    # Calculate current performance and update (if better than previous best) current best model.
-    if ((criterion == "gini") && (validation == FALSE)) {
-      criterion_iter[[i]] <- normalizedGini(labels[ensemble[[1]]], predictlogisticRegression(data_logit[ensemble[[1]], ], model_reglog$coefficients))
-    } else if ((criterion == "gini") && (validation == TRUE)) {
-      criterion_iter[[i]] <- normalizedGini(labels[ensemble[[2]]], predictlogisticRegression(data_logit[ensemble[[2]], ], model_reglog$coefficients))
-    } else if ((criterion == "aic") && (validation == FALSE)) {
-      criterion_iter[[i]] <- 2 * model_reglog$loglikelihood - 2 * length(model_reglog$coefficients)
-    } else if ((criterion == "bic") && (validation == FALSE)) {
-      criterion_iter[[i]] <- 2 * model_reglog$loglikelihood - log(sum(ensemble[[1]])) * length(model_reglog$coefficients)
-    } else if ((criterion %in% c("aic", "bic")) && (validation == TRUE)) {
-      criterion_iter[[i]] <- bernoulli_loglik(
-        labels[ensemble[[2]]],
-        predictlogisticRegression(data_logit[ensemble[[2]], ], model_reglog$coefficients)
-      )
-    }
-
-    if (i == 2 || criterion_iter[[i]] >= criterion_iter[[current_best]]) {
-      best_reglog <- model_reglog
-      best_link <- link
-      current_best <- i
-      best_formula <- fmla_logit
-    }
-
-    if (interact == TRUE) {
-      p_delta_transition <- abs(delta - p_delta)
-      pq <- sample(1:d^2, prob = prop.table(t(as.matrix(as.vector(p_delta_transition))), 1), size = 1)
-      delta_new <- delta
-      delta_new[pq] <- 1 - delta_new[pq]
-      if (sum(delta_new == 1) > 0) {
-        xInter_new <- sapply(1:nrow(which(delta_new == 1, arr.ind = TRUE)), function(row) paste0("V", which(delta_new == 1, arr.ind = TRUE)[row, "row"], ":V", which(delta_new == 1, arr.ind = TRUE)[row, "col"]))
-        if (exists("ejecter_logit")) {
-          xInter_new <- drop_interaction_terms(xInter_new, xPrincipal[ejecter_logit])
-          if (length(xInter_new) > 0) {
-            fmla_logit_new <- stats::as.formula(paste("~", paste(xPrincipal[!ejecter_logit], collapse = "+"), "+", paste(xInter_new, collapse = "+")))
-
-            fmla_logit_new_encoder <- dummyVars(fmla_logit_new, emap, fullRank = FALSE, sep = "_")
-
-            data_logit_new <- predict(object = fmla_logit_new_encoder, newdata = emap)
-          } else {
-            fmla_logit_new <- stats::as.formula(paste("~", paste(xPrincipal[!ejecter_logit], collapse = "+")))
-
-            fmla_logit_new_encoder <- dummyVars(fmla_logit_new, emap, fullRank = FALSE, sep = "_")
-
-            data_logit_new <- predict(object = fmla_logit_new_encoder, newdata = emap)
-          }
-        } else {
-          fmla_logit_new <- stats::as.formula(paste("~", paste(xPrincipal, collapse = "+"), "+", paste(xInter_new, collapse = "+")))
-
-          fmla_logit_new_encoder <- dummyVars(fmla_logit_new, emap, fullRank = FALSE, sep = "_")
-
-          data_logit_new <- predict(object = fmla_logit_new_encoder, newdata = emap)
-        }
-      } else {
-        if (exists("ejecter_logit")) {
-          fmla_logit_new <- stats::as.formula(paste("~", paste(xPrincipal[!ejecter_logit], collapse = "+")))
-
-          fmla_logit_new_encoder <- dummyVars(fmla_logit_new, emap, fullRank = FALSE, sep = "_")
-
-          data_logit_new <- predict(object = fmla_logit_new_encoder, newdata = emap)
-        } else {
-          fmla_logit_new <- stats::as.formula(paste("~", paste(xPrincipal, collapse = "+")))
-
-          fmla_logit_new_encoder <- dummyVars(fmla_logit_new, emap, fullRank = FALSE, sep = "_")
-
-          data_logit_new <- predict(object = fmla_logit_new_encoder, newdata = emap)
-        }
-      }
-
-      new_logit <- RcppNumerical::fastLR(data_logit_new[ensemble[[1]], ], labels[ensemble[[1]]])
-      alpha <- exp(2 * new_logit$loglikelihood - log(sum(ensemble[[1]])) * length(new_logit$coefficients) - (2 * model_reglog$loglikelihood - log(sum(ensemble[[1]])) * length(model_reglog$coefficients))) * (p_delta_transition[pq]) / (1 - p_delta_transition[pq])
-
-      if (pq %% d == 0) {
-        var_interact <- c(noms_colonnes[pq %/% d], noms_colonnes[d])
-      } else {
-        var_interact <- c(noms_colonnes[pq %/% d + 1], noms_colonnes[pq %% d])
-      }
-
-      if (verbose) message("Current interaction being tested is between variables ", var_interact[1], " and ", var_interact[2], " with a probability of acceptance of ", alpha)
-      if (sample(c(TRUE, FALSE), size = 1, prob = c(min(alpha, 1), 1 - min(alpha, 1)))) {
-        delta <- delta_new
-      }
-    }
-
-    # Initialization of link function
-    link <- list()
-    lev_1 <- lev
-    m <- sapply(e, nlevels)
-
-    # Update E^j with j chosen at random
-    for (j in sample(1:d)) {
-      # p(e^j | x^j) training
-      if (length(unique(e[continu_complete_case[, j] & ensemble[[1]], j])) > 1) {
-        if (sum(lapply(lapply(1:d, function(j) !lev_1[[j]][[1]] %in% lev[[j]]), sum) > 0) > 0) {
-          e[, which(lapply(lapply(1:d, function(j) !lev_1[[j]][[1]] %in% lev[[j]]), sum) > 0)] <- sapply(which(lapply(lapply(1:d, function(j) !lev_1[[j]][[1]] %in% lev[[j]]), sum) > 0), function(col) factor(e[, col], levels = lev_1[[col]][[1]]))
-        }
-
-        # Polytomic or ordered logistic regression
-        if ((reg_type == "poly") & (types_data[j] == "numeric")) {
-          link[[j]] <- suppressWarnings(nnet::multinom(e ~ x,
-            data = data.frame(
-              e = e[continu_complete_case[, j] & ensemble[[1]], j],
-              x = predictors[continu_complete_case[, j] & ensemble[[1]], j],
-              stringsAsFactors = TRUE
-            ),
-            start = link[[j]]$coefficients,
-            trace = FALSE,
-            Hess = FALSE,
-            maxit = 50
-          ))
-        } else if (types_data[j] == "numeric") {
-          if (exists("link[[j]]$weights")) {
-            link[[j]] <- MASS::polr(e ~ x, data = data.frame(e = factor(as.numeric(ordered(e[continu_complete_case[, j] & ensemble[[1]], j], levels = names(sort(unlist(by(predictors[continu_complete_case[, j] & ensemble[[1]], j], e[continu_complete_case[, j] & ensemble[[1]], j], mean)))))), ordered = T), x = predictors[continu_complete_case[, j] & ensemble[[1]], j], stringsAsFactors = TRUE), Hess = FALSE, model = FALSE, weights = link[[j]]$weights)
-          } else if (nlevels(as.factor(e[continu_complete_case[ensemble[[1]], j], ][ensemble[[1]], j])) > 2) {
-            link[[j]] <- MASS::polr(e ~ x, data = data.frame(e = factor(as.numeric(ordered(e[continu_complete_case[, j] & ensemble[[1]], j], levels = names(sort(unlist(by(predictors[continu_complete_case[, j] & ensemble[[1]], j], e[continu_complete_case[, j] & ensemble[[1]], j], mean)))))), ordered = T), x = predictors[continu_complete_case[, j] & ensemble[[1]], j], stringsAsFactors = TRUE), Hess = FALSE, model = FALSE)
-          } else {
-            link[[j]] <- suppressWarnings(stats::glm(e ~ x, data = data.frame(e = factor(e[continu_complete_case[, j] & ensemble[[1]], j]), x = predictors[continu_complete_case[, j] & ensemble[[1]], j], stringsAsFactors = TRUE), family = stats::binomial(link = "logit"), model = FALSE))
-          }
-        }
-      } else {
-        link[[j]] <- NA
-      }
-
-      # p(y|e^j,e^-j) calculation
-      if ((m[j]) > 1) {
-        y_p <- array(0, c(n, (m[j])))
-        levels_to_sample <- lev[[j]]
-
-        for (k in 1:length(levels_to_sample)) {
-          modalites_k <- data
-
-          if (j > 1) {
-            modalites_k[, ((3 - j + sum((m[1:(j - 1)]))):(1 - j + sum((m[1:j]))))] <- matrix(0, nrow = n, ncol = m[j] - 1)
-          } else {
-            modalites_k[, (2:((m[1])))] <- matrix(0, nrow = n, ncol = (m[j]) - 1)
-          }
-
-          if (paste0("V", j, "_", as.numeric(levels_to_sample[k])) %in% colnames(data)) {
-            modalites_k[, paste0("V", j, "_", as.numeric(levels_to_sample[k]))] <- rep(1, n)
-          }
-
-          p <- predictlogisticRegression(modalites_k, logit$coefficients)
-
-          y_p[, k] <- (labels * p + (1 - labels) * (1 - p))
-        }
-
-        # p(e^j|reste) calculation
-        if ((types_data[j] == "numeric")) {
-          t <- tryCatch(predict(link[[j]], newdata = data.frame(x = unlist(unname(c(predictors[continu_complete_case[, j], , drop = FALSE][, j, drop = FALSE]))), stringsAsFactors = TRUE), type = "probs"),
-            error = function(e) {
-              predict(link[[j]], newdata = data.frame(x = unlist(unname(c(predictors[continu_complete_case[, j], , drop = FALSE][, j, drop = FALSE]))), stringsAsFactors = TRUE), type = "response")
-            }
-          )
-
-          if (is.vector(t)) {
-            t <- cbind(1 - t, t)
-            colnames(t) <- c("1", "2")
-          }
-
-          if (sum(!continu_complete_case[, j]) > 0) {
-            t_bis <- matrix(NA, nrow = nrow(predictors), ncol = ncol(t) + 1)
-            t_bis[continu_complete_case[, j], 1:ncol(t)] <- t
-            t_bis[continu_complete_case[, j], ncol(t) + 1] <- 0
-            t_bis[!continu_complete_case[, j], ] <- t(matrix(c(rep(0, ncol(t)), 1), nrow = ncol(t) + 1, ncol = sum(!continu_complete_case[, j])))
-            colnames(t_bis) <- c(colnames(t), m_start + 1)
-            t <- t_bis
-          }
-        } else {
-          link[[j]] <- table(e[ensemble[[1]], j], predictors[ensemble[[1]], j])
-          t <- normalize_rows(t(link[[j]])[as.integer(predictors[, j]), , drop = FALSE])
-        }
-
-        # Updating emap^j: MAP of p(e^j | x^j)
-        t_link <- t
-        emap_j <- colnames(t_link)[max.col(t_link, ties.method = "first")]
-
-        # Updating e^j: draw from p(e^j | x^j) * p(y | e^j, e^-j)
-        t <- normalize_rows(t_link * y_p[, match(colnames(t_link), levels_to_sample), drop = FALSE])
-        e_j <- colnames(t)[sample_rows(t)]
-
-        # Held-out observations (test / validation) must not take values unseen in the training set.
-        held_out <- ensemble[[2]] | ensemble[[3]]
-        e_j <- resample_unseen_levels(factor(e_j, levels = levels_to_sample), t, ensemble[[1]], held_out, "sample")
-        emap_j <- resample_unseen_levels(factor(emap_j, levels = levels_to_sample), t_link, ensemble[[1]], held_out, "map")
-        e[, j] <- as.character(e_j)
-        emap[, j] <- as.character(emap_j)
-
-        if (nlevels(as.factor(e[, j])) > 1) {
-          if (nlevels(as.factor(e[, j])) == m[j]) {
-            if (j > 1) {
-              data[, ((3 - j + sum((m[1:(j - 1)]))):(1 - j + sum((m[1:j]))))] <- stats::model.matrix(stats::as.formula("~e"), data = data.frame("e" = factor(e[, j]), stringsAsFactors = TRUE))[, -1]
-            } else {
-              data[, (2:(m[1]))] <- stats::model.matrix(stats::as.formula("~e"), data = data.frame("e" = factor(e[, j]), stringsAsFactors = TRUE))[, -1]
-            }
-          } else {
-            data[, paste0("V", j, "_", lev[[j]][which(!lev[[j]] %in% levels(as.factor(e[, j])))])] <- matrix(0, nrow = n, ncol = sum(!lev[[j]] %in% levels(as.factor(e[, j]))))
-            data[, paste0("V", j, "_", levels(as.factor(e[, j])))[paste0("V", j, levels(as.factor(e[, j]))) %in% colnames(data)]] <- stats::model.matrix(stats::as.formula("~e[,j]"), data = data.frame(e[, j], stringsAsFactors = TRUE))[, -1]
-          }
-        } else {
-          data[, paste0("V", j, "_", lev[[j]][which(!lev[[j]] %in% levels(as.factor(e[, j])))])] <- matrix(0, nrow = n, ncol = sum(!lev[[j]] %in% levels(as.factor(e[, j]))))
-        }
-      } else {
-        # e^j and emap^j for disappearing features
-        e[, j] <- emap[, j] <- factor(rep(1, n))
-      }
-    }
-    if (verbose) message("Iteration ", i, " ended with a performance of ", criterion, " = ", criterion_iter[[i]])
-  }
-
-  # Output preparation and calculation
-  ## 1st returned object
-  best.disc <- list(bestLogisticRegression = best_reglog, bestLinkFunction = best_link, formulaOfBestLogisticRegression = best_formula)
-
-  if (validation) {
-    if (test) {
-      encoder <- dummyVars(best.disc[[3]], as.data.frame(discretize_link(best.disc[[2]], predictors[ensemble[[1]], , drop = FALSE], m_start), stringsAsFactors = TRUE), fullRank = FALSE, sep = "_")
-      newdata <- as.data.frame(discretize_link(best.disc[[2]], predictors[ensemble[[3]], , drop = FALSE], m_start), stringsAsFactors = TRUE)
-      labels_test <- as.numeric(labels[ensemble[[3]]])
-
-      for (var in encoder$facVars) {
-        suppressed_ind <- newdata[, var] == levels(newdata[, var])[!levels(newdata[, var]) %in% unlist(unname(encoder$lvls[var]))]
-        if (length(suppressed_ind) > 0) {
-          newdata <- newdata[!suppressed_ind, ]
-          labels_test <- labels_test[!suppressed_ind]
-          warning("Level(s) ", paste(levels(newdata[, var])[(!levels(newdata) %in% unlist(unname(encoder$lvls[var])))], collapse = ", "), " of feature ", var, " were removed from test set.")
-        }
-      }
-
-      data_test <- predict(object = encoder, newdata = newdata)
-
-      performance <- normalizedGini(labels_test, predictlogisticRegression(data_test, best.disc[[1]]$coefficients))
-    } else {
-      encoder <- dummyVars(best.disc[[3]], as.data.frame(discretize_link(best.disc[[2]], predictors[ensemble[[1]], , drop = FALSE], m_start), stringsAsFactors = TRUE), fullRank = FALSE, sep = "_")
-      newdata <- as.data.frame(discretize_link(best.disc[[2]], predictors[ensemble[[2]], , drop = FALSE], m_start), stringsAsFactors = TRUE)
-      labels_validation <- as.numeric(labels[ensemble[[2]]])
-
-      for (var in encoder$facVars) {
-        suppressed_ind <- newdata[, var] == levels(newdata[, var])[!levels(newdata[, var]) %in% unlist(unname(encoder$lvls[var]))]
-        if (length(suppressed_ind) > 0) {
-          newdata <- newdata[!suppressed_ind, ]
-          labels_validation <- labels_validation[!suppressed_ind]
-          warning("Level(s) ", paste(levels(newdata[, var])[(!levels(newdata) %in% unlist(unname(encoder$lvls[var])))], collapse = ", "), " of feature ", var, " were removed from test set.")
-        }
-      }
-
-      data_validation <- predict(object = encoder, newdata = newdata)
-
-      performance <- normalizedGini(labels_validation, predictlogisticRegression(data_validation, best.disc[[1]]$coefficients))
-    }
-  } else {
-    if (test) {
-      encoder <- dummyVars(best.disc[[3]], as.data.frame(discretize_link(best.disc[[2]], predictors[ensemble[[1]], , drop = FALSE], m_start), stringsAsFactors = TRUE), fullRank = FALSE, sep = "_")
-      newdata <- as.data.frame(discretize_link(best.disc[[2]], predictors[ensemble[[2]], , drop = FALSE], m_start), stringsAsFactors = TRUE)
-      labels_test <- as.numeric(labels[ensemble[[2]]])
-      for (var in encoder$facVars) {
-        suppressed_ind <- newdata[, var] == levels(newdata[, var])[!levels(newdata[, var]) %in% unlist(unname(encoder$lvls[var]))]
-        if (length(suppressed_ind) > 0) {
-          newdata <- newdata[!suppressed_ind, ]
-          labels_test <- labels_test[!suppressed_ind]
-          warning("Level(s) ", paste(levels(newdata[, var])[(!levels(newdata) %in% unlist(unname(encoder$lvls[var])))], collapse = ", "), " of feature ", var, " were removed from test set.")
-        }
-      }
-      data_test <- predict(object = encoder, newdata = as.data.frame(discretize_link(best.disc[[2]], predictors[ensemble[[2]], , drop = FALSE], m_start), stringsAsFactors = TRUE))
-
-
-      performance <- normalizedGini(labels_test, predictlogisticRegression(data_test, best.disc[[1]]$coefficients))
-    } else {
-      encoder <- dummyVars(best.disc[[3]], as.data.frame(
-        discretize_link(
-          best.disc[[2]],
-          predictors[ensemble[[1]], , drop = FALSE],
-          m_start
-        ),
-        stringsAsFactors = TRUE
-      ),
-      fullRank = FALSE,
-      sep = "_"
-      )
-      performance <- normalizedGini(as.numeric(labels[ensemble[[1]]]), best.disc[[1]]$fitted.values)
-    }
-  }
-
-  ## Good column names
-
-  if (!is.null(noms_colonnes)) {
-    for (j in (length(noms_colonnes):1)) {
-      best.disc$formulaOfBestLogisticRegression <- stats::as.formula(paste(sub(paste0("V", j), noms_colonnes[j], best.disc$formulaOfBestLogisticRegression), collapse = " "))
-    }
-  }
-
-  if ((test) & (validation)) {
-    disc.data <- as.data.frame(cbind(discretize_link(best.disc[[2]], predictors[ensemble[[3]], , drop = FALSE], m_start), labels = labels[ensemble[[3]]]), stringsAsFactors = TRUE)
-
-    if (!is.null(colnames(predictors))) {
-      colnames(disc.data) <- c(colnames(predictors), "labels")
-    }
-
-    return(methods::new(
-      Class = "glmdisc", parameters = list(test = test, validation = validation, criterion = criterion, iter = iter, m_start = m_start, reg_type = reg_type, types_data = types_data, encoder = encoder, interact = interact), best.disc = best.disc, performance = list(performance = performance, criterionEvolution = criterion_iter), disc.data = disc.data,
-      cont.data = as.data.frame(cbind(predictors[ensemble[[3]], , drop = FALSE], labels = labels[ensemble[[3]]]), stringsAsFactors = TRUE)
-    ))
-  } else if (validation) {
-    disc.data <- as.data.frame(cbind(discretize_link(best.disc[[2]], predictors[ensemble[[2]], , drop = FALSE], m_start), labels = labels[ensemble[[2]]]), stringsAsFactors = TRUE)
-    if (!is.null(colnames(predictors))) {
-      colnames(disc.data) <- c(colnames(predictors), "labels")
-    }
-    return(methods::new(
-      Class = "glmdisc", parameters = list(test = test, validation = validation, criterion = criterion, iter = iter, m_start = m_start, reg_type = reg_type, types_data = types_data, encoder = encoder, interact = interact), best.disc = best.disc, performance = list(performance = performance, criterionEvolution = criterion_iter), disc.data = disc.data,
-      cont.data = as.data.frame(cbind(predictors[ensemble[[2]], , drop = FALSE], labels = labels[ensemble[[2]]]), stringsAsFactors = TRUE)
-    ))
+  prepared <- prepare_features(predictors)
+  X <- prepared$X
+  types <- prepared$types
+  n <- nrow(X)
+  d <- ncol(X)
+  second_argument_checks(d, interact)
+  labels <- as.numeric(labels)
+
+  # Training, validation (criterion used to choose the best iteration) and test
+  # (performance of the chosen model) sets.
+  split <- split_dataset(n, proportions, test, validation)
+
+  fitted <- sem_engine(X, types, labels, split, criterion, as.integer(iter), as.integer(m_start), reg_type, interact, verbose)
+  best <- fitted$best
+  links <- add_level_names(best$links, X, types, split$train)
+
+  # Final logistic regression on the best quantization (a regular glm object)
+  model_names <- make.names(colnames(X), unique = TRUE)
+  quantized <- quantized_frame(links, X, model_names)
+  varying <- which(lengths(lapply(links, `[[`, "out_levels")) > 1L)
+  terms <- c(
+    model_names[varying],
+    paste(model_names[best$pairs[, 1L]], model_names[best$pairs[, 2L]], sep = ":")
+  )
+  quantized$labels <- labels
+  formula_best <- stats::reformulate(terms, response = "labels")
+  best_glm <- suppressWarnings(stats::glm(formula_best, family = stats::binomial(link = "logit"), data = quantized[split$train, , drop = FALSE]))
+  formula_best <- stats::reformulate(
+    c(colnames(X)[varying], paste(colnames(X)[best$pairs[, 1L]], colnames(X)[best$pairs[, 2L]], sep = ":")),
+    response = "labels"
+  )
+
+  # Performance on the test set, else on the validation set, else on the training set
+  reported <- if (any(split$test)) split$test else if (any(split$validation)) split$validation else split$train
+  performance <- normalizedGini(
+    labels[reported],
+    as.numeric(suppressWarnings(stats::predict(best_glm, newdata = quantized[reported, , drop = FALSE], type = "response")))
+  )
+
+  disc_data <- as.data.frame(discretize_link(links, X[reported, , drop = FALSE]), stringsAsFactors = TRUE)
+  colnames(disc_data) <- colnames(X)
+  disc_data$labels <- labels[reported]
+  cont_data <- X[reported, , drop = FALSE]
+  cont_data$labels <- labels[reported]
+
+  methods::new(
+    Class = "glmdisc",
+    parameters = list(
+      test = test, validation = validation, criterion = criterion, iter = iter, m_start = m_start,
+      reg_type = reg_type, types_data = types, interact = interact,
+      factor_levels = lapply(X, function(column) if (is.factor(column)) levels(column) else NULL),
+      model_names = model_names
+    ),
+    best.disc = list(
+      bestLogisticRegression = best_glm,
+      bestLinkFunction = links,
+      formulaOfBestLogisticRegression = formula_best
+    ),
+    performance = list(performance = performance, criterionEvolution = fitted$history),
+    disc.data = disc_data,
+    cont.data = cont_data
+  )
+}
+
+# Masks of the training, validation and test observations.
+split_dataset <- function(n, proportions, test, validation) {
+  sets <- cut_dataset(n, proportions, test = test, validation = validation)
+  mask <- function(index) if (is.null(index)) rep(FALSE, n) else seq_len(n) %in% index
+  if (test && validation) {
+    list(train = mask(sets[[1L]]), test = mask(sets[[2L]]), validation = mask(sets[[3L]]))
   } else if (test) {
-    disc.data <- as.data.frame(cbind(discretize_link(best.disc[[2]], predictors[ensemble[[2]], , drop = FALSE], m_start), labels = labels[ensemble[[2]]]), stringsAsFactors = TRUE)
-    if (!is.null(colnames(predictors))) {
-      colnames(disc.data) <- c(colnames(predictors), "labels")
-    }
-    return(methods::new(
-      Class = "glmdisc", parameters = list(test = test, validation = validation, criterion = criterion, iter = iter, m_start = m_start, reg_type = reg_type, types_data = types_data, encoder = encoder, interact = interact), best.disc = best.disc, performance = list(performance = performance, criterionEvolution = criterion_iter), disc.data = disc.data,
-      cont.data = as.data.frame(cbind(predictors[ensemble[[2]], , drop = FALSE], labels = labels[ensemble[[2]]]), stringsAsFactors = TRUE)
-    ))
+    list(train = mask(sets[[1L]]), test = mask(sets[[2L]]), validation = mask(NULL))
+  } else if (validation) {
+    list(train = mask(sets[[1L]]), test = mask(NULL), validation = mask(sets[[2L]]))
   } else {
-    disc.data <- as.data.frame(cbind(discretize_link(best.disc[[2]], predictors[ensemble[[1]], , drop = FALSE], m_start), labels = labels[ensemble[[1]]]), stringsAsFactors = TRUE)
-    if (!is.null(colnames(predictors))) {
-      colnames(disc.data) <- c(colnames(predictors), "labels")
-    }
-    return(methods::new(
-      Class = "glmdisc", parameters = list(test = test, validation = validation, criterion = criterion, iter = iter, m_start = m_start, reg_type = reg_type, types_data = types_data, encoder = encoder, interact = interact), best.disc = best.disc, performance = list(performance = performance, criterionEvolution = criterion_iter), disc.data = disc.data,
-      cont.data = as.data.frame(cbind(predictors[ensemble[[1]], , drop = FALSE], labels = labels[ensemble[[1]]]), stringsAsFactors = TRUE)
-    ))
+    list(train = mask(sets[[1L]]), test = mask(NULL), validation = mask(NULL))
   }
 }
