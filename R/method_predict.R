@@ -17,7 +17,6 @@ methods::setGeneric("predict")
 #' Prediction on a raw test set of the best logistic regression model on discretized data.
 #'
 #' @rdname predict
-#' @importFrom magrittr "%>%"
 #' @aliases predict,glmdisc,ANY,ANY-method
 #' @param object The S4 discretization object.
 #' @param predictors The test dataframe to discretize and for which we wish to have predictions.
@@ -59,18 +58,29 @@ predict.glmdisc <- function(object, predictors) {
     }
   )
 
-  # Levels not in the training set but in the test set are removed
-  for (var in object@parameters$encoder$facVars) {
-    if (length(levels(data_disc[, var])[!(levels(data_disc[, var]) %in% unlist(unname(object@parameters$encoder$lvls[var])))]) > 0) {
-      data_disc <- data_disc[-which(data_disc[, var] == levels(data_disc[, var])[!(levels(data_disc[, var]) %in% unlist(unname(object@parameters$encoder$lvls[var])))]), ]
-      warning("Level(s) ", paste(levels(data_disc[, var])[(!levels(data_disc[, var]) %in% unlist(unname(object@parameters$encoder$lvls[var])))], collapse = ", "), " of feature ", var, " were removed from test set.")
-      data_disc <- data_disc %>% dplyr::mutate_at(dplyr::vars(object@parameters$encoder$facVars), dplyr::funs(factor))
+  # Observations whose quantized value was not seen during training cannot be scored: they get NA.
+  encoder <- object@parameters$encoder
+  unseen <- rep(FALSE, nrow(data_disc))
+  for (var in encoder$facVars) {
+    training_levels <- unlist(unname(encoder$lvls[var]))
+    value <- as.character(data_disc[[var]])
+    new_level <- !(value %in% training_levels)
+    if (any(new_level)) {
+      warning(
+        "Level(s) ", paste(unique(value[new_level]), collapse = ", "), " of feature ", var,
+        " were not seen in the training set: the corresponding predictions are NA."
+      )
+      value[new_level] <- training_levels[1]
+      unseen <- unseen | new_level
     }
+    data_disc[[var]] <- factor(value, levels = training_levels)
   }
 
-  data <- predict(object = object@parameters$encoder, newdata = data_disc)
+  data <- predict(object = encoder, newdata = data_disc)
 
-  predictlogisticRegression(data, object@best.disc[[1]]$coefficients)
+  prediction <- rep(NA_real_, nrow(data_disc))
+  prediction[!unseen] <- predictlogisticRegression(data[!unseen, , drop = FALSE], object@best.disc[[1]]$coefficients)
+  prediction
 }
 
 #' Prediction on a raw test set of the best logistic regression model on discretized data.
@@ -81,7 +91,6 @@ predict.glmdisc <- function(object, predictors) {
 #' @name predict,glmdisc-method
 #' @aliases predict,glmdisc-method
 #' @description This defines the method "predict" which will predict the discretization of a new input dataset given a discretization scheme of S4 class \code{\link{glmdisc}}
-#' @importFrom magrittr "%>%"
 methods::setMethod("predict", "glmdisc", predict.glmdisc)
 
 # Levels not in the training set but in the test set are removed
