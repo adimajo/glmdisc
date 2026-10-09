@@ -244,5 +244,12 @@ initialize_interaction <- function(d, X, y, train) {
         with$deviance + log(n_train) * length(with$coefficients)))
     }
   }
+  # A prior probability of exactly 0 or 1 makes the chain unable to flip the pair back (or
+  # in): keep it away from the boundaries.
+  clamp <- getOption("glmdisc.mh_clamp", 0)
+  if (clamp > 0) {
+    pairs <- upper.tri(p_delta)
+    p_delta[pairs] <- pmin(pmax(p_delta[pairs], clamp), 1 - clamp)
+  }
   list(delta = delta, p_delta = p_delta)
 }

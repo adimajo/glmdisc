@@ -62,3 +62,22 @@ test_that("without the Hastings correction the chain is biased (documents the th
   chain <- run_toy_chain(scale = 1, hastings = FALSE)
   expect_gt(max(abs(chain$empirical - chain$target)), 0.02)
 })
+
+test_that("the prior of the interactions can be kept away from 0 and 1", {
+  set.seed(1)
+  n <- 600
+  x <- data.frame(a = runif(n), b = runif(n), c = runif(n))
+  y <- rbinom(n, 1, plogis(8 * ((x$a > 0.5) != (x$b > 0.5)) - 4)) # the (a, b) interaction is saturated
+  train <- rep(TRUE, n)
+  raw <- glmdisc:::initialize_interaction(3, x, y, train)
+  expect_equal(raw$p_delta[1, 2], 1)
+
+  old <- options(glmdisc.mh_clamp = 0.01)
+  on.exit(options(old))
+  clamped <- glmdisc:::initialize_interaction(3, x, y, train)
+  upper <- upper.tri(clamped$p_delta)
+  expect_true(all(clamped$p_delta[upper] >= 0.01 & clamped$p_delta[upper] <= 0.99))
+  expect_equal(clamped$p_delta[1, 2], 0.99)
+  # entries outside the upper triangle stay 0 so that those pairs are never proposed
+  expect_true(all(clamped$p_delta[!upper] == 0))
+})
