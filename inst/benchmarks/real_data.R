@@ -36,7 +36,36 @@ load_datasets <- function() {
   pima <- rbind(load_data("Pima.tr", "MASS"), load_data("Pima.te", "MASS"))
   default <- load_data("Default", "ISLR")
   credit_card <- load_data("CreditCard", "AER")
+  simulate <- function(kind) {
+    function(rep) {
+      set.seed(90000L + rep)
+      n <- 3000L
+      x <- matrix(stats::runif(n * 5L), n, 5L, dimnames = list(NULL, paste0("x", 1:5)))
+      linear_predictor <- switch(kind,
+        steps = {
+          steps <- apply(x[, 1:3], 2, function(col) as.integer(cut(col, c(0, 1 / 3, 2 / 3, 1))))
+          rowSums(sapply(1:3, function(j) c(-1.5, 0.5, 1.5)[steps[, j]])) - 1.5
+        },
+        ushape = 6 * (x[, 1] - 0.5)^2 * 4 + 6 * (x[, 2] - 0.5)^2 * 4 + x[, 3] - 3.5,
+        xor = 2.5 * ((x[, 1] > 0.5) != (x[, 2] > 0.5)) - 1.25
+      )
+      list(X = as.data.frame(x), y = stats::rbinom(n, 1L, stats::plogis(linear_predictor)))
+    }
+  }
+
   list(
+    sim_steps = list(
+      description = "Simulation: logit is a step function of 3 of 5 uniform features",
+      generate = simulate("steps")
+    ),
+    sim_ushape = list(
+      description = "Simulation: logit is U-shaped (non-monotone) in 2 of 5 uniform features",
+      generate = simulate("ushape")
+    ),
+    sim_xor = list(
+      description = "Simulation: outcome driven by the XOR of two thresholded features (pure interaction)",
+      generate = simulate("xor")
+    ),
     german = list(
       description = "German credit (UCI Statlog): 1000 loans, 7 numeric + 13 categorical features",
       X = german[, setdiff(names(german), "creditability")],
@@ -179,18 +208,30 @@ method_glmdisc <- function(train, test, y_train, interact = FALSE, ...) {
        best_iteration = which.max(unlist(fit@performance$criterionEvolution)))
 }
 
+method_glmdisc_bic <- function(train, test, y_train, interact = FALSE, ...) {
+  # no validation set: the BIC picks the quantization and all training data are used
+  fit <- glmdisc::glmdisc(train, y_train,
+    iter = sem_iter, m_start = 10, test = FALSE, validation = FALSE,
+    criterion = "bic", interact = interact
+  )
+  test <- align_factors(train, test)
+  list(p = as.numeric(predict(fit, test)), npar = length(stats::coef(fit@best.disc[[1]])))
+}
+
 methods <- list(
   logit_raw = method_raw,
   logit_quantile5 = method_quantile,
   logit_mdlp = method_mdlp,
   logit_woe = method_woe,
   glmdisc = method_glmdisc,
+  glmdisc_bic = method_glmdisc_bic,
   glmdisc_interact = function(...) method_glmdisc(..., interact = TRUE)
 )
 
 # ---- one repetition ---------------------------------------------------------------------
 
 run_repetition <- function(dataset_name, dataset, rep) {
+  if (!is.null(dataset$generate)) dataset <- c(dataset, dataset$generate(rep))
   set.seed(1000L + rep)
   X <- clean_types(dataset$X)
   y <- dataset$y
