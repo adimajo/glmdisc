@@ -1,6 +1,6 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
-^codecov\.yml
+^codecov\.yml$
 ^\.github$
 ^docs/.*$
 README.md
