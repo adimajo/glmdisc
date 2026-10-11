@@ -2,7 +2,7 @@ Package: glmdisc
 Type: Package
 Title: Discretization and Grouping for Logistic Regression
 Version: 0.8.0
-Date: 2026-10-09
+Date: 2026-10-11
 Authors@R: c(person("Adrien", "Ehrhardt", email = "adrien.ehrhardt@polytechnique.edu",
                   role = c("aut", "cre")),
                   person("Vincent", "Vandewalle", email = "vincent.vandewalle@inria.fr",
