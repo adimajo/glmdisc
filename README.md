@@ -95,7 +95,7 @@ Reproduce with `Rscript inst/benchmarks/real_data.R 20 300` (needs `scorecard`, 
 ## Documentation
 
 * Help pages and vignette: `?glmdisc`, `vignette("glmdisc")`.
-* Online: <https://adimajo.github.io/glmdisc>.
+* Online: <https://adimajo.github.io/glmdisc/>.
 * Questions and bug reports: <https://github.com/adimajo/glmdisc/issues>.
 
 ## References
