@@ -31,7 +31,7 @@ glmdisc(
 
 \item{test}{Boolean : True if the algorithm should use predictors to construct a test set on which to calculate the provided criterion using the best discretization scheme (chosen thanks to the provided criterion on either the test set (if true) or the training set (otherwise)) (default: TRUE).}
 
-\item{criterion}{The criterion ('gini','aic','bic') to use to choose the best discretization scheme among the generated ones (default: 'gini'). Nota Bene: it is best to use 'gini' only when test is set to TRUE and 'aic' or 'bic' when it is not. When using 'aic' or 'bic' with a test set, the likelihood is returned as there is no need to penalize for generalization purposes.}
+\item{criterion}{The criterion ('gini','aic','bic') to use to choose the best discretization scheme among the generated ones (default: 'gini'). Note: it is best to use 'gini' only when test is set to TRUE and 'aic' or 'bic' when it is not. When using 'aic' or 'bic' with a test set, the likelihood is returned as there is no need to penalize for generalization purposes.}
 
 \item{iter}{The number of iterations to do in the SEM protocol (default: 1000).}
 
