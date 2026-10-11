@@ -184,7 +184,7 @@ Second, we assume the conditional independence of $Q_j$ given $X_j$, i.e. knowin
 $$\forall \:x, k\neq j, \; Q_j | x_j \perp Q_k | x_k$$
 The first equation becomes:
 $$\forall \: x,y, \; p(y|x) = \sum_q p(y|q) \prod_{j=1}^d p(q_j|x_j)$$
-As said earlier, we consider only logistic regression models on discretized data $p_\theta(y|e)$. Additionnally, it seems like we have to make further assumptions on the nature of the relationship of $q_j$ to $x_j$. We chose to use polytomous logistic regressions for continuous $X_j$ and contengency tables for qualitative $X_j$. This is an arbitrary choice and future versions will include the possibility of plugging your own model.
+As said earlier, we consider only logistic regression models on discretized data $p_\theta(y|e)$. Additionally, it seems like we have to make further assumptions on the nature of the relationship of $q_j$ to $x_j$. We chose to use polytomous logistic regressions for continuous $X_j$ and contingency tables for qualitative $X_j$. This is an arbitrary choice and future versions will include the possibility of plugging your own model.
 
 The first equation becomes:
 $$\forall \: x,y, \; p(y|x) = \sum_q p_\theta(y|q) \prod_{j=1}^d p_{\alpha_j}(q_j|x_j)$$
@@ -218,7 +218,7 @@ Introducing $\Delta$ as a latent variable as we have done for discretization, we
 
 Again, a simple strategy would consist in estimating $\hat{\theta}_\delta$ for every value of $\Delta$ i.e. $2^{\frac{d(d-1)}{2}}$ models and compare their AIC or BIC values.
 
-As a consequence of this untractable approach, we propose an MCMC procedure to draw $\delta$ from $p(\delta|x,y)$.
+As a consequence of this intractable approach, we propose an MCMC procedure to draw $\delta$ from $p(\delta|x,y)$.
 
 ## An MCMC estimation procedure
 
@@ -246,7 +246,7 @@ This approach would work as a "stand-alone" model selection tool but it can also
 
 ## The `glmdisc` function
 
-The `glmdisc` function implements the algorithm discribed in the previous section. Its parameters are described first, then its internals are briefly discussed. We finally focus on its ouptuts.
+The `glmdisc` function implements the algorithm described in the previous section. Its parameters are described first, then its internals are briefly discussed. We finally focus on its outputs.
 
 ### Parameters
 
@@ -267,7 +267,7 @@ The SEM chain is slow to merge levels: on simulated data (3000 observations, 5 f
 First, the discretized version $Q$ of $X$ is initialized at random using the user-provided maximum number of values for quantitative values through the `m_start` parameter.
 
 Then we iterate `times`:
-First, the model $p_\theta(y|q)$, where $q$ denotes the current value of $Q$, is adjusted. Then, for each feature $X_j$, the model $p_{\alpha_j}(q|x)$ is adjusted (depending on the type of $X_j$ it can be a polytomous logistic regression or a contengency table). Finally, we draw a new candidate $q_j$ with probability $p_\theta(y|q)p_{\alpha_j}(q_j|x_j)$.
+First, the model $p_\theta(y|q)$, where $q$ denotes the current value of $Q$, is adjusted. Then, for each feature $X_j$, the model $p_{\alpha_j}(q|x)$ is adjusted (depending on the type of $X_j$ it can be a polytomous logistic regression or a contingency table). Finally, we draw a new candidate $q_j$ with probability $p_\theta(y|q)p_{\alpha_j}(q_j|x_j)$.
 
 The performance metric chosen through the `criterion` parameter determines the best candidate $q$.
 
@@ -498,7 +498,7 @@ In the third section, we described two fundamental modelling hypotheses that wer
 
 + A polytomous logistic regression if $X_j$ is continuous;
 
-+ A contengency table if $X_j$ is qualitative.
++ A contingency table if $X_j$ is qualitative.
 
 These hypotheses are "building blocks" that could be changed at the modeller's will: discretization could optimize other models.
 

@@ -31,9 +31,9 @@ glmdisc(
 
 \item{test}{Boolean : True if the algorithm should use predictors to construct a test set on which to calculate the provided criterion using the best discretization scheme (chosen thanks to the provided criterion on either the test set (if true) or the training set (otherwise)) (default: TRUE).}
 
-\item{criterion}{The criterion ('gini','aic','bic') to use to choose the best discretization scheme among the generated ones (default: 'gini'). Nota Bene: it is best to use 'gini' only when test is set to TRUE and 'aic' or 'bic' when it is not. When using 'aic' or 'bic' with a test set, the likelihood is returned as there is no need to penalize for generalization purposes.}
+\item{criterion}{The criterion ('gini','aic','bic') to use to choose the best discretization scheme among the generated ones (default: 'gini'). Note: it is best to use 'gini' only when test is set to TRUE and 'aic' or 'bic' when it is not. When using 'aic' or 'bic' with a test set, the likelihood is returned as there is no need to penalize for generalization purposes.}
 
-\item{iter}{The number of iterations to do in the SEM protocole (default: 1000).}
+\item{iter}{The number of iterations to do in the SEM protocol (default: 1000).}
 
 \item{m_start}{The maximum number of resulting categories for each variable wanted (default: 20).}
 
@@ -54,7 +54,7 @@ Second-order interactions can be searched through the optional \code{interaction
 }
 \details{
 This function finds the most appropriate discretization scheme for logistic regression. When provided with a continuous variable \eqn{X}, it tries to convert it to a categorical variable \eqn{Q} which values uniquely correspond to intervals of the continuous variable \eqn{X}.
-When provided with a categorical variable \eqn{X}, it tries to find the best regroupement of its values and subsequently creates categorical variable \eqn{Q}. The goal is to perform supervised learning with logistic regression so that you have to specify a target variable \eqn{Y} denoted by \code{labels}.
+When provided with a categorical variable \eqn{X}, it tries to find the best grouping of its values and subsequently creates categorical variable \eqn{Q}. The goal is to perform supervised learning with logistic regression so that you have to specify a target variable \eqn{Y} denoted by \code{labels}.
 The "discretization" process, i.e. the transformation of \eqn{X} to \eqn{Q} is done so as to achieve the best logistic regression model \eqn{p(y|e;\theta)}. It can be interpreted as a special case feature engineering algorithm.
 When \code{interact = TRUE}, the set of pairwise interactions is explored by a Metropolis-Hastings sampler: at each iteration one pair is proposed for addition or removal (with a probability that favors pairs for which a logistic regression on the raw features finds an interaction) and accepted according to the BIC of the logistic regression with and without it.
 The target of this sampler is the BIC approximation of the posterior of the set of interactions, with a Bernoulli prior given by the pairwise screening, and the proposal is corrected so that it is sampled exactly. The sampler of the thesis (BIC not halved, no proposal correction, unclamped prior) can be restored for comparison with \code{options(glmdisc.mh_scale = 1, glmdisc.mh_hastings = FALSE, glmdisc.mh_clamp = 0)}.

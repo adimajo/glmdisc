@@ -2,7 +2,7 @@
 % Please edit documentation in R/RcppExports.R
 \name{predictlogisticRegression}
 \alias{predictlogisticRegression}
-\title{Predicting using a logistic regression fitted with RCpp::fast_LR}
+\title{Predicting using a logistic regression fitted with RcppNumerical::fastLR}
 \usage{
 predictlogisticRegression(test, parameters)
 }
@@ -13,5 +13,5 @@ predictlogisticRegression(test, parameters)
 }
 \description{
 This function returns a numeric vector containing the probability of each observation of being of class 1 given a vector of logistic
-regression parameters (usually estimated through RCpp::fast_LR).
+regression parameters (usually estimated through RcppNumerical::fastLR).
 }
