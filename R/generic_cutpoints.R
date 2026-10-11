@@ -1,7 +1,7 @@
 #' @include allClasses.R
 NULL
 
-#' Obtaining the cutpoints and / or regroupments of a discretization
+#' Obtaining the cutpoints and / or groupings of a discretization
 #' @name cutpoints
 #' @rdname cutpoints-method
 #' @docType methods
