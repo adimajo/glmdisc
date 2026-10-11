@@ -218,7 +218,7 @@ Introducing $\Delta$ as a latent variable as we have done for discretization, we
 
 Again, a simple strategy would consist in estimating $\hat{\theta}_\delta$ for every value of $\Delta$ i.e. $2^{\frac{d(d-1)}{2}}$ models and compare their AIC or BIC values.
 
-As a consequence of this untractable approach, we propose an MCMC procedure to draw $\delta$ from $p(\delta|x,y)$.
+As a consequence of this intractable approach, we propose an MCMC procedure to draw $\delta$ from $p(\delta|x,y)$.
 
 ## An MCMC estimation procedure
 
@@ -246,7 +246,7 @@ This approach would work as a "stand-alone" model selection tool but it can also
 
 ## The `glmdisc` function
 
-The `glmdisc` function implements the algorithm discribed in the previous section. Its parameters are described first, then its internals are briefly discussed. We finally focus on its ouptuts.
+The `glmdisc` function implements the algorithm described in the previous section. Its parameters are described first, then its internals are briefly discussed. We finally focus on its outputs.
 
 ### Parameters
 
