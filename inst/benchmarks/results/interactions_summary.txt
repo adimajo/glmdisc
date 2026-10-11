@@ -1,0 +1,47 @@
+glmdisc interaction rules: 20 random 70/30 splits per dataset, 300 SEM iterations
+gini on the held-out 30%; vs_none = paired difference with glmdisc without interactions (mean, standard error);
+pairs = mean number of interactions in the final model
+
+    dataset                     method   gini        vs_none pairs secs
+  sim_steps                  logit_raw  0.690 -0.022 (0.005)   NaN  0.0
+  sim_steps               glmdisc_none  0.712 +0.000 (0.000)  0.00 10.0
+  sim_steps            interact_thesis  0.714 +0.002 (0.006)  0.00 13.9
+  sim_steps              interact_half  0.714 +0.002 (0.006)  0.00 13.9
+  sim_steps          interact_hastings  0.713 +0.001 (0.006)  0.00 13.9
+  sim_steps         interact_posterior  0.713 +0.001 (0.006)  0.00 13.9
+  sim_steps interact_posterior_clamped  0.714 +0.003 (0.005)  0.00 13.7
+    sim_xor                  logit_raw -0.001 -0.009 (0.012)   NaN  0.0
+    sim_xor               glmdisc_none  0.009 +0.000 (0.000)  0.00 10.6
+    sim_xor            interact_thesis  0.534 +0.526 (0.008)  1.05 17.0
+    sim_xor              interact_half  0.538 +0.530 (0.008)  1.05 20.7
+    sim_xor          interact_hastings  0.082 +0.073 (0.043)  0.80 13.0
+    sim_xor         interact_posterior  0.082 +0.073 (0.043)  0.80 12.8
+    sim_xor interact_posterior_clamped  0.541 +0.532 (0.009)  1.00 16.3
+  sim_mixed                  logit_raw  0.687 +0.002 (0.005)   NaN  0.0
+  sim_mixed               glmdisc_none  0.685 +0.000 (0.000)  0.00 14.0
+  sim_mixed            interact_thesis  0.678 -0.006 (0.005)  0.85 17.8
+  sim_mixed              interact_half  0.681 -0.003 (0.005)  0.85 17.4
+  sim_mixed          interact_hastings  0.682 -0.002 (0.006)  0.75 17.1
+  sim_mixed         interact_posterior  0.684 -0.001 (0.006)  0.80 18.0
+  sim_mixed interact_posterior_clamped  0.686 +0.001 (0.005)  0.40 16.7
+       pima                  logit_raw  0.704 +0.091 (0.010)   NaN  0.0
+       pima               glmdisc_none  0.613 +0.000 (0.000)  0.00  2.8
+       pima            interact_thesis  0.625 +0.012 (0.011)  0.70  3.7
+       pima              interact_half  0.618 +0.005 (0.013)  0.55  3.7
+       pima          interact_hastings  0.629 +0.016 (0.011)  0.55  3.6
+       pima         interact_posterior  0.628 +0.015 (0.012)  0.70  3.8
+       pima interact_posterior_clamped  0.584 -0.029 (0.025)  0.60  3.6
+    default                  logit_raw  0.896 +0.039 (0.004)   NaN  0.0
+    default               glmdisc_none  0.857 +0.000 (0.000)  0.00 20.5
+    default            interact_thesis  0.859 +0.002 (0.005)  0.00 21.2
+    default              interact_half  0.859 +0.002 (0.005)  0.00 25.3
+    default          interact_hastings  0.859 +0.002 (0.005)  0.00 21.4
+    default         interact_posterior  0.859 +0.002 (0.005)  0.00 21.4
+    default interact_posterior_clamped  0.861 +0.004 (0.006)  0.00 21.0
+ creditcard                  logit_raw  0.670 +0.004 (0.008)   NaN  0.0
+ creditcard               glmdisc_none  0.667 +0.000 (0.000)  0.00 10.8
+ creditcard            interact_thesis  0.671 +0.005 (0.009)  0.20  9.6
+ creditcard              interact_half  0.663 -0.004 (0.007)  0.30  9.8
+ creditcard          interact_hastings  0.658 -0.008 (0.009)  0.05  9.5
+ creditcard         interact_posterior  0.678 +0.011 (0.009)  0.05  9.4
+ creditcard interact_posterior_clamped  0.668 +0.002 (0.006)  0.40  9.3

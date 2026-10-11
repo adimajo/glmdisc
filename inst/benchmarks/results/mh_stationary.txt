@@ -1,0 +1,17 @@
+Toy problem, 3 candidate interactions, exact stationary distributions
+(intended target = prior * exp(scale * score); 'posterior' = scale 0.5)
+
+ scale hastings_correction tv_to_intended_target tv_to_posterior_scale_0.5
+   1.0               FALSE                0.2009                    0.2076
+   1.0                TRUE                0.0000                    0.1673
+   0.5               FALSE                0.1785                    0.1785
+   0.5                TRUE                0.0000                    0.0000
+ expected_number_of_interactions
+                           1.821
+                           1.875
+                           1.600
+                           1.615
+
+Expected number of interactions under the prior alone: 1.4 
+Under the posterior (scale 0.5): 1.615 
+Under the squared posterior (scale 1): 1.875 

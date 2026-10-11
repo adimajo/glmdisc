@@ -1,4 +1,5 @@
 test_that("S4 class glmdisc available", {
+  set.seed(1)
   expect_s4_class(methods::new(
     Class = "glmdisc",
     parameters = list(),

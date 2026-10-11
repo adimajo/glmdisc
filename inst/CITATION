@@ -1,6 +1,34 @@
-citHeader("To cite the glmdisc package in publications use:")
-bibentry(bibtype = "Manual",
-    author = personList(as.person("Adrien Ehrhardt")), title = "glmdisc: feature quantization and interaction discovery for logistic regression",
-    year = 2020,
-    url = "https://CRAN.R-project.org/package=glmdisc")
-citFooter("As glmdisc is continually evolving, you may want to cite its version number. Find it with 'help(package=glmdisc)'.")
+bibentry(
+  bibtype = "Manual",
+  title = "glmdisc: Discretization and Grouping for Logistic Regression",
+  author = c(
+    person("Adrien", "Ehrhardt"),
+    person("Vincent", "Vandewalle")
+  ),
+  year = format(Sys.Date(), "%Y"),
+  note = paste("R package version", meta$Version),
+  url = "https://github.com/adimajo/glmdisc",
+  header = "To cite the glmdisc package in publications use:",
+  textVersion = paste0(
+    "Ehrhardt A., Vandewalle V. (", format(Sys.Date(), "%Y"),
+    "). glmdisc: Discretization and Grouping for Logistic Regression. R package version ",
+    meta$Version, ". https://github.com/adimajo/glmdisc"
+  )
+)
+
+bibentry(
+  bibtype = "Article",
+  title = "Feature quantization for parsimonious and interpretable predictive models",
+  author = c(
+    person("Adrien", "Ehrhardt"),
+    person("Christophe", "Biernacki"),
+    person("Vincent", "Vandewalle"),
+    person("Philippe", "Heinrich"),
+    person("Sébastien", "Beben")
+  ),
+  journal = "arXiv preprint",
+  year = "2019",
+  note = "arXiv:1903.08920",
+  url = "https://arxiv.org/abs/1903.08920",
+  header = "The method is described in:"
+)

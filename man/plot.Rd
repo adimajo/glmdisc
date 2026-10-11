@@ -3,23 +3,24 @@
 \docType{methods}
 \name{plot}
 \alias{plot}
-\alias{plot.glmdisc}
-\alias{plot,glmdisc,ANY-method}
 \alias{plot,glmdisc,missing-method}
-\title{Plots for the discretized / grouped data.}
+\title{Plots for the discretized / grouped data}
 \usage{
-plot.glmdisc(x)
-
-\S4method{plot}{glmdisc,missing}(x)
+\S4method{plot}{glmdisc,missing}(x, y, ...)
 }
 \arguments{
 \item{x}{The S4 \code{\link{glmdisc}} object to plot.}
+
+\item{y}{Not used.}
+
+\item{...}{Not used.}
 }
 \description{
-This defines the \code{\link{plot}} method which will plot some useful graphs for the discretization scheme of S4 class \code{\link{glmdisc}}
+This defines the \code{\link[graphics]{plot}} method which will plot some useful graphs for the discretization scheme of S4 class \code{\link{glmdisc}}
 }
 \examples{
 # Simulation of a discretized logit model
+set.seed(1)
 x <- matrix(runif(300), nrow = 100, ncol = 3)
 cuts <- seq(0, 1, length.out = 4)
 xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))

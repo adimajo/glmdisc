@@ -1,6 +1,5 @@
-context("test-glmdisc")
-
 test_that("glmdisc works for one-dimensional continuous data", {
+  set.seed(1)
   x <- matrix(runif(200), nrow = 200, ncol = 1)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) {
@@ -57,16 +56,14 @@ test_that("glmdisc works for one-dimensional continuous data", {
         sem_disc@parameters$types_data,
         "numeric"
       )
-      expect_s3_class(
-        sem_disc@parameters$encoder,
-        "dummyVars"
-      )
+      expect_s3_class(sem_disc@best.disc[[1]], "glm")
     }
   }
   # }
 })
 
 test_that("glmdisc works for multi-dimensional continuous data", {
+  set.seed(1)
   x <- matrix(runif(120), nrow = 40, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) {
@@ -124,7 +121,7 @@ test_that("glmdisc works for multi-dimensional continuous data", {
           expect_equal(sem_disc@parameters$interact, interact)
           expect_equal(sem_disc@parameters$reg_type, "poly")
           expect_equal(sem_disc@parameters$types_data, c("numeric", "numeric", "numeric"))
-          expect_s3_class(sem_disc@parameters$encoder, "dummyVars")
+          expect_s3_class(sem_disc@best.disc[[1]], "glm")
         }
       }
     }
@@ -132,6 +129,7 @@ test_that("glmdisc works for multi-dimensional continuous data", {
 })
 
 test_that("glmdisc works for one-dimensional categorical data", {
+  set.seed(1)
   x <- matrix(runif(600), nrow = 600, ncol = 1)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) {
@@ -182,13 +180,14 @@ test_that("glmdisc works for one-dimensional categorical data", {
         expect_false(sem_disc@parameters$interact)
         expect_equal(sem_disc@parameters$reg_type, "poly")
         expect_equal(sem_disc@parameters$types_data, "factor")
-        expect_s3_class(sem_disc@parameters$encoder, "dummyVars")
+        expect_s3_class(sem_disc@best.disc[[1]], "glm")
       }
     }
   }
 })
 
 test_that("glmdisc works for multi-dimensional categorical data", {
+  set.seed(1)
   x <- matrix(runif(120), nrow = 40, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   cuts2 <- seq(0, 1, length.out = 8)
@@ -256,7 +255,7 @@ test_that("glmdisc works for multi-dimensional categorical data", {
           expect_equal(sem_disc@parameters$interact, interact)
           expect_equal(sem_disc@parameters$reg_type, "poly")
           expect_true(all(sem_disc@parameters$types_data == c("factor", "factor", "factor")))
-          expect_s3_class(sem_disc@parameters$encoder, "dummyVars")
+          expect_s3_class(sem_disc@best.disc[[1]], "glm")
         }
       }
     }
@@ -264,6 +263,7 @@ test_that("glmdisc works for multi-dimensional categorical data", {
 })
 
 test_that("glmdisc works for multi-dimensional mixed data", {
+  set.seed(1)
   x <- matrix(runif(300), nrow = 100, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) {
@@ -329,14 +329,15 @@ test_that("glmdisc works for multi-dimensional mixed data", {
           expect_equal(sem_disc@parameters$interact, interact)
           expect_equal(sem_disc@parameters$reg_type, "poly")
           expect_true(all(sem_disc@parameters$types_data == c("factor", "factor", "factor", "numeric", "numeric", "numeric")))
-          expect_s3_class(sem_disc@parameters$encoder, "dummyVars")
+          expect_s3_class(sem_disc@best.disc[[1]], "glm")
         }
       }
     }
   }
 })
 
-test_that("glmdisc works for multi-dimensional mixed data and fast method", {
+test_that("glmdisc works for multi-dimensional mixed data", {
+  set.seed(1)
   x <- matrix(runif(300), nrow = 100, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) {
@@ -377,8 +378,7 @@ test_that("glmdisc works for multi-dimensional mixed data and fast method", {
       test = test,
       validation = validation,
       criterion = criterion,
-      interact = interact,
-      fast = TRUE
+      interact = interact
     ),
     error = function(e) {
       glmdisc(
@@ -389,8 +389,7 @@ test_that("glmdisc works for multi-dimensional mixed data and fast method", {
         test = test,
         validation = validation,
         criterion = criterion,
-        interact = interact,
-        fast = TRUE
+        interact = interact
       )
     }
   )
@@ -403,10 +402,11 @@ test_that("glmdisc works for multi-dimensional mixed data and fast method", {
   expect_equal(sem_disc@parameters$interact, interact)
   expect_equal(sem_disc@parameters$reg_type, "poly")
   expect_true(all(sem_disc@parameters$types_data == c("factor", "factor", "factor", "numeric", "numeric", "numeric")))
-  expect_s3_class(sem_disc@parameters$encoder, "dummyVars")
+  expect_s3_class(sem_disc@best.disc[[1]], "glm")
 })
 
 test_that("glmdisc errors for type of input data", {
+  set.seed(1)
   expect_error(glmdisc("toto", "tztz", iter = 20, m_start = 4, test = FALSE, validation = FALSE, criterion = "aic"))
 
   x <- matrix(runif(120), nrow = 40, ncol = 3)
@@ -426,11 +426,12 @@ test_that("glmdisc errors for type of input data", {
 
   x <- data.frame(x)
   x[, 1] <- c(rep(1:3, 40 %/% 3), rep(1, 40 - 3 * (40 %/% 3)))
-  x[, 1] <- as.integer(x[, 1])
-  expect_error(glmdisc(x, y, iter = 15, m_start = 4, test = FALSE, validation = FALSE, criterion = "aic"))
+  x[, 1] <- as.Date("2020-01-01") + seq_len(nrow(x))
+  expect_error(glmdisc(x, y, iter = 15, m_start = 4, test = FALSE, validation = FALSE, criterion = "aic"), "Unsupported data types")
 })
 
 test_that("glmdisc warns for type of input data", {
+  set.seed(1)
   x <- matrix(runif(120), nrow = 40, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))
@@ -461,6 +462,7 @@ test_that("glmdisc warns for type of input data", {
 
 
 test_that("glmdisc m_start > nlevels categorical data", {
+  set.seed(1)
   x <- matrix(runif(120), nrow = 40, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))
@@ -473,6 +475,7 @@ test_that("glmdisc m_start > nlevels categorical data", {
 })
 
 test_that("glmdisc stops early", {
+  set.seed(1)
   x <- matrix(runif(120), nrow = 40, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))
@@ -495,6 +498,7 @@ test_that("glmdisc interaction stopping rules", {
 })
 
 test_that("glmdisc w. polr", {
+  set.seed(1)
   x <- matrix(runif(150), nrow = 50, ncol = 3)
   cuts <- seq(0, 1, length.out = 4)
   xd <- apply(x, 2, function(col) as.numeric(cut(col, cuts)))
@@ -503,4 +507,14 @@ test_that("glmdisc w. polr", {
   y <- rbinom(50, 1, 1 / (1 + exp(-log_odd)))
   sem_disc <- glmdisc(x, y, iter = 15, m_start = 4, test = FALSE, validation = FALSE, criterion = "aic", reg_type = "polr")
   succeed()
+})
+
+test_that("the `fast` argument is deprecated and ignored", {
+  set.seed(1)
+  x <- matrix(runif(200), nrow = 100, ncol = 2)
+  y <- rbinom(100, 1, 0.5)
+  expect_warning(
+    glmdisc(x, y, iter = 5, m_start = 3, test = FALSE, validation = FALSE, criterion = "aic", interact = FALSE, fast = TRUE),
+    "deprecated"
+  )
 })

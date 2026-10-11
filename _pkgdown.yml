@@ -1,0 +1,21 @@
+url: https://adimajo.github.io/glmdisc
+template:
+  bootstrap: 5
+
+reference:
+  - title: Fitting
+    contents:
+      - glmdisc
+  - title: Using a fitted model
+    contents:
+      - predict
+      - discretize
+      - cutpoints-method
+      - plot
+      - print
+      - summary
+      - glmdisc-class
+  - title: Utilities
+    contents:
+      - normalizedGini
+      - predictlogisticRegression

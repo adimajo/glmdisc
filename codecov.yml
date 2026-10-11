@@ -10,10 +10,7 @@ coverage:
       default:
         target: auto
         threshold: 1%
-        
-  ignore:
-    - "R/generic_cutpoints.R"
-    - "R/generic_discretize.R"
-    - "renv/*"
-    - "renv/**"
-    - "renv/**/*"
+
+ignore:
+  - "R/generic_cutpoints.R"
+  - "R/generic_discretize.R"

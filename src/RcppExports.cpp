@@ -11,20 +11,51 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// fit_multinomial_1d
+Rcpp::List fit_multinomial_1d(const Eigen::VectorXd& z, const Rcpp::IntegerVector& cls, int K, const Eigen::MatrixXd& start, double ridge, int maxit, double tol);
+RcppExport SEXP _glmdisc_fit_multinomial_1d(SEXP zSEXP, SEXP clsSEXP, SEXP KSEXP, SEXP startSEXP, SEXP ridgeSEXP, SEXP maxitSEXP, SEXP tolSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type z(zSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector& >::type cls(clsSEXP);
+    Rcpp::traits::input_parameter< int >::type K(KSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type start(startSEXP);
+    Rcpp::traits::input_parameter< double >::type ridge(ridgeSEXP);
+    Rcpp::traits::input_parameter< int >::type maxit(maxitSEXP);
+    Rcpp::traits::input_parameter< double >::type tol(tolSEXP);
+    rcpp_result_gen = Rcpp::wrap(fit_multinomial_1d(z, cls, K, start, ridge, maxit, tol));
+    return rcpp_result_gen;
+END_RCPP
+}
+// multinomial_1d_probs
+Eigen::MatrixXd multinomial_1d_probs(const Eigen::VectorXd& z, const Eigen::MatrixXd& coef);
+RcppExport SEXP _glmdisc_multinomial_1d_probs(SEXP zSEXP, SEXP coefSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type z(zSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type coef(coefSEXP);
+    rcpp_result_gen = Rcpp::wrap(multinomial_1d_probs(z, coef));
+    return rcpp_result_gen;
+END_RCPP
+}
 // predictlogisticRegression
-Eigen::VectorXd predictlogisticRegression(const Eigen::MatrixXd test, const Eigen::VectorXd parameters);
+Eigen::VectorXd predictlogisticRegression(const Eigen::MatrixXd& test, const Eigen::VectorXd& parameters);
 RcppExport SEXP _glmdisc_predictlogisticRegression(SEXP testSEXP, SEXP parametersSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const Eigen::MatrixXd >::type test(testSEXP);
-    Rcpp::traits::input_parameter< const Eigen::VectorXd >::type parameters(parametersSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type test(testSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type parameters(parametersSEXP);
     rcpp_result_gen = Rcpp::wrap(predictlogisticRegression(test, parameters));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_glmdisc_fit_multinomial_1d", (DL_FUNC) &_glmdisc_fit_multinomial_1d, 7},
+    {"_glmdisc_multinomial_1d_probs", (DL_FUNC) &_glmdisc_multinomial_1d_probs, 2},
     {"_glmdisc_predictlogisticRegression", (DL_FUNC) &_glmdisc_predictlogisticRegression, 2},
     {NULL, NULL, 0}
 };

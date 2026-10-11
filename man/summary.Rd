@@ -2,7 +2,7 @@
 % Please edit documentation in R/methods_disc.R
 \name{summary.glmdisc}
 \alias{summary.glmdisc}
-\title{Summary for the glmdisc class.}
+\title{Summary for the glmdisc class}
 \usage{
 \method{summary}{glmdisc}(object, ...)
 }
@@ -12,5 +12,5 @@
 \item{...}{Other objects passed to summary}
 }
 \description{
-Summary for the glmdisc class.
+Summary for the glmdisc class
 }

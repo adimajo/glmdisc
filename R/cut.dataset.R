@@ -14,47 +14,45 @@
 # #' cut_dataset(n=30,test=TRUE,
 # #' validation=TRUE,proportions=c(0.3,0.3),seed=1)
 
-prop.table.robust <- function(x, margin = NULL) {
-  # tab <- sweep(x, margin, margin.table(x, margin), "/", check.margin = FALSE)
-  # tab <- sweep(x, margin, rowSums(x), "/", check.margin = FALSE)
-  tab <- x / rowSums(x)
-  tab[which(is.na(tab))] <- 1 / ncol(tab)
-  tab
-}
-
-
 cut_dataset <- function(n, proportions, test = TRUE, validation = TRUE) {
   if (test == TRUE) {
     if (validation == TRUE) {
-      if (tryCatch(length(proportions) < 2 | proportions[1] <= 0 | proportions[2] <= 0 | sum(proportions) >= 1, error = function() stop(simpleError("Argument proportions should contain 2 positive arguments which sum should be less than 1")))) {
+      if (tryCatch(length(proportions) < 2 | proportions[1] <= 0 | proportions[2] <= 0 | sum(proportions) >= 1, error = function(e) TRUE)) {
         stop(simpleError("Argument proportions should contain 2 positive arguments which sum should be less than 1"))
       }
+      n_test <- floor(proportions[1] * n)
+      n_validation <- floor((proportions[1] + proportions[2]) * n) - n_test
+      check_set_sizes(n, n_test, n_validation)
       ind_train <- sample.int(n, n)
-      ind_test <- ind_train[1:floor(proportions[1] * n)]
-      ind_validation <- ind_train[(floor(proportions[1] * n) + 1):floor((proportions[1] + proportions[2]) * n)]
-      ind_train <- ind_train[(floor((proportions[1] + proportions[2]) * n) + 1):n]
+      ind_test <- ind_train[seq_len(n_test)]
+      ind_validation <- ind_train[n_test + seq_len(n_validation)]
+      ind_train <- ind_train[-seq_len(n_test + n_validation)]
       return(list(ind_train, ind_test, ind_validation))
     } else {
-      if (tryCatch(length(proportions) < 1 | proportions[1] <= 0 | proportions[1] >= 1, error = function() stop(simpleError("Argument proportions should contain 1 argument strictly between 0 and 1")))) {
-        stop(simpleError("Argument proportions should contain 1 argument strictly between 0 and 1"))
-      }
-      ind_train <- sample.int(n, n)
-      ind_test <- ind_train[1:floor(proportions[1] * n)]
-      ind_train <- ind_train[(floor(proportions[1] * n) + 1):n]
-      return(list(ind_train, ind_test, NULL))
+      return(cut_one_set(n, proportions))
     }
   } else {
     if (validation == TRUE) {
-      if (tryCatch(length(proportions) < 1 | proportions[1] <= 0 | proportions[1] >= 1, error = function() stop(simpleError("Argument proportions should contain 1 argument strictly between 0 and 1")))) {
-        stop(simpleError("Argument proportions should contain 1 argument strictly between 0 and 1"))
-      }
-      ind_train <- sample.int(n, n)
-      ind_validation <- ind_train[1:floor(proportions[1] * n)]
-      ind_train <- ind_train[(floor(proportions[1] * n) + 1):n]
-      return(list(ind_train, ind_validation, NULL))
+      return(cut_one_set(n, proportions))
     } else {
-      ind_train <- sample.int(n, n)
-      return(list(ind_train, NULL, NULL))
+      return(list(sample.int(n, n), NULL, NULL))
     }
+  }
+}
+
+cut_one_set <- function(n, proportions) {
+  if (tryCatch(length(proportions) < 1 | proportions[1] <= 0 | proportions[1] >= 1, error = function(e) TRUE)) {
+    stop(simpleError("Argument proportions should contain 1 argument strictly between 0 and 1"))
+  }
+  n_held_out <- floor(proportions[1] * n)
+  check_set_sizes(n, n_held_out)
+  ind <- sample.int(n, n)
+  list(ind[-seq_len(n_held_out)], ind[seq_len(n_held_out)], NULL)
+}
+
+check_set_sizes <- function(n, ...) {
+  sizes <- c(...)
+  if (any(sizes < 1) || n - sum(sizes) < 1) {
+    stop(simpleError("The dataset is too small for the requested proportions: every set needs at least one observation."))
   }
 }

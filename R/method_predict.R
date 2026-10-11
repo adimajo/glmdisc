@@ -1,26 +1,26 @@
 #' @include allClasses.R
 NULL
 
-#' Prediction on a raw test set of the best logistic regression model on discretized data.
+#' Prediction on a raw test set of the best logistic regression model on discretized data
 #'
 #' This function discretizes a user-provided test dataset given a discretization scheme provided by an S4 "glmdisc" object.
-#' It then applies the learnt logistic regression model and outputs its prediction (see \code{\link{predict.glm}}).
+#' It then applies the learnt logistic regression model and outputs its prediction (see \code{\link[stats]{predict.glm}}).
 #' @exportMethod predict
 #' @concept test discretization predict prediction
 #' @docType methods
 #' @name predict
 #' @aliases predict
-#' @description This defines the method "discretize" which will discretize a new input dataset given a discretization scheme of S4 class \code{\link{glmdisc}}
-#' @param ... Essai
+#' @description This defines the method "predict" which discretizes a new input dataset given a discretization scheme of S4 class \code{\link{glmdisc}} and returns the predicted probabilities of class 1.
+#' @param ... Not used.
 methods::setGeneric("predict")
 
-#' Prediction on a raw test set of the best logistic regression model on discretized data.
-#'
 #' @rdname predict
-#' @importFrom magrittr "%>%"
-#' @aliases predict,glmdisc,ANY,ANY-method
+#' @aliases predict,glmdisc-method
+#' @method predict glmdisc
+#' @export
 #' @param object The S4 discretization object.
 #' @param predictors The test dataframe to discretize and for which we wish to have predictions.
+#' @return A numeric vector with the predicted probability of class 1 for each row of \code{predictors}.
 #' @examples
 #' # Simulation of a discretized logit model
 #' set.seed(1)
@@ -41,56 +41,10 @@ methods::setGeneric("predict")
 #'   validation = FALSE, criterion = "aic"
 #' )
 #' predict(sem_disc, data.frame(x))
-predict.glmdisc <- function(object, predictors) {
-  if (ncol(predictors) != length(object@parameters$types_data)) {
-    stop(simpleError("Not the same number of columns."))
-  }
-
-  types_data <- sapply(predictors[1, ], class)
-
-  if (!all(types_data == object@parameters$types_data)) {
-    stop(simpleError("Not the same data types."))
-  }
-
-  data_disc <- tryCatch(
-    as.data.frame(discretize_link(object@best.disc[[2]], predictors, object@parameters$m_start), stringsAsFactors = TRUE),
-    error = function(e) {
-      stop(simpleError("Unseen (during training) levels of some categorical feature."))
-    }
-  )
-
-  # Levels not in the training set but in the test set are removed
-  for (var in object@parameters$encoder$facVars) {
-    if (length(levels(data_disc[, var])[!(levels(data_disc[, var]) %in% unlist(unname(object@parameters$encoder$lvls[var])))]) > 0) {
-      data_disc <- data_disc[-which(data_disc[, var] == levels(data_disc[, var])[!(levels(data_disc[, var]) %in% unlist(unname(object@parameters$encoder$lvls[var])))]), ]
-      warning("Level(s) ", paste(levels(data_disc[, var])[(!levels(data_disc[, var]) %in% unlist(unname(object@parameters$encoder$lvls[var])))], collapse = ", "), " of feature ", var, " were removed from test set.")
-      data_disc <- data_disc %>% dplyr::mutate_at(dplyr::vars(object@parameters$encoder$facVars), dplyr::funs(factor))
-    }
-  }
-
-  data <- predict(object = object@parameters$encoder, newdata = data_disc)
-
-  predictlogisticRegression(data, object@best.disc[[1]]$coefficients)
+predict.glmdisc <- function(object, predictors, ...) {
+  X <- prepare_new_features(object, predictors)
+  quantized <- quantized_frame(object@best.disc[[2]], X, object@parameters$model_names)
+  as.numeric(suppressWarnings(stats::predict(object@best.disc[[1]], newdata = quantized, type = "response")))
 }
 
-#' Prediction on a raw test set of the best logistic regression model on discretized data.
-#'
-#' This function discretizes a user-provided test dataset given a discretization scheme provided by an S4 "glmdisc" object.
-#' It then applies the learnt logistic regression model and outputs its prediction (see \code{\link{predict.glm}}).
-#' @rdname predict
-#' @name predict,glmdisc-method
-#' @aliases predict,glmdisc-method
-#' @description This defines the method "predict" which will predict the discretization of a new input dataset given a discretization scheme of S4 class \code{\link{glmdisc}}
-#' @importFrom magrittr "%>%"
 methods::setMethod("predict", "glmdisc", predict.glmdisc)
-
-# Levels not in the training set but in the test set are removed
-# if (class(data_disc) == "character") {
-#   for (var in 1:length(object@parameters$encoder$facVars)) {
-#     if (length(levels(predictors[, names(which(types_data == "factor"))[var]])[!(levels(predictors[, names(which(types_data == "factor"))[var]]) %in% unlist(unname(object@parameters$encoder$lvls[var])))]) > 0) {
-#       predictors <- predictors[-which(predictors[, names(which(types_data == "factor"))[var]] == levels(predictors[, names(which(types_data == "factor"))[var]])[!(levels(predictors[, names(which(types_data == "factor"))[var]]) %in% unlist(unname(object@parameters$encoder$lvls[var])))]), ]
-#       warning("Level(s) ", paste(levels(predictors[, names(which(types_data == "factor"))[var]])[!(levels(predictors[, names(which(types_data == "factor"))[var]]) %in% unlist(unname(object@parameters$encoder$lvls[var])))], collapse = ", "), " of feature ", var, " were removed from test set.")
-#       predictors <- predictors %>% dplyr::mutate_at(dplyr::vars(names(which(types_data == "factor"))), dplyr::funs(factor))
-#     }
-#   }
-# }

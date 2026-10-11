@@ -1,12 +1,4 @@
-are_fast_packages_installed <- function(verbose = FALSE) {
-  installed_NPflow <- requireNamespace("NPflow", quietly = TRUE)
-  installed_Rfast <- requireNamespace("Rfast", quietly = TRUE)
-  if (verbose & !installed_NPflow) message("Package NPflow not installed. Cannot use 'fast = TRUE' .")
-  if (verbose & !installed_Rfast) message("Package Rfast not installed. Cannot use 'fast = TRUE' .")
-  return(installed_Rfast & installed_NPflow)
-}
-
-#' glmdisc: A package for discretizing continuous features, grouping categorical features' values and optimizing it for logistic regression.
+#' glmdisc: A package for discretizing continuous features, grouping categorical features' values and optimizing it for logistic regression
 #'
 #' The glmdisc package provides two important functions:
 #' glmdisc and its associate method discretize.
@@ -33,6 +25,6 @@ are_fast_packages_installed <- function(verbose = FALSE) {
 #'
 #' @author Adrien Ehrhardt.
 #' @importFrom Rcpp evalCpp
-#' @useDynLib glmdisc
+#' @useDynLib glmdisc, .registration = TRUE
 #' @name glmdisc-package
 "_PACKAGE"

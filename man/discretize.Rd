@@ -3,7 +3,7 @@
 \name{discretize}
 \alias{discretize}
 \alias{discretize,glmdisc-method}
-\title{Prediction on a raw test set of the best logistic regression model on discretized / grouped data.}
+\title{Prediction on a raw test set of the best logistic regression model on discretized / grouped data}
 \usage{
 discretize(object, data)
 
