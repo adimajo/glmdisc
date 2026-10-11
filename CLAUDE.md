@@ -46,6 +46,9 @@ Rscript -e 'Rcpp::compileAttributes("."); roxygen2::roxygenise(".", load_code = 
 # install, test, check
 R CMD INSTALL --no-docs -l /tmp/glmdisc-lib . && Rscript -e '.libPaths(c("/tmp/glmdisc-lib", .libPaths())); testthat::test_local(".")'
 R CMD build . && R CMD check --as-cran glmdisc_*.tar.gz
+# reproduce the CRAN incoming checks, including the spell check of DESCRIPTION
+# (needs aspell and aspell-en; the variable is set on the CRAN machines, not by --as-cran)
+_R_CHECK_CRAN_INCOMING_USE_ASPELL_=true R CMD check --as-cran glmdisc_*.tar.gz
 # style (CI fails on a diff)
 Rscript -e 'styler::style_pkg()'
 # benchmark
