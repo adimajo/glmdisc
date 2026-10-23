@@ -47,6 +47,15 @@ glmdisc(
 
 \item{patience}{Optional early stopping: stop when the criterion has not improved for this many consecutive iterations (default: NULL, run all \code{iter} iterations). The SEM chain typically reaches a plateau long before the default \code{iter}; see the vignette.}
 }
+\value{
+An S4 object of class \code{\linkS4class{glmdisc}} with the following slots:
+\itemize{
+  \item \code{parameters}: a list with the arguments used to fit the model (\code{test}, \code{validation}, \code{criterion}, \code{iter}, \code{m_start}, \code{reg_type}, \code{interact}), the type of each feature (\code{types_data}, \code{"numeric"} or \code{"factor"}) and the levels of the factor features;
+  \item \code{best.disc}: a list of three elements describing the best discretization scheme found: \code{bestLogisticRegression}, the \code{\link[stats]{glm}} fitted on the quantized features (and their interactions, if any); \code{bestLinkFunction}, a list with one element per feature that describes how a raw value is assigned to a level (it is used by \code{\link{discretize}} and \code{\link{predict}}); and \code{formulaOfBestLogisticRegression}, the formula of the logistic regression;
+  \item \code{performance}: a list with \code{performance}, the normalized Gini index of the best model on the test set (if \code{test = TRUE}, otherwise on the validation set if \code{validation = TRUE}, otherwise on the training set), and \code{criterionEvolution}, the value of the criterion at each iteration;
+  \item \code{disc.data}: a data frame with the discretized features (levels named \code{"1"}, \code{"2"}, ... and \code{"NA"} for missing values) and the \code{labels} of the observations on which \code{performance} was computed; \code{cont.data}: the same observations with the raw features.
+}
+}
 \description{
 This function discretizes a training set using an SEM-Gibbs based method (see References section).
 It detects numerical features of the dataset and discretizes them ; values of categorical features (of type \code{factor}) are regrouped. This is done in a multivariate supervised way. Assessment of the correct model is done via AIC, BIC or test set error (see parameter \code{criterion}).

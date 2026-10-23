@@ -11,6 +11,9 @@
 
 \item{...}{Other objects passed to print}
 }
+\value{
+The logistic regression fitted on the discretized features (a \code{\link[stats]{glm}} object), invisibly.
+}
 \description{
 Print for the glmdisc class
 }

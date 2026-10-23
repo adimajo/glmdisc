@@ -11,6 +11,9 @@
 
 \item{...}{Other objects passed to summary}
 }
+\value{
+An object of class \code{summary.glm}, the summary of the logistic regression fitted on the discretized features.
+}
 \description{
 Summary for the glmdisc class
 }

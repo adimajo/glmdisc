@@ -13,6 +13,7 @@ methods::setMethod(
 #' @export
 #' @param x S4 glmdisc object.
 #' @param ... Other objects passed to print
+#' @return The logistic regression fitted on the discretized features (a \code{\link[stats]{glm}} object), invisibly.
 print.glmdisc <- function(x, ...) {
   print(x@best.disc[[1]])
 }
@@ -24,6 +25,7 @@ print.glmdisc <- function(x, ...) {
 #' @export
 #' @param object S4 glmdisc object.
 #' @param ... Other objects passed to summary
+#' @return An object of class \code{summary.glm}, the summary of the logistic regression fitted on the discretized features.
 summary.glmdisc <- function(object, ...) {
   summary(object@best.disc[[1]])
 }

@@ -30,6 +30,7 @@ multinomial_1d_probs <- function(z, coef) {
 #'
 #' @param test A matrix containing test data
 #' @param parameters A vector containing the logistic regression parameters
+#' @return A numeric vector of length \code{nrow(test)}: the probability of class 1 of each row, \eqn{1 / (1 + e^{-x^T \beta})} where \eqn{x} is the row and \eqn{\beta} the \code{parameters}.
 #' @export
 predictlogisticRegression <- function(test, parameters) {
     .Call(`_glmdisc_predictlogisticRegression`, test, parameters)

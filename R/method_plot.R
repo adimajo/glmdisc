@@ -68,6 +68,7 @@ plot_glmdisc <- function(x) {
 #' @param x The S4 \code{\link{glmdisc}} object to plot.
 #' @param y Not used.
 #' @param ... Not used.
+#' @return No return value (\code{NULL}, invisibly), called for its side effects: it draws the ROC curve of the model, the risk of each level of every discretized feature, and, for numeric features, a GAM fit of the feature with its discretization. For factor features it also prints the table of the groups of levels.
 #' @examples
 #' # Simulation of a discretized logit model
 #' set.seed(1)

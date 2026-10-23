@@ -6,6 +6,7 @@ NULL
 #' @name discretize
 #' @aliases discretize,glmdisc-method
 #' @description This defines the method "discretize" which will discretize a new input dataset given a discretization scheme of S4 class \code{\link{glmdisc}}
+#' @return A character matrix with one row per observation of \code{data} and one column per feature: the name of the level (\code{"1"}, \code{"2"}, ...; \code{"NA"} for a missing value) that each value was assigned to.
 #' @examples
 #' # Simulation of a discretized logit model
 #' set.seed(1)

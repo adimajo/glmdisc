@@ -14,6 +14,9 @@ discretize(object, data)
 
 \item{data}{the data to discretize according to the provided discretization scheme}
 }
+\value{
+A character matrix with one row per observation of \code{data} and one column per feature: the name of the level (\code{"1"}, \code{"2"}, ...; \code{"NA"} for a missing value) that each value was assigned to.
+}
 \description{
 This function discretizes a user-provided test dataset given a discretization scheme provided by an S4 \code{\link{glmdisc}} object.
 It then applies the learnt logistic regression model and outputs its prediction (see \code{\link{predict.glm}}).
