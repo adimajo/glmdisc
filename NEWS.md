@@ -1,3 +1,16 @@
+# glmdisc 0.8.1
+
+Version 0.8.0 was submitted to CRAN but not released; its changes are listed below. This version
+answers the comments of the CRAN team.
+
+* The documentation of every exported function now has a `\value` section that describes the
+  class and the meaning of the result (`plot()` is documented as called for its side effects).
+* New examples for `print()`, `summary()` and `predictlogisticRegression()`.
+* `plot()` restores the graphical parameters of the user (it used to leave `ask` set to `FALSE`).
+* The arXiv paper is cited through its DOI in the `Description`, `Authors@R` contains the ORCID iDs
+  of three authors and the `URL` field lists the package website and its repository.
+* The plot test no longer leaves an `Rplots.pdf` in the test directory.
+
 # glmdisc 0.8.0
 
 This release re-submits the package to CRAN, from which it was archived on 2023-02-26 because
