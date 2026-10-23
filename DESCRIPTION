@@ -27,7 +27,7 @@ Imports:
     RcppNumerical,
     stats
 LinkingTo: Rcpp, RcppEigen, RcppNumerical
-URL: https://adimajo.github.io
+URL: https://adimajo.github.io/glmdisc/, https://github.com/adimajo/glmdisc
 BugReports: https://github.com/adimajo/glmdisc/issues
 Suggests:
     covr,
