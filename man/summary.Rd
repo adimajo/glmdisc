@@ -17,3 +17,13 @@ An object of class \code{summary.glm}, the summary of the logistic regression fi
 \description{
 Summary for the glmdisc class
 }
+\examples{
+set.seed(1)
+x <- matrix(runif(300), nrow = 100, ncol = 3)
+y <- rbinom(100, 1, plogis(2 * (x[, 1] > 0.5) - 1))
+sem_disc <- glmdisc(x, y,
+  iter = 30, m_start = 4, test = FALSE,
+  validation = FALSE, criterion = "aic", interact = FALSE
+)
+summary(sem_disc)
+}

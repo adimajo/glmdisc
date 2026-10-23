@@ -18,3 +18,7 @@ A numeric vector of length \code{nrow(test)}: the probability of class 1 of each
 This function returns a numeric vector containing the probability of each observation of being of class 1 given a vector of logistic
 regression parameters (usually estimated through RcppNumerical::fastLR).
 }
+\examples{
+# intercept and one covariate: the probabilities are plogis(c(-2, 0, 2))
+predictlogisticRegression(cbind(1, c(-2, 0, 2)), c(0, 1))
+}
