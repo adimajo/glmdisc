@@ -16,6 +16,10 @@ if (!isGeneric("plot")) {
 }
 
 plot_glmdisc <- function(x) {
+  # restore the graphical parameters of the user, whatever happens
+  oldpar <- graphics::par(no.readonly = TRUE)
+  on.exit(graphics::par(oldpar))
+
   # Graph 1 : ROC CURVE
   glm_simple_roc <- simple_roc(x@disc.data$labels, predict(x, x@cont.data[, -ncol(x@cont.data), drop = FALSE]))
 
@@ -58,8 +62,6 @@ plot_glmdisc <- function(x) {
   for (j in which(x@parameters$types_data == "factor")) {
     print(table(factor(x@disc.data[, j]), factor(x@cont.data[, j])))
   }
-
-  on.exit(graphics::par(ask = FALSE))
 }
 
 #' @rdname plot

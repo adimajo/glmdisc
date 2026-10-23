@@ -26,7 +26,9 @@ test_that("plot works", {
     criterion = "aic",
     interact = FALSE
   )
+  before <- graphics::par(c("ask", "new", "mfrow", "mar", "xpd"))
   plot(sem_disc1)
+  expect_equal(graphics::par(c("ask", "new", "mfrow", "mar", "xpd")), before)
   sem_disc2 <- glmdisc(data.frame(x = factor(xd)),
     y,
     iter = 25,
