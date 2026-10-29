@@ -7,6 +7,7 @@ NULL
 #' @aliases cutpoints,glmdisc-method
 #' @param glmdisc The trained glmdisc S4 object.
 #' @description This defines the method to provide the cutpoints of a trained glmdisc.
+#' @return A named list with one element per feature. For a numeric feature, a numeric vector with the cutpoints between consecutive levels of the discretization (empty if the feature has a single level). For a factor, a named integer vector that gives, for each level of the factor, the number of the group it was assigned to.
 #' @examples
 #' # Simulation of a discretized logit model
 #' set.seed(1)

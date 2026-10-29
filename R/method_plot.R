@@ -16,6 +16,10 @@ if (!isGeneric("plot")) {
 }
 
 plot_glmdisc <- function(x) {
+  # restore the graphical parameters of the user, whatever happens
+  oldpar <- graphics::par(no.readonly = TRUE)
+  on.exit(graphics::par(oldpar))
+
   # Graph 1 : ROC CURVE
   glm_simple_roc <- simple_roc(x@disc.data$labels, predict(x, x@cont.data[, -ncol(x@cont.data), drop = FALSE]))
 
@@ -58,8 +62,6 @@ plot_glmdisc <- function(x) {
   for (j in which(x@parameters$types_data == "factor")) {
     print(table(factor(x@disc.data[, j]), factor(x@cont.data[, j])))
   }
-
-  on.exit(graphics::par(ask = FALSE))
 }
 
 #' @rdname plot
@@ -68,6 +70,7 @@ plot_glmdisc <- function(x) {
 #' @param x The S4 \code{\link{glmdisc}} object to plot.
 #' @param y Not used.
 #' @param ... Not used.
+#' @return No return value (\code{NULL}, invisibly), called for its side effects: it draws the ROC curve of the model, the risk of each level of every discretized feature, and, for numeric features, a GAM fit of the feature with its discretization. For factor features it also prints the table of the groups of levels.
 #' @examples
 #' # Simulation of a discretized logit model
 #' set.seed(1)

@@ -1,5 +1,7 @@
 test_that("plot works", {
   set.seed(1)
+  # draw on a null device: no Rplots.pdf is left in the test directory
+  grDevices::pdf(NULL)
   x <- matrix(runif(100), nrow = 100, ncol = 1)
   cuts <- seq(0, 1, length.out = 4)
   xd <- as.numeric(cut(x, cuts))
@@ -24,7 +26,9 @@ test_that("plot works", {
     criterion = "aic",
     interact = FALSE
   )
+  before <- graphics::par(c("ask", "new", "mfrow", "mar", "xpd"))
   plot(sem_disc1)
+  expect_equal(graphics::par(c("ask", "new", "mfrow", "mar", "xpd")), before)
   sem_disc2 <- glmdisc(data.frame(x = factor(xd)),
     y,
     iter = 25,
@@ -35,5 +39,6 @@ test_that("plot works", {
     interact = FALSE
   )
   plot(sem_disc2)
+  invisible(grDevices::dev.off())
   succeed()
 })

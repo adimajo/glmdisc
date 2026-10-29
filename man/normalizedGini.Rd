@@ -11,6 +11,9 @@ normalizedGini(actual, predicted)
 
 \item{predicted}{The vector of the probabilities predicted by the classification rule.}
 }
+\value{
+A single number between -1 and 1, the normalized Gini index (2 AUC - 1) of \code{predicted} for the labels \code{actual}: 1 for a perfect ranking, 0 for a ranking no better than chance, negative for an inverted ranking. It is \code{NaN} when \code{actual} contains a single class.
+}
 \description{
 This function calculates the Gini index of a classification rule outputting probabilities. It is a classical metric in the context of Credit Scoring.
 It is equal to 2 times the AUC (Area Under ROC Curve) minus 1; tied predicted probabilities are given half credit, so the result does not depend on the order of the observations.

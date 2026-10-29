@@ -15,6 +15,9 @@
 
 \item{...}{Not used.}
 }
+\value{
+No return value (\code{NULL}, invisibly), called for its side effects: it draws the ROC curve of the model, the risk of each level of every discretized feature, and, for numeric features, a GAM fit of the feature with its discretization. For factor features it also prints the table of the groups of levels.
+}
 \description{
 This defines the \code{\link[graphics]{plot}} method which will plot some useful graphs for the discretization scheme of S4 class \code{\link{glmdisc}}
 }
